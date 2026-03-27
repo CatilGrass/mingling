@@ -1,0 +1,60 @@
+//! Command Node Macro Implementation
+//!
+//! This module provides the `node` procedural macro for creating
+//! command nodes from dot-separated path strings.
+
+use just_fmt::kebab_case;
+use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
+use quote::quote;
+use syn::parse::{Parse, ParseStream};
+use syn::{LitStr, Result as SynResult};
+
+/// Parses a string literal input for the node macro
+struct NodeInput {
+    path: LitStr,
+}
+
+impl Parse for NodeInput {
+    fn parse(input: ParseStream) -> SynResult<Self> {
+        Ok(NodeInput {
+            path: input.parse()?,
+        })
+    }
+}
+
+/// Implementation of the `node` procedural macro
+///
+/// # Examples
+///
+/// ```ignore
+/// use mingling_macros::node;
+///
+/// // Creates: Node::default().join("root").join("subcommand").join("action")
+/// let node = node!("root.subcommand.action");
+/// ```
+pub fn node(input: TokenStream) -> TokenStream {
+    // Parse the input as a string literal
+    let input_parsed = syn::parse_macro_input!(input as NodeInput);
+    let path_str = input_parsed.path.value();
+
+    // Split the path by dots
+    let parts: Vec<String> = path_str
+        .split('.')
+        .map(|s| kebab_case!(s).to_string())
+        .collect();
+
+    // Build the expression starting from Node::default()
+    let mut expr: TokenStream2 = quote! {
+        mingling::Node::default()
+    };
+
+    // Add .join() calls for each part of the path
+    for part in parts {
+        expr = quote! {
+            #expr.join(#part)
+        };
+    }
+
+    expr.into()
+}

@@ -1,0 +1,17 @@
+[package]
+name = "mingling"
+version = "0.1.0"
+edition = "2024"
+authors = ["Weicao-CatilGrass"]
+license-file = "LICENSE-MIT"
+
+[features]
+default = ["macros"]
+macros = ["mingling_macros"]
+serde_renderer = ["dep:serde", "mingling_macros/serde"]
+
+[dependencies]
+mingling_macros = { path = "../mingling_macros", optional = true }
+just_fmt = "0.1.2"
+serde = { version = "1.0", features = ["derive"], optional = true }
+thiserror = "2"
