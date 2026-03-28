@@ -5,23 +5,8 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
-use syn::{
-    FnArg, Ident, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input,
-};
-
-/// Parses the renderer attribute arguments
-struct RendererAttribute {
-    struct_name: Ident,
-}
-
-impl Parse for RendererAttribute {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let struct_name = input.parse()?;
-        Ok(RendererAttribute { struct_name })
-    }
-}
+use syn::{FnArg, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input};
 
 /// Extracts the previous type and parameter name from function arguments
 fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
@@ -74,11 +59,7 @@ fn extract_return_type(sig: &Signature) -> syn::Result<()> {
     }
 }
 
-pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
-    // Parse the attribute arguments
-    let renderer_attr = parse_macro_input!(attr as RendererAttribute);
-    let struct_name = renderer_attr.struct_name;
-
+pub fn renderer_attr(item: TokenStream) -> TokenStream {
     // Parse the function item
     let input_fn = parse_macro_input!(item as ItemFn);
 
@@ -114,6 +95,10 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // Get function name
     let fn_name = &input_fn.sig.ident;
+
+    // Generate struct name from function name using pascal_case
+    let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
+    let struct_name = syn::Ident::new(&pascal_case_name, fn_name.span());
 
     // Register the renderer in the global list
     let renderer_entry = quote! {

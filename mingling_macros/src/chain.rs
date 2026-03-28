@@ -5,23 +5,10 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
     FnArg, Ident, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input,
 };
-
-/// Parses the chain attribute arguments
-struct ChainAttribute {
-    struct_name: Ident,
-}
-
-impl Parse for ChainAttribute {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let struct_name = input.parse()?;
-        Ok(ChainAttribute { struct_name })
-    }
-}
 
 /// Extracts the previous type and parameter name from function arguments
 fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
@@ -72,11 +59,7 @@ fn extract_return_type(sig: &Signature) -> syn::Result<TypePath> {
     }
 }
 
-pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
-    // Parse the attribute arguments
-    let chain_attr = parse_macro_input!(attr as ChainAttribute);
-    let struct_name = chain_attr.struct_name;
-
+pub fn chain_attr(item: TokenStream) -> TokenStream {
     // Parse the function item
     let input_fn = parse_macro_input!(item as ItemFn);
 
@@ -112,6 +95,10 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // Get function name
     let fn_name = &input_fn.sig.ident;
+
+    // Generate struct name from function name using pascal_case
+    let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
+    let struct_name = Ident::new(&pascal_case_name, fn_name.span());
 
     // Generate the struct and implementation
     let expanded = quote! {

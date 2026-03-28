@@ -28,6 +28,14 @@ pub fn node(input: TokenStream) -> TokenStream {
     let input_parsed = syn::parse_macro_input!(input as NodeInput);
     let path_str = input_parsed.path.value();
 
+    // If the input string is empty, return an empty Node
+    if path_str.is_empty() {
+        return quote! {
+            mingling::Node::default()
+        }
+        .into();
+    }
+
     // Split the path by dots
     let parts: Vec<String> = path_str
         .split('.')

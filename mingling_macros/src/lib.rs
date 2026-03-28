@@ -121,8 +121,8 @@ pub fn r_println(input: TokenStream) -> TokenStream {
 /// ```ignore
 /// use mingling_macros::chain;
 ///
-/// #[chain(InitEntry)]
-/// pub async fn proc(_: InitBegin) -> mingling::ChainProcess {
+/// #[chain]
+/// pub async fn init_entry(_: InitBegin) -> mingling::ChainProcess {
 ///     AnyOutput::new::<InitResult>("Init!".to_string().into()).route_chain()
 /// }
 /// ```
@@ -138,8 +138,8 @@ pub fn r_println(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
-    chain::chain_attr(attr, item)
+pub fn chain(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    chain::chain_attr(item)
 }
 
 /// Attribute macro for automatically generating structs that implement the `Renderer` trait.
@@ -152,8 +152,8 @@ pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// ```ignore
 /// use mingling_macros::renderer;
 ///
-/// #[renderer(InitResultRenderer)]
-/// fn render(p: InitResult) {
+/// #[renderer]
+/// fn init_result_render(p: InitResult) {
 ///     let str: String = p.into();
 ///     r_println!("{}", str);
 /// }
@@ -161,8 +161,8 @@ pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// This generates:
 /// ```ignore
-/// pub struct InitResultRenderer;
-/// impl Renderer for InitResultRenderer {
+/// pub struct InitResultRender;
+/// impl Renderer for InitResultRender {
 ///     type Previous = InitResult;
 ///
 ///     fn render(p: Self::Previous, r: &mut RenderResult) {
@@ -172,8 +172,8 @@ pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn renderer(attr: TokenStream, item: TokenStream) -> TokenStream {
-    renderer::renderer_attr(attr, item)
+pub fn renderer(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    renderer::renderer_attr(item)
 }
 
 /// Macro for creating a program structure that collects all chains and renderers.
