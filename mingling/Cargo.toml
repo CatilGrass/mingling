@@ -15,3 +15,4 @@ mingling_macros = { path = "../mingling_macros", optional = true }
 just_fmt = "0.1.2"
 serde = { version = "1.0", features = ["derive"], optional = true }
 thiserror = "2"
+tokio = { version = "1", features = ["full"] }

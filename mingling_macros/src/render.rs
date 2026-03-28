@@ -8,19 +8,6 @@ use quote::quote;
 use syn::parse::Parser;
 use syn::{Expr, Token};
 
-/// Implementation of the `r_print!` procedural macro
-///
-/// This macro expands to a call to `RenderResult::print` with formatted arguments.
-/// It expects a mutable reference to a `RenderResult` named `r` to be in scope.
-///
-/// # Examples
-///
-/// ```ignore
-/// use mingling_macros::r_print;
-///
-/// let mut r = RenderResult::default();
-/// r_print!("Hello, {}!", "world");
-/// ```
 pub fn r_print(input: TokenStream) -> TokenStream {
     // Parse the input as format arguments
     let parser = syn::punctuated::Punctuated::<Expr, Token![,]>::parse_terminated;
@@ -47,19 +34,6 @@ pub fn r_print(input: TokenStream) -> TokenStream {
     expanded.into()
 }
 
-/// Implementation of the `r_println!` procedural macro
-///
-/// This macro expands to a call to `RenderResult::println` with formatted arguments.
-/// It expects a mutable reference to a `RenderResult` named `r` to be in scope.
-///
-/// # Examples
-///
-/// ```ignore
-/// use mingling_macros::r_println;
-///
-/// let mut r = RenderResult::default();
-/// r_println!("Hello, {}!", "world");
-/// ```
 pub fn r_println(input: TokenStream) -> TokenStream {
     // Parse the input as format arguments
     let parser = syn::punctuated::Punctuated::<Expr, Token![,]>::parse_terminated;

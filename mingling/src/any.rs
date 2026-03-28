@@ -8,7 +8,7 @@ pub type ChainProcess = Result<AnyOutput, ChainProcessError>;
 #[derive(Debug)]
 pub struct AnyOutput {
     inner: Box<dyn std::any::Any + Send + 'static>,
-    type_id: std::any::TypeId,
+    pub type_id: std::any::TypeId,
 }
 
 impl AnyOutput {

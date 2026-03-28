@@ -4,13 +4,23 @@
 //! Macros are implemented in separate modules and re-exported here.
 
 use proc_macro::TokenStream;
+use proc_macro2::Ident;
+use quote::quote;
+use syn::parse_macro_input;
 
 mod chain;
 mod chain_struct;
-mod dispatcher;
+mod dispatcher_chain;
 mod node;
 mod render;
 mod renderer;
+
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
+
+// Global variable declarations for storing chain and renderer mappings
+pub(crate) static CHAINS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+pub(crate) static RENDERERS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 /// Creates a command node from a dot-separated path string.
 ///
@@ -24,31 +34,6 @@ mod renderer;
 #[proc_macro]
 pub fn node(input: TokenStream) -> TokenStream {
     node::node(input)
-}
-
-/// Derive macro for automatically implementing the `Dispatcher` trait.
-///
-/// This macro generates an implementation of `mingling::Dispatcher` for a struct.
-/// By default, it uses the struct name converted to snake_case as the command path.
-/// You can also specify a custom path using the `#[dispatcher("path")]` attribute.
-///
-/// # Examples
-///
-/// ```ignore
-/// use mingling_macros::Dispatcher;
-///
-/// // Uses default path: "remote.add"
-/// #[derive(Dispatcher)]
-/// pub struct RemoteAdd;
-///
-/// // Uses custom path: "remote.rm"
-/// #[derive(Dispatcher)]
-/// #[dispatcher("remote.rm")]
-/// pub struct MyCommand;
-/// ```
-#[proc_macro_derive(Dispatcher, attributes(dispatcher))]
-pub fn dispatcher_derive(input: TokenStream) -> TokenStream {
-    dispatcher::dispatcher_derive(input)
 }
 
 /// Macro for creating wrapper types with automatic trait implementations.
@@ -78,6 +63,16 @@ pub fn dispatcher_derive(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn chain_struct(input: TokenStream) -> TokenStream {
     chain_struct::chain_struct(input)
+}
+
+#[proc_macro]
+pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
+    dispatcher_chain::dispatcher_chain(input)
+}
+
+#[proc_macro]
+pub fn dispatcher_render(input: TokenStream) -> TokenStream {
+    dispatcher_chain::dispatcher_render(input)
 }
 
 /// Macro for printing to a RenderResult without newline.
@@ -127,8 +122,8 @@ pub fn r_println(input: TokenStream) -> TokenStream {
 /// use mingling_macros::chain;
 ///
 /// #[chain(InitEntry)]
-/// pub async fn proc(_: InitBegin) -> mingling::AnyOutput {
-///     AnyOutput::new::<InitResult>("初始化成功！".to_string().into())
+/// pub async fn proc(_: InitBegin) -> mingling::ChainProcess {
+///     AnyOutput::new::<InitResult>("Init!".to_string().into()).route_chain()
 /// }
 /// ```
 ///
@@ -137,8 +132,8 @@ pub fn r_println(input: TokenStream) -> TokenStream {
 /// pub struct InitEntry;
 /// impl Chain for InitEntry {
 ///     type Previous = InitBegin;
-///     async fn proc(_: Self::Previous) -> mingling::AnyOutput {
-///         AnyOutput::new::<InitResult>("初始化成功！".to_string().into())
+///     async fn proc(_: Self::Previous) -> mingling::ChainProcess {
+///         AnyOutput::new::<InitResult>("Init!".to_string().into()).route_chain()
 ///     }
 /// }
 /// ```
@@ -158,7 +153,7 @@ pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// use mingling_macros::renderer;
 ///
 /// #[renderer(InitResultRenderer)]
-/// fn render(p: InitResult, r: &mut RenderResult) {
+/// fn render(p: InitResult) {
 ///     let str: String = p.into();
 ///     r_println!("{}", str);
 /// }
@@ -179,4 +174,98 @@ pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn renderer(attr: TokenStream, item: TokenStream) -> TokenStream {
     renderer::renderer_attr(attr, item)
+}
+
+/// Macro for creating a program structure that collects all chains and renderers.
+///
+/// This macro creates a struct that implements the `ProgramCollect` trait,
+/// which collects all chains and renderers registered with `#[chain]` and `#[renderer]`
+/// attribute macros. The program can then be used to execute the command chain.
+///
+/// # Examples
+///
+/// ```ignore
+/// use mingling_macros::program;
+///
+/// program!(MyProgram);
+///
+/// // This generates:
+/// pub struct MyProgram;
+/// impl mingling::ProgramCollect for MyProgram {
+///     mingling::__dispatch_program_renderers!(...);
+///     mingling::__dispatch_program_chains!(...);
+/// }
+/// impl MyProgram {
+///     pub fn new() -> mingling::Program<MyProgram> {
+///         mingling::Program::new()
+///     }
+/// }
+/// ```
+#[proc_macro]
+pub fn program(input: TokenStream) -> TokenStream {
+    let name = parse_macro_input!(input as Ident);
+
+    let renderers = RENDERERS.lock().unwrap().clone();
+    let chains = CHAINS.lock().unwrap().clone();
+
+    let renderer_tokens: Vec<proc_macro2::TokenStream> = renderers
+        .iter()
+        .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
+        .collect();
+
+    let chain_tokens: Vec<proc_macro2::TokenStream> = chains
+        .iter()
+        .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
+        .collect();
+
+    let expanded = quote! {
+        pub struct #name;
+
+        impl ::mingling::ProgramCollect for #name {
+            ::mingling::__dispatch_program_renderers!(
+                #(#renderer_tokens)*
+            );
+            ::mingling::__dispatch_program_chains!(
+                #(#chain_tokens)*
+            );
+        }
+
+        impl #name {
+            pub fn new() -> ::mingling::Program<#name> {
+                ::mingling::Program::new()
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Internal macro for registering chains.
+///
+/// This macro is used internally by the `#[chain]` attribute macro
+/// and should not be used directly.
+#[doc(hidden)]
+#[proc_macro]
+pub fn __register_chain(input: TokenStream) -> TokenStream {
+    let chain_entry = parse_macro_input!(input as syn::LitStr);
+    let entry_str = chain_entry.value();
+
+    CHAINS.lock().unwrap().push(entry_str);
+
+    TokenStream::new()
+}
+
+/// Internal macro for registering renderers.
+///
+/// This macro is used internally by the `#[renderer]` attribute macro
+/// and should not be used directly.
+#[doc(hidden)]
+#[proc_macro]
+pub fn __register_renderer(input: TokenStream) -> TokenStream {
+    let renderer_entry = parse_macro_input!(input as syn::LitStr);
+    let entry_str = renderer_entry.value();
+
+    RENDERERS.lock().unwrap().push(entry_str);
+
+    TokenStream::new()
 }

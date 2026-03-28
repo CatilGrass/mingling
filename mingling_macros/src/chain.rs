@@ -72,32 +72,6 @@ fn extract_return_type(sig: &Signature) -> syn::Result<TypePath> {
     }
 }
 
-/// Implementation of the `#[chain]` attribute macro
-///
-/// This macro transforms an async function into a struct that implements
-/// the `Chain` trait. The struct name is specified in the attribute.
-///
-/// # Examples
-///
-/// ```ignore
-/// use mingling_macros::chain;
-///
-/// #[chain(InitEntry)]
-/// pub async fn process(data: InitBegin) -> mingling::AnyOutput {
-///     AnyOutput::new::<InitResult>("初始化成功！".to_string().into())
-/// }
-/// ```
-///
-/// This generates:
-/// ```ignore
-/// pub struct InitEntry;
-/// impl Chain for InitEntry {
-///     type Previous = InitBegin;
-///     async fn proc(data: Self::Previous) -> mingling::AnyOutput {
-///         AnyOutput::new::<InitResult>("初始化成功！".to_string().into())
-///     }
-/// }
-/// ```
 pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the attribute arguments
     let chain_attr = parse_macro_input!(attr as ChainAttribute);
@@ -159,6 +133,16 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             #fn_body
         }
     };
+
+    // Record the chain mapping
+    let chain_entry = quote! {
+        #struct_name => #previous_type,
+    };
+    let mut chains = crate::CHAINS.lock().unwrap();
+    let entry = chain_entry.to_string();
+    if !chains.contains(&entry) {
+        chains.push(entry);
+    }
 
     expanded.into()
 }

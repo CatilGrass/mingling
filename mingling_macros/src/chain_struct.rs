@@ -27,29 +27,6 @@ impl Parse for ChainStructInput {
     }
 }
 
-/// Implementation of the `chain_struct!` macro
-///
-/// This macro creates a wrapper struct with automatic implementations of:
-/// - `From<InnerType>` and `Into<InnerType>`
-/// - `new()` constructor
-/// - `Default` (if the inner type implements Default)
-/// - `AsRef<InnerType>` and `AsMut<InnerType>`
-/// - `Deref` and `DerefMut` to the inner type
-///
-/// # Examples
-///
-/// ```ignore
-/// use mingling_macros::chain_struct;
-///
-/// // Creates a wrapper type around String
-/// chain_struct!(NameString = String);
-///
-/// // Usage:
-/// let name = NameString::new("Hello".to_string());
-/// let inner: String = name.into(); // Into conversion
-/// let name2 = NameString::from("World".to_string()); // From conversion
-/// let ref_str: &String = name2.as_ref(); // AsRef
-/// ```
 pub fn chain_struct(input: TokenStream) -> TokenStream {
     let ChainStructInput {
         type_name,

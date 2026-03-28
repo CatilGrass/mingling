@@ -25,15 +25,15 @@ impl Parse for RendererAttribute {
 
 /// Extracts the previous type and parameter name from function arguments
 fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
-    // The function should have exactly two parameters
-    if sig.inputs.len() != 2 {
+    // The function should have exactly one parameter
+    if sig.inputs.len() != 1 {
         return Err(syn::Error::new(
             sig.inputs.span(),
-            "Renderer function must have exactly two parameters",
+            "Renderer function must have exactly one parameter (the previous type)",
         ));
     }
 
-    // First parameter is the previous type
+    // First and only parameter is the previous type
     let arg = &sig.inputs[0];
     match arg {
         FnArg::Typed(PatType { pat, ty, .. }) => {
@@ -45,7 +45,7 @@ fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
                 Type::Path(type_path) => Ok((param_pat, type_path.clone())),
                 _ => Err(syn::Error::new(
                     ty.span(),
-                    "First parameter type must be a type path",
+                    "Parameter type must be a type path",
                 )),
             }
         }
@@ -54,81 +54,6 @@ fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
             "Renderer function cannot have self parameter",
         )),
     }
-}
-
-/// Validates that the second parameter is r: &mut RenderResult
-fn validate_render_result_param(sig: &Signature) -> syn::Result<()> {
-    // Second parameter should be &mut RenderResult
-    let arg = &sig.inputs[1];
-
-    match arg {
-        FnArg::Typed(PatType { pat, ty, .. }) => {
-            // Check parameter name is "r"
-            let param_name = match &**pat {
-                Pat::Ident(pat_ident) => pat_ident.ident.to_string(),
-                _ => {
-                    return Err(syn::Error::new(
-                        pat.span(),
-                        "Second parameter must be named 'r'",
-                    ));
-                }
-            };
-
-            if param_name != "r" {
-                return Err(syn::Error::new(
-                    pat.span(),
-                    "Second parameter must be named 'r'",
-                ));
-            }
-
-            // Check type is &mut RenderResult
-            match &**ty {
-                Type::Reference(type_ref) => {
-                    // Check mutability
-                    if !type_ref.mutability.is_some() {
-                        return Err(syn::Error::new(
-                            ty.span(),
-                            "Second parameter must be mutable reference: &mut RenderResult",
-                        ));
-                    }
-
-                    // Check inner type is RenderResult
-                    match &*type_ref.elem {
-                        Type::Path(type_path) => {
-                            let type_name =
-                                type_path.path.segments.last().unwrap().ident.to_string();
-                            if type_name != "RenderResult" {
-                                return Err(syn::Error::new(
-                                    ty.span(),
-                                    "Second parameter must be &mut RenderResult",
-                                ));
-                            }
-                        }
-                        _ => {
-                            return Err(syn::Error::new(
-                                ty.span(),
-                                "Second parameter must be &mut RenderResult",
-                            ));
-                        }
-                    }
-                }
-                _ => {
-                    return Err(syn::Error::new(
-                        ty.span(),
-                        "Second parameter must be &mut RenderResult",
-                    ));
-                }
-            }
-        }
-        FnArg::Receiver(_) => {
-            return Err(syn::Error::new(
-                arg.span(),
-                "Renderer function cannot have self parameter",
-            ));
-        }
-    }
-
-    Ok(())
 }
 
 /// Extracts the return type from the function signature
@@ -149,35 +74,6 @@ fn extract_return_type(sig: &Signature) -> syn::Result<()> {
     }
 }
 
-/// Implementation of the `#[renderer]` attribute macro
-///
-/// This macro transforms a function into a struct that implements
-/// the `Renderer` trait. The struct name is specified in the attribute.
-///
-/// # Examples
-///
-/// ```ignore
-/// use mingling_macros::renderer;
-///
-/// #[renderer(InitResultRenderer)]
-/// fn render(data: InitResult, r: &mut RenderResult) {
-///     let str: String = data.into();
-///     r_println!("{}", str);
-/// }
-/// ```
-///
-/// This generates:
-/// ```ignore
-/// pub struct InitResultRenderer;
-/// impl Renderer for InitResultRenderer {
-///     type Previous = InitResult;
-///
-///     fn render(data: Self::Previous, r: &mut RenderResult) {
-///         let str: String = data.into();
-///         r_println!("{}", str);
-///     }
-/// }
-/// ```
 pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the attribute arguments
     let renderer_attr = parse_macro_input!(attr as RendererAttribute);
@@ -199,11 +95,6 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         Err(e) => return e.to_compile_error().into(),
     };
 
-    // Validate second parameter is r: &mut RenderResult
-    if let Err(e) = validate_render_result_param(&input_fn.sig) {
-        return e.to_compile_error().into();
-    }
-
     // Validate return type
     if let Err(e) = extract_return_type(&input_fn.sig) {
         return e.to_compile_error().into();
@@ -214,6 +105,7 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // Get function attributes (excluding the renderer attribute)
     let mut fn_attrs = input_fn.attrs.clone();
+
     // Remove any #[renderer(...)] attributes to avoid infinite recursion
     fn_attrs.retain(|attr| !attr.path().is_ident("renderer"));
 
@@ -223,7 +115,19 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Get function name
     let fn_name = &input_fn.sig.ident;
 
+    // Register the renderer in the global list
+    let renderer_entry = quote! {
+        #struct_name => #previous_type,
+    };
+
+    let mut renderers = crate::RENDERERS.lock().unwrap();
+    let entry_str = renderer_entry.to_string();
+    if !renderers.contains(&entry_str) {
+        renderers.push(entry_str);
+    }
+
     // Generate the struct and implementation
+    // We need to create a wrapper function that adds the r parameter
     let expanded = quote! {
         #(#fn_attrs)*
         #vis struct #struct_name;
@@ -232,14 +136,23 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             type Previous = #previous_type;
 
             fn render(#prev_param: Self::Previous, r: &mut ::mingling::RenderResult) {
-                // Call the original function
-                #fn_name(#prev_param, r)
+                // Create a local wrapper function that includes r parameter
+                // This allows r_println! to access r
+                #[allow(non_snake_case)]
+                fn render_wrapper(#prev_param: #previous_type, r: &mut ::mingling::RenderResult) {
+                    #fn_body
+                }
+
+                // Call the wrapper function
+                render_wrapper(#prev_param, r);
             }
         }
 
-        // Keep the original function for internal use
+        // Keep the original function for internal use (without r parameter)
         #(#fn_attrs)*
-        #vis fn #fn_name(#prev_param: #previous_type, r: &mut ::mingling::RenderResult) {
+        #vis fn #fn_name(#prev_param: #previous_type) {
+            let mut dummy_r = ::mingling::RenderResult::default();
+            let r = &mut dummy_r;
             #fn_body
         }
     };

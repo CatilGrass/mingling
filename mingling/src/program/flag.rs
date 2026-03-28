@@ -1,4 +1,4 @@
-use crate::Program;
+use crate::{Program, ProgramCollect};
 
 pub struct Flag {
     vec: Vec<&'static str>,
@@ -80,11 +80,14 @@ macro_rules! special_argument {
     }};
 }
 
-impl Program {
+impl<C> Program<C>
+where
+    C: ProgramCollect,
+{
     /// Registers a global argument (with value) and its handler.
     pub fn global_argument<F, A>(&mut self, arguments: A, do_fn: F)
     where
-        F: Fn(&mut Program, String),
+        F: Fn(&mut Program<C>, String),
         A: Into<Flag>,
     {
         let flag = arguments.into();
@@ -100,7 +103,7 @@ impl Program {
     /// Registers a global flag (boolean) and its handler.
     pub fn global_flag<F, A>(&mut self, flag: A, do_fn: F)
     where
-        F: Fn(&mut Program),
+        F: Fn(&mut Program<C>),
         A: Into<Flag>,
     {
         let flag = flag.into();
@@ -111,5 +114,35 @@ impl Program {
                 return;
             }
         }
+    }
+
+    /// Extracts a global argument (with value) from arguments
+    pub fn pick_global_argument<F>(&mut self, flag: F) -> Option<String>
+    where
+        F: Into<Flag>,
+    {
+        let flag: Flag = flag.into();
+        for argument in flag.iter() {
+            let value = special_argument!(self.args, argument);
+            if value.is_some() {
+                return value;
+            }
+        }
+        None
+    }
+
+    /// Extracts global flags from arguments
+    pub fn pick_global_flag<F>(&mut self, flag: F) -> bool
+    where
+        F: Into<Flag>,
+    {
+        let flag: Flag = flag.into();
+        for argument in flag.iter() {
+            let enabled = special_flag!(self.args, argument);
+            if enabled {
+                return enabled;
+            }
+        }
+        return false;
     }
 }

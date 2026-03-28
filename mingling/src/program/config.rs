@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub struct ProgramStdoutSetting {
     /// Output error messages
     pub error_output: bool,
@@ -15,6 +16,7 @@ impl Default for ProgramStdoutSetting {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ProgramUserContext {
     /// View help information instead of running the command
     pub help: bool,

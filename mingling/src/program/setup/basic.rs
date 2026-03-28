@@ -1,4 +1,7 @@
-use crate::program::{Program, setup::ProgramSetup};
+use crate::{
+    ProgramCollect,
+    program::{Program, setup::ProgramSetup},
+};
 
 /// Performs basic program initialization:
 ///
@@ -7,8 +10,11 @@ use crate::program::{Program, setup::ProgramSetup};
 /// - Collects `--confirm` flag to skip user confirmation
 pub struct BasicProgramSetup;
 
-impl ProgramSetup for BasicProgramSetup {
-    fn setup(program: &mut Program) {
+impl<C> ProgramSetup<C> for BasicProgramSetup
+where
+    C: ProgramCollect,
+{
+    fn setup(&mut self, program: &mut Program<C>) {
         program.global_flag(["--quiet", "-q"], |p| {
             p.stdout_setting.render_output = false;
             p.stdout_setting.error_output = false;

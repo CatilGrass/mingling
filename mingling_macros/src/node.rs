@@ -23,16 +23,6 @@ impl Parse for NodeInput {
     }
 }
 
-/// Implementation of the `node` procedural macro
-///
-/// # Examples
-///
-/// ```ignore
-/// use mingling_macros::node;
-///
-/// // Creates: Node::default().join("root").join("subcommand").join("action")
-/// let node = node!("root.subcommand.action");
-/// ```
 pub fn node(input: TokenStream) -> TokenStream {
     // Parse the input as a string literal
     let input_parsed = syn::parse_macro_input!(input as NodeInput);
