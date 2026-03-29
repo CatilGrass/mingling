@@ -52,6 +52,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mingling"
+version = "0.1.1"
+dependencies = [
+ "mingling_core",
+]
+
+[[package]]
 name = "mingling_core"
 version = "0.1.0"
 dependencies = [

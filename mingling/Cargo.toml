@@ -1,0 +1,20 @@
+[package]
+name = "mingling"
+version = "0.1.1"
+edition = "2024"
+authors = ["Weicao-CatilGrass"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+description = "A procedural command-line framework with subcommand support"
+keywords = ["cli", "framework", "procedural", "subcommand", "command-line"]
+categories = ["command-line-interface"]
+repository = "https://github.com/catilgrass/mingling"
+
+[features]
+default = ["mingling_core/default"]
+full = ["mingling_core/full"]
+macros = ["mingling_core/macros"]
+general_renderer = ["mingling_core/general_renderer"]
+
+[dependencies]
+mingling_core = { path = "../mingling_core", default-features = false }

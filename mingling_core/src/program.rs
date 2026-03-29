@@ -120,12 +120,7 @@ macro_rules! __dispatch_program_chains {
                         Box::pin(fut)
                     }
                 )*
-                _ => Box::pin(async move {
-                    mingling::AnyOutput::new(mingling::hint::NoChainFound {
-                        name: format!("{:?}", any.type_id).to_string(),
-                    })
-                    .route_chain()
-                }),
+                _ => panic!("No chain found for type id: {:?}", any.type_id),
             }
         }
     };
