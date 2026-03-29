@@ -8,6 +8,7 @@ readme = "README.md"
 description = "A procedural command-line framework with subcommand support"
 keywords = ["cli", "framework", "procedural", "subcommand", "command-line"]
 categories = ["command-line"]
+repository = "https://github.com/catilgrass/mingling"
 
 [features]
 default = ["macros"]
