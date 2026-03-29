@@ -17,4 +17,4 @@ macros = ["mingling_core/macros"]
 general_renderer = ["mingling_core/general_renderer"]
 
 [dependencies]
-mingling_core = { path = "../mingling_core", default-features = false }
+mingling_core = { version = "0.1.0", default-features = false }
