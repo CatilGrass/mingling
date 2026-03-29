@@ -20,7 +20,7 @@ pub mod hint {
 pub mod macros {
     pub use mingling_macros::chain;
     pub use mingling_macros::chain_struct;
-    pub use mingling_macros::dispatcher_chain;
+    pub use mingling_macros::dispatcher;
     pub use mingling_macros::dispatcher_render;
     pub use mingling_macros::node;
     pub use mingling_macros::program;

@@ -81,6 +81,8 @@ where
 pub trait ProgramCollect {
     fn render(any: AnyOutput, r: &mut RenderResult);
     fn do_chain(any: AnyOutput) -> Pin<Box<dyn Future<Output = ChainProcess> + Send>>;
+    fn has_renderer(any: &AnyOutput) -> bool;
+    fn has_chain(any: &AnyOutput) -> bool;
 }
 
 #[macro_export]

@@ -1,7 +1,7 @@
 use crate::{
     AnyOutput, ChainProcess, Dispatcher, Program, ProgramCollect, RenderResult,
     error::{ChainProcessError, ProgramInternalExecuteError},
-    hint::{DispatcherNotFound, NoChainFound, ProgramEnd},
+    hint::{DispatcherNotFound, NoChainFound, ProgramEnd, RendererNotFound},
 };
 
 pub mod error;
@@ -30,10 +30,33 @@ pub async fn exec<C: ProgramCollect>(
     };
 
     loop {
-        current = match handle_chain_process::<C>(C::do_chain(current).await) {
-            Ok(Next::RenderResult(render_result)) => return Ok(render_result),
-            Ok(Next::AnyOutput(any)) => any,
-            Err(e) => return Err(e),
+        current = {
+            // If a chain exists, execute as a chain
+            if C::has_chain(&current) {
+                match handle_chain_process::<C>(C::do_chain(current).await) {
+                    Ok(Next::RenderResult(render_result)) => return Ok(render_result),
+                    Ok(Next::AnyOutput(any)) => any,
+                    Err(e) => return Err(e),
+                }
+            }
+            // If no chain exists, attempt to render
+            else if C::has_renderer(&current) {
+                let mut render_result = RenderResult::default();
+                C::render(current, &mut render_result);
+                return Ok(render_result);
+            }
+            // If no renderer exists, transfer to the RendererNotFound Dispatcher for execution
+            else {
+                let disp: Box<dyn Dispatcher> = Box::new(RendererNotFound);
+                let any = match handle_chain_process::<C>(
+                    disp.begin(vec![format!("{:?}", current.type_id)]),
+                ) {
+                    Ok(Next::AnyOutput(any)) => any,
+                    Ok(Next::RenderResult(result)) => return Ok(result),
+                    Err(e) => return Err(e),
+                };
+                any
+            }
         };
         if current.is::<ProgramEnd>() || current.is::<NoChainFound>() {
             break;

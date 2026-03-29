@@ -50,3 +50,35 @@ impl Dispatcher for DispatcherNotFound {
         Box::new(DispatcherNotFound)
     }
 }
+
+/// Marker: Renderer Not Found
+///
+/// If a Chain outputs NoRendererFound to the Chain,
+/// the program will terminate directly.
+///
+/// You can implement Renderer for NoRendererFound
+/// to render relevant information when a Renderer cannot be found.
+#[cfg_attr(feature = "serde_renderer", derive(serde::Serialize))]
+pub struct NoRendererFound {
+    pub type_to_render: String,
+}
+
+#[derive(Default)]
+#[cfg_attr(feature = "serde_renderer", derive(serde::Serialize))]
+pub struct RendererNotFound;
+impl Dispatcher for RendererNotFound {
+    fn node(&self) -> crate::Node {
+        Node::default().join("_not_found")
+    }
+
+    fn begin(&self, args: Vec<String>) -> ChainProcess {
+        AnyOutput::new(NoRendererFound {
+            type_to_render: args.get(0).unwrap().clone(),
+        })
+        .route_renderer()
+    }
+
+    fn clone_dispatcher(&self) -> Box<dyn Dispatcher> {
+        Box::new(RendererNotFound)
+    }
+}

@@ -104,11 +104,19 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     let renderer_entry = quote! {
         #struct_name => #previous_type,
     };
+    let renderer_exist_entry = quote! {
+        id if id == std::any::TypeId::of::<#previous_type>() => true,
+    };
 
     let mut renderers = crate::RENDERERS.lock().unwrap();
-    let entry_str = renderer_entry.to_string();
-    if !renderers.contains(&entry_str) {
-        renderers.push(entry_str);
+    let mut renderer_exist = crate::RENDERERS_EXIST.lock().unwrap();
+    let renderer_entry_str = renderer_entry.to_string();
+    let renderer_exist_entry_str = renderer_exist_entry.to_string();
+    if !renderers.contains(&renderer_entry_str) {
+        renderers.push(renderer_entry_str);
+    }
+    if !renderer_exist.contains(&renderer_exist_entry_str) {
+        renderer_exist.push(renderer_exist_entry_str);
     }
 
     // Generate the struct and implementation

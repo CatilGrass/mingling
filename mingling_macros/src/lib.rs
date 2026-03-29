@@ -21,6 +21,8 @@ use std::sync::Mutex;
 // Global variable declarations for storing chain and renderer mappings
 pub(crate) static CHAINS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static RENDERERS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+pub(crate) static CHAINS_EXIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+pub(crate) static RENDERERS_EXIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 /// Creates a command node from a dot-separated path string.
 ///
@@ -66,7 +68,7 @@ pub fn chain_struct(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
+pub fn dispatcher(input: TokenStream) -> TokenStream {
     dispatcher_chain::dispatcher_chain(input)
 }
 
@@ -207,6 +209,8 @@ pub fn program(input: TokenStream) -> TokenStream {
 
     let renderers = RENDERERS.lock().unwrap().clone();
     let chains = CHAINS.lock().unwrap().clone();
+    let renderer_exist = RENDERERS_EXIST.lock().unwrap().clone();
+    let chain_exist = CHAINS_EXIST.lock().unwrap().clone();
 
     let renderer_tokens: Vec<proc_macro2::TokenStream> = renderers
         .iter()
@@ -214,6 +218,16 @@ pub fn program(input: TokenStream) -> TokenStream {
         .collect();
 
     let chain_tokens: Vec<proc_macro2::TokenStream> = chains
+        .iter()
+        .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
+        .collect();
+
+    let renderer_exist_tokens: Vec<proc_macro2::TokenStream> = renderer_exist
+        .iter()
+        .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
+        .collect();
+
+    let chain_exist_tokens: Vec<proc_macro2::TokenStream> = chain_exist
         .iter()
         .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
         .collect();
@@ -228,6 +242,18 @@ pub fn program(input: TokenStream) -> TokenStream {
             ::mingling::__dispatch_program_chains!(
                 #(#chain_tokens)*
             );
+            fn has_renderer(any: &::mingling::AnyOutput) -> bool {
+                match any.type_id {
+                    #(#renderer_exist_tokens)*
+                    _ => false
+                }
+            }
+            fn has_chain(any: &::mingling::AnyOutput) -> bool {
+                match any.type_id {
+                    #(#chain_exist_tokens)*
+                    _ => false
+                }
+            }
         }
 
         impl #name {
