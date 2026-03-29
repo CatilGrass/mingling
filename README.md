@@ -1,4 +1,4 @@
-# Mìng Lìng - Command
+# Mìng Lìng - 命令
 
 > [!WARNING]
 >
