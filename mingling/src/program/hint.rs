@@ -1,27 +1,5 @@
 use crate::{AnyOutput, ChainProcess, Dispatcher, Node};
 
-/// Marker: Program End
-///
-/// If a chain outputs ProgramEnd to the Chain,
-/// the program will terminate directly.
-///
-/// You can implement Renderer for ProgramEnd
-/// to render relevant information after the program ends.
-#[cfg_attr(feature = "serde_renderer", derive(serde::Serialize))]
-pub struct ProgramEnd;
-
-/// Marker: Chain Not Found
-///
-/// If a Chain or Dispatcher outputs NoChainFound to the Chain,
-/// the program will terminate directly.
-///
-/// You can implement Renderer for NoChainFound
-/// to render relevant information when a Chain cannot be found.
-#[cfg_attr(feature = "serde_renderer", derive(serde::Serialize))]
-pub struct NoChainFound {
-    pub name: String,
-}
-
 /// Marker: Dispatcher Not Found
 ///
 /// If a Dispatcher outputs NoDispatcherFound to the Chain,

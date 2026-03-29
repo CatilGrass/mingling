@@ -3,7 +3,7 @@
 use crate::{
     AnyOutput, ChainProcess, Dispatcher, Program, ProgramCollect, RenderResult,
     error::{ChainProcessError, ProgramInternalExecuteError},
-    hint::{DispatcherNotFound, NoChainFound, ProgramEnd, RendererNotFound},
+    hint::{DispatcherNotFound, RendererNotFound},
 };
 
 pub mod error;
@@ -59,7 +59,9 @@ pub async fn exec<C: ProgramCollect>(
                 }
             }
         };
-        if current.is::<ProgramEnd>() || current.is::<NoChainFound>() {
+
+        // If the dispatcher cannot find the next chain, end execution
+        if C::has_chain(&current) {
             break;
         }
     }
