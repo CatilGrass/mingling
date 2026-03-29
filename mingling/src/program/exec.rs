@@ -1,3 +1,5 @@
+#![allow(clippy::borrowed_box)]
+
 use crate::{
     AnyOutput, ChainProcess, Dispatcher, Program, ProgramCollect, RenderResult,
     error::{ChainProcessError, ProgramInternalExecuteError},
@@ -48,14 +50,13 @@ pub async fn exec<C: ProgramCollect>(
             // If no renderer exists, transfer to the RendererNotFound Dispatcher for execution
             else {
                 let disp: Box<dyn Dispatcher> = Box::new(RendererNotFound);
-                let any = match handle_chain_process::<C>(
-                    disp.begin(vec![format!("{:?}", current.type_id)]),
-                ) {
+
+                match handle_chain_process::<C>(disp.begin(vec![format!("{:?}", current.type_id)]))
+                {
                     Ok(Next::AnyOutput(any)) => any,
                     Ok(Next::RenderResult(result)) => return Ok(result),
                     Err(e) => return Err(e),
-                };
-                any
+                }
             }
         };
         if current.is::<ProgramEnd>() || current.is::<NoChainFound>() {
@@ -70,7 +71,7 @@ pub async fn exec<C: ProgramCollect>(
 fn match_user_input<C: ProgramCollect>(
     program: &Program<C>,
 ) -> Result<(&Box<dyn Dispatcher>, Vec<String>), ProgramInternalExecuteError> {
-    let nodes = get_nodes(&program);
+    let nodes = get_nodes(program);
     let command = format!("{} ", program.args.join(" "));
 
     // Find all nodes that match the command prefix
@@ -121,11 +122,9 @@ fn handle_chain_process<C: ProgramCollect>(
         Err(e) => match e {
             ChainProcessError::Broken(any_output) => {
                 let render_result = render::<C>(any_output);
-                return Ok(Next::RenderResult(render_result));
+                Ok(Next::RenderResult(render_result))
             }
-            _ => {
-                return Err(e.into());
-            }
+            _ => Err(e.into()),
         },
     }
 }

@@ -17,6 +17,7 @@ impl Default for ProgramStdoutSetting {
 }
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct ProgramUserContext {
     /// View help information instead of running the command
     pub help: bool,
@@ -25,11 +26,3 @@ pub struct ProgramUserContext {
     pub confirm: bool,
 }
 
-impl Default for ProgramUserContext {
-    fn default() -> Self {
-        ProgramUserContext {
-            help: false,
-            confirm: false,
-        }
-    }
-}

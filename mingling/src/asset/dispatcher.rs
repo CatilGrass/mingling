@@ -188,8 +188,8 @@ impl std::ops::Deref for Dispatchers {
     }
 }
 
-impl Into<Vec<Box<dyn Dispatcher + 'static>>> for Dispatchers {
-    fn into(self) -> Vec<Box<dyn Dispatcher + 'static>> {
-        self.dispatcher
+impl From<Dispatchers> for Vec<Box<dyn Dispatcher + 'static>> {
+    fn from(val: Dispatchers) -> Self {
+        val.dispatcher
     }
 }

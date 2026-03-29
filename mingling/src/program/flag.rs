@@ -143,6 +143,6 @@ where
                 return enabled;
             }
         }
-        return false;
+        false
     }
 }

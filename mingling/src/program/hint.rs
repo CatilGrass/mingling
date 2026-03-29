@@ -73,7 +73,7 @@ impl Dispatcher for RendererNotFound {
 
     fn begin(&self, args: Vec<String>) -> ChainProcess {
         AnyOutput::new(NoRendererFound {
-            type_to_render: args.get(0).unwrap().clone(),
+            type_to_render: args.first().unwrap().clone(),
         })
         .route_renderer()
     }
