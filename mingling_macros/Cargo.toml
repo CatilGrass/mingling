@@ -1,10 +1,10 @@
 [package]
 name = "mingling_macros"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/catilgrass/mingling"
-description = "Macros for the mingling library"
+description = "Macros of the mingling library"
 
 [lib]
 proc-macro = true

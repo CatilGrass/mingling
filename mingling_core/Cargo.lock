@@ -52,7 +52,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mingling"
+name = "mingling_dispatcher"
 version = "0.1.0"
 dependencies = [
  "just_fmt",
