@@ -64,7 +64,7 @@ pub fn chain_attr(item: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(item as ItemFn);
 
     // Validate the function
-    if !input_fn.sig.asyncness.is_some() {
+    if input_fn.sig.asyncness.is_none() {
         return syn::Error::new(input_fn.sig.span(), "Chain function must be async")
             .to_compile_error()
             .into();

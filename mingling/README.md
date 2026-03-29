@@ -63,20 +63,6 @@ The Mingling project consists of two main parts:
 - **[mingling/](mingling/)** - The core runtime library, containing type definitions, error handling, and basic functionality.
 - **[mingling_macros/](mingling_macros/)** - The procedural macro library, providing declarative macros to simplify development.
 
-## Next Steps
-
-You can read the following docs to learn more about the `Mingling` framework:
-
-- Check out **[mingling/README.md](mingling/README.md)** to learn about the core library.
-- Check out **[mingling_macros/README.md](mingling_macros/README.md)** to learn how to use the macro system.
-
-## Roadmap
-
-- [ ] Parallel Chains ( Parallel\<AnyOutput, AnyOutput\> )
-- [ ] General Renderers ( Json, Yaml, Toml, Ron )
-- [ ] Completion
-- [ ] ...
-
 ## License
 
 This project is licensed under the MIT License. 

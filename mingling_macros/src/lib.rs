@@ -25,13 +25,16 @@ pub(crate) static CHAINS_EXIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::n
 pub(crate) static RENDERERS_EXIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 /// Creates a command node from a dot-separated path string.
+/// The path components are automatically converted to kebab-case.
 ///
 /// # Examples
 ///
 /// ```ignore
 /// use mingling_macros::node;
 ///
-/// let node = node!("root.subcommand.action");
+/// // Creates a node representing "subcommand.action"
+/// // The components will be converted to kebab-case
+/// let node = node!("subcommand.action");
 /// ```
 #[proc_macro]
 pub fn node(input: TokenStream) -> TokenStream {
@@ -47,6 +50,10 @@ pub fn node(input: TokenStream) -> TokenStream {
 /// - `Default` (if inner type implements Default)
 /// - `AsRef<InnerType>` and `AsMut<InnerType>`
 /// - `Deref` and `DerefMut` to inner type
+/// - `Into<mingling::AnyOutput>` and `Into<mingling::ChainProcess>`
+/// - Helper methods `to_chain()` and `to_render()` for chaining operations
+///
+/// When the `serde` feature is enabled, the struct also derives `serde::Serialize`.
 ///
 /// # Examples
 ///
@@ -61,17 +68,72 @@ pub fn node(input: TokenStream) -> TokenStream {
 /// let inner: String = name.into(); // Into conversion
 /// let name2 = NameString::from("World".to_string()); // From conversion
 /// let ref_str: &String = name2.as_ref(); // AsRef
+/// let chain_process = name2.to_chain(); // Convert to ChainProcess
 /// ```
 #[proc_macro]
 pub fn chain_struct(input: TokenStream) -> TokenStream {
     chain_struct::chain_struct(input)
 }
 
+/// Creates a dispatcher chain for command execution.
+///
+/// This macro generates a dispatcher struct that implements the `Dispatcher` trait
+/// for command chain execution. It creates a dispatcher that begins a chain process
+/// with the given command name and arguments.
+///
+/// # Syntax
+///
+/// `dispatcher!("command_name", CommandStruct => ChainStruct)`
+///
+/// - `command_name`: A string literal representing the command name
+/// - `CommandStruct`: The name of the dispatcher struct to generate
+/// - `ChainStruct`: The name of the chain wrapper struct to generate
+///
+/// # Examples
+///
+/// ```ignore
+/// use mingling_macros::dispatcher;
+///
+/// // Creates a dispatcher for the "init" command
+/// dispatcher!("init", InitDispatcher => InitChain);
+///
+/// // This generates:
+/// // - A dispatcher struct `InitDispatcher` that implements `Dispatcher`
+/// // - A chain wrapper struct `InitChain` wrapping `Vec<String>`
+/// // - The dispatcher will create a chain process when invoked
+/// ```
 #[proc_macro]
 pub fn dispatcher(input: TokenStream) -> TokenStream {
     dispatcher_chain::dispatcher_chain(input)
 }
 
+/// Creates a dispatcher for rendering operations.
+///
+/// This macro generates a dispatcher struct that implements the `Dispatcher` trait
+/// for rendering operations. It creates a dispatcher that begins a render process
+/// with the given command name and arguments.
+///
+/// # Syntax
+///
+/// `dispatcher_render!("command_name", CommandStruct => ChainStruct)`
+///
+/// - `command_name`: A string literal representing the command name
+/// - `CommandStruct`: The name of the dispatcher struct to generate
+/// - `ChainStruct`: The name of the chain wrapper struct to generate
+///
+/// # Examples
+///
+/// ```ignore
+/// use mingling_macros::dispatcher_render;
+///
+/// // Creates a render dispatcher for the "show" command
+/// dispatcher_render!("show", ShowDispatcher => ShowChain);
+///
+/// // This generates:
+/// // - A dispatcher struct `ShowDispatcher` that implements `Dispatcher`
+/// // - A chain wrapper struct `ShowChain` wrapping `Vec<String>`
+/// // - The dispatcher will create a render process when invoked
+/// ```
 #[proc_macro]
 pub fn dispatcher_render(input: TokenStream) -> TokenStream {
     dispatcher_chain::dispatcher_render(input)
@@ -116,7 +178,8 @@ pub fn r_println(input: TokenStream) -> TokenStream {
 /// Attribute macro for automatically generating structs that implement the `Chain` trait.
 ///
 /// This macro transforms an async function into a struct that implements
-/// the `Chain` trait. The struct name is specified in the attribute.
+/// the `Chain` trait. The struct name is automatically generated from the function name
+/// by converting it to PascalCase.
 ///
 /// # Examples
 ///
@@ -147,7 +210,8 @@ pub fn chain(_attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Attribute macro for automatically generating structs that implement the `Renderer` trait.
 ///
 /// This macro transforms a function into a struct that implements
-/// the `Renderer` trait. The struct name is specified in the attribute.
+/// the `Renderer` trait. The struct name is automatically generated from the function name
+/// by converting it to PascalCase.
 ///
 /// # Examples
 ///
@@ -196,6 +260,8 @@ pub fn renderer(_attr: TokenStream, item: TokenStream) -> TokenStream {
 /// impl mingling::ProgramCollect for MyProgram {
 ///     mingling::__dispatch_program_renderers!(...);
 ///     mingling::__dispatch_program_chains!(...);
+///     fn has_renderer(any: &mingling::AnyOutput) -> bool { ... }
+///     fn has_chain(any: &mingling::AnyOutput) -> bool { ... }
 /// }
 /// impl MyProgram {
 ///     pub fn new() -> mingling::Program<MyProgram> {
