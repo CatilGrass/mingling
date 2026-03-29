@@ -3,8 +3,6 @@ use serde::Serialize;
 
 use crate::error::ChainProcessError;
 
-pub type ChainProcess = Result<AnyOutput, ChainProcessError>;
-
 #[derive(Debug)]
 pub struct AnyOutput {
     inner: Box<dyn std::any::Any + Send + 'static>,
@@ -48,12 +46,12 @@ impl AnyOutput {
 
     /// Route the output to the next Chain
     pub fn route_chain(self) -> ChainProcess {
-        Ok(self)
+        ChainProcess::Ok((self, Next::Chain))
     }
 
     /// Route the output to the Renderer, ending execution
     pub fn route_renderer(self) -> ChainProcess {
-        Err(ChainProcessError::Broken(self))
+        ChainProcess::Ok((self, Next::Renderer))
     }
 }
 
@@ -68,5 +66,63 @@ impl std::ops::Deref for AnyOutput {
 impl std::ops::DerefMut for AnyOutput {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.inner
+    }
+}
+
+pub enum ChainProcess {
+    Ok((AnyOutput, Next)),
+    Err(ChainProcessError),
+}
+
+pub enum Next {
+    Chain,
+    Renderer,
+}
+
+impl ChainProcess {
+    pub fn is_next(&self) -> bool {
+        matches!(self, Self::Ok(_))
+    }
+
+    pub fn is_err(&self) -> bool {
+        matches!(self, Self::Err(_))
+    }
+
+    pub fn next(&self) -> Option<&Next> {
+        match self {
+            Self::Ok((_, next)) => Some(next),
+            Self::Err(_) => None,
+        }
+    }
+
+    pub fn err(&self) -> Option<&ChainProcessError> {
+        match self {
+            Self::Ok(_) => None,
+            Self::Err(err) => Some(err),
+        }
+    }
+
+    pub fn unwrap(self) -> (AnyOutput, Next) {
+        match self {
+            Self::Ok(tuple) => tuple,
+            Self::Err(_) => panic!("called `ChainProcess2::unwrap()` on an `Error` value"),
+        }
+    }
+
+    pub fn unwrap_or(self, default: (AnyOutput, Next)) -> (AnyOutput, Next) {
+        match self {
+            Self::Ok(tuple) => tuple,
+            Self::Err(_) => default,
+        }
+    }
+
+    pub fn unwrap_or_else<F>(self, f: F) -> (AnyOutput, Next)
+    where
+        F: FnOnce(ChainProcessError) -> (AnyOutput, Next),
+    {
+        match self {
+            Self::Ok(tuple) => tuple,
+            Self::Err(err) => f(err),
+        }
     }
 }

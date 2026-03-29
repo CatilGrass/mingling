@@ -1,8 +1,8 @@
 #![allow(clippy::borrowed_box)]
 
 use crate::{
-    AnyOutput, ChainProcess, Dispatcher, Program, ProgramCollect, RenderResult,
-    error::{ChainProcessError, ProgramInternalExecuteError},
+    AnyOutput, ChainProcess, Dispatcher, Next, Program, ProgramCollect, RenderResult,
+    error::ProgramInternalExecuteError,
     hint::{DispatcherNotFound, RendererNotFound},
 };
 
@@ -25,20 +25,20 @@ pub async fn exec<C: ProgramCollect>(
 
     // Entry point
     let (dispatcher, args) = matched;
-    let mut current = match handle_chain_process::<C>(dispatcher.begin(args)) {
-        Ok(Next::RenderResult(render_result)) => return Ok(render_result),
-        Ok(Next::AnyOutput(any)) => any,
-        Err(e) => return Err(e),
+    let mut current = match dispatcher.begin(args) {
+        ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C>(any)),
+        ChainProcess::Ok((any, Next::Chain)) => any,
+        ChainProcess::Err(e) => return Err(e.into()),
     };
 
     loop {
         current = {
             // If a chain exists, execute as a chain
             if C::has_chain(&current) {
-                match handle_chain_process::<C>(C::do_chain(current).await) {
-                    Ok(Next::RenderResult(render_result)) => return Ok(render_result),
-                    Ok(Next::AnyOutput(any)) => any,
-                    Err(e) => return Err(e),
+                match C::do_chain(current).await {
+                    ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C>(any)),
+                    ChainProcess::Ok((any, Next::Chain)) => any,
+                    ChainProcess::Err(e) => return Err(e.into()),
                 }
             }
             // If no chain exists, attempt to render
@@ -51,22 +51,14 @@ pub async fn exec<C: ProgramCollect>(
             else {
                 let disp: Box<dyn Dispatcher> = Box::new(RendererNotFound);
 
-                match handle_chain_process::<C>(disp.begin(vec![format!("{:?}", current.type_id)]))
-                {
-                    Ok(Next::AnyOutput(any)) => any,
-                    Ok(Next::RenderResult(result)) => return Ok(result),
-                    Err(e) => return Err(e),
+                match disp.begin(vec![format!("{:?}", current.type_id)]) {
+                    ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C>(any)),
+                    ChainProcess::Ok((any, Next::Chain)) => any,
+                    ChainProcess::Err(e) => return Err(e.into()),
                 }
             }
         };
-
-        // If the dispatcher cannot find the next chain, end execution
-        if C::has_chain(&current) {
-            break;
-        }
     }
-
-    Ok(RenderResult::default())
 }
 
 /// Match user input against registered dispatchers and return the matched dispatcher and remaining arguments.
@@ -116,21 +108,6 @@ fn render<C: ProgramCollect>(any: AnyOutput) -> RenderResult {
     render_result
 }
 
-fn handle_chain_process<C: ProgramCollect>(
-    process: ChainProcess,
-) -> Result<Next, ProgramInternalExecuteError> {
-    match process {
-        Ok(any) => Ok(Next::AnyOutput(any)),
-        Err(e) => match e {
-            ChainProcessError::Broken(any_output) => {
-                let render_result = render::<C>(any_output);
-                Ok(Next::RenderResult(render_result))
-            }
-            _ => Err(e.into()),
-        },
-    }
-}
-
 // Get all registered dispatcher names from the program
 fn get_nodes<C: ProgramCollect>(program: &Program<C>) -> Vec<(String, &Box<dyn Dispatcher>)> {
     program
@@ -146,9 +123,4 @@ fn get_nodes<C: ProgramCollect>(program: &Program<C>) -> Vec<(String, &Box<dyn D
             (node_str, disp)
         })
         .collect()
-}
-
-enum Next {
-    RenderResult(RenderResult),
-    AnyOutput(AnyOutput),
 }
