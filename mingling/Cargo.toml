@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 description = "A procedural command-line framework with subcommand support"
 keywords = ["cli", "framework", "procedural", "subcommand", "command-line"]
-categories = ["command-line"]
+categories = ["command-line-interface"]
 repository = "https://github.com/catilgrass/mingling"
 
 [features]
@@ -16,7 +16,7 @@ macros = ["mingling_macros"]
 serde_renderer = ["dep:serde", "mingling_macros/serde"]
 
 [dependencies]
-mingling_macros = { path = "../mingling_macros", optional = true }
+mingling_macros = { version = "0.1.0", optional = true }
 just_fmt = "0.1.2"
 serde = { version = "1.0", features = ["derive"], optional = true }
 thiserror = "2"
