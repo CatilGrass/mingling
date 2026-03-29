@@ -16,8 +16,7 @@ impl Default for ProgramStdoutSetting {
     }
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct ProgramUserContext {
     /// View help information instead of running the command
     pub help: bool,
@@ -25,4 +24,3 @@ pub struct ProgramUserContext {
     /// Skip user confirmation step
     pub confirm: bool,
 }
-

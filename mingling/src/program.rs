@@ -65,15 +65,14 @@ where
         };
 
         // Render result
-        if stdout_setting.render_output
-            && !result.is_empty() {
-                print!("{}", result);
-                if let Err(e) = tokio::io::stdout().flush().await
-                    && stdout_setting.error_output
-                {
-                    eprintln!("{}", e);
-                }
+        if stdout_setting.render_output && !result.is_empty() {
+            print!("{}", result);
+            if let Err(e) = tokio::io::stdout().flush().await
+                && stdout_setting.error_output
+            {
+                eprintln!("{}", e);
             }
+        }
     }
 }
 

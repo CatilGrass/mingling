@@ -38,7 +38,9 @@ impl From<ChainProcessError> for ProgramInternalExecuteError {
         match value {
             ChainProcessError::Other(s) => ProgramInternalExecuteError::Other(s),
             ChainProcessError::IO(error) => ProgramInternalExecuteError::IO(error),
-            ChainProcessError::Broken(_) => ProgramInternalExecuteError::Other("Broken".to_string()),
+            ChainProcessError::Broken(_) => {
+                ProgramInternalExecuteError::Other("Broken".to_string())
+            }
         }
     }
 }
