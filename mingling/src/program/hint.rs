@@ -7,13 +7,13 @@ use crate::{AnyOutput, ChainProcess, Dispatcher, Node};
 ///
 /// You can implement Renderer for NoDispatcherFound
 /// to render relevant information when a Dispatcher cannot be found.
-#[cfg_attr(feature = "serde_renderer", derive(serde::Serialize))]
+#[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
 pub struct NoDispatcherFound {
     pub args: Vec<String>,
 }
 
 #[derive(Default)]
-#[cfg_attr(feature = "serde_renderer", derive(serde::Serialize))]
+#[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
 pub struct DispatcherNotFound;
 impl Dispatcher for DispatcherNotFound {
     fn node(&self) -> crate::Node {
@@ -36,13 +36,13 @@ impl Dispatcher for DispatcherNotFound {
 ///
 /// You can implement Renderer for NoRendererFound
 /// to render relevant information when a Renderer cannot be found.
-#[cfg_attr(feature = "serde_renderer", derive(serde::Serialize))]
+#[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
 pub struct NoRendererFound {
     pub type_to_render: String,
 }
 
 #[derive(Default)]
-#[cfg_attr(feature = "serde_renderer", derive(serde::Serialize))]
+#[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
 pub struct RendererNotFound;
 impl Dispatcher for RendererNotFound {
     fn node(&self) -> crate::Node {

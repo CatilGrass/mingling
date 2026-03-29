@@ -1,4 +1,4 @@
-#[cfg(feature = "serde_renderer")]
+#[cfg(feature = "general_renderer")]
 use serde::Serialize;
 
 use crate::error::ChainProcessError;
@@ -12,7 +12,7 @@ pub struct AnyOutput {
 }
 
 impl AnyOutput {
-    #[cfg(feature = "serde_renderer")]
+    #[cfg(feature = "general_renderer")]
     pub fn new<T>(value: T) -> Self
     where
         T: Send + Serialize + 'static,
@@ -23,7 +23,7 @@ impl AnyOutput {
         }
     }
 
-    #[cfg(not(feature = "serde_renderer"))]
+    #[cfg(not(feature = "general_renderer"))]
     pub fn new<T>(value: T) -> Self
     where
         T: Send + 'static,

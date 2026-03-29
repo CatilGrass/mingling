@@ -84,6 +84,7 @@ pub trait ProgramCollect {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! __dispatch_program_renderers {
     (
         $( $render_ty:ty => $prev_ty:ty, )*
@@ -103,6 +104,7 @@ macro_rules! __dispatch_program_renderers {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! __dispatch_program_chains {
     (
         $( $chain_ty:ty => $chain_prev:ty, )*

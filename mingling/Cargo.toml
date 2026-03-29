@@ -11,9 +11,10 @@ categories = ["command-line-interface"]
 repository = "https://github.com/catilgrass/mingling"
 
 [features]
+full = ["macros", "general_renderer"]
 default = ["macros"]
 macros = ["mingling_macros"]
-serde_renderer = ["dep:serde", "mingling_macros/serde"]
+general_renderer = ["dep:serde", "mingling_macros/serde"]
 
 [dependencies]
 mingling_macros = { version = "0.1.0", optional = true }
