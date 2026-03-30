@@ -48,6 +48,7 @@ impl std::ops::Deref for Flag {
     }
 }
 
+#[macro_export]
 macro_rules! special_flag {
     ($args:expr, $flag:expr) => {{
         let flag = $flag;
@@ -57,6 +58,7 @@ macro_rules! special_flag {
     }};
 }
 
+#[macro_export]
 macro_rules! special_argument {
     ($args:expr, $flag:expr) => {{
         let flag = $flag;

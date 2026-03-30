@@ -10,11 +10,18 @@ keywords = ["cli", "framework", "procedural", "subcommand", "command-line"]
 categories = ["command-line-interface"]
 repository = "https://github.com/catilgrass/mingling"
 
+[dev-dependencies]
+mingling = { path = ".", features = ["full"] }
+
 [features]
 default = ["mingling_core/default"]
-full = ["mingling_core/full"]
+full = ["mingling_core/full", "general_renderer", "macros", "parser"]
+general_renderer = ["mingling_core/general_renderer", "dep:serde"]
 macros = ["mingling_core/macros"]
-general_renderer = ["mingling_core/general_renderer"]
+
+parser = ["dep:size"]
 
 [dependencies]
-mingling_core = { version = "0.1.0", default-features = false }
+mingling_core = { path = "../mingling_core", default-features = false }
+serde = { version = "1.0", features = ["derive"], optional = true }
+size = { version = "0.5", optional = true }
