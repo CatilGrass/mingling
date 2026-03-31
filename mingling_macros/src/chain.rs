@@ -125,13 +125,17 @@ pub fn chain_attr(item: TokenStream) -> TokenStream {
     let chain_entry = quote! {
         #struct_name => #previous_type,
     };
+
     let chain_exist_entry = quote! {
         id if id == std::any::TypeId::of::<#previous_type>() => true,
     };
+
     let mut chains = crate::CHAINS.lock().unwrap();
     let mut chain_exist = crate::CHAINS_EXIST.lock().unwrap();
+
     let chain_entry = chain_entry.to_string();
     let chain_exist_entry = chain_exist_entry.to_string();
+
     if !chains.contains(&chain_entry) {
         chains.push(chain_entry);
     }
