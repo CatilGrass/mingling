@@ -93,7 +93,9 @@ macro_rules! __dispatch_program_renderers {
             match any.type_id {
                 $(
                     id if id == std::any::TypeId::of::<$prev_ty>() => {
-                        let value = any.downcast::<$prev_ty>().unwrap();
+                        // SAFETY: The `type_id` check ensures that `any` contains a value of type `$chain_prev`,
+                        // so downcasting to `$chain_prev` is safe.
+                        let value = unsafe { any.downcast::<$prev_ty>().unwrap_unchecked() };
                         <$render_ty as mingling::Renderer>::render(value, r);
                     }
                 )*
@@ -115,7 +117,9 @@ macro_rules! __dispatch_program_chains {
             match any.type_id {
                 $(
                     id if id == std::any::TypeId::of::<$chain_prev>() => {
-                        let value = any.downcast::<$chain_prev>().unwrap();
+                        // SAFETY: The `type_id` check ensures that `any` contains a value of type `$chain_prev`,
+                        // so downcasting to `$chain_prev` is safe.
+                        let value = unsafe { any.downcast::<$chain_prev>().unwrap_unchecked() };
                         let fut = async { <$chain_ty as mingling::Chain>::proc(value).await };
                         Box::pin(fut)
                     }
