@@ -4,6 +4,12 @@ pub struct Flag {
     vec: Vec<&'static str>,
 }
 
+impl From<()> for Flag {
+    fn from(_: ()) -> Self {
+        Flag { vec: vec![] }
+    }
+}
+
 impl From<&'static str> for Flag {
     fn from(s: &'static str) -> Self {
         Flag { vec: vec![s] }
