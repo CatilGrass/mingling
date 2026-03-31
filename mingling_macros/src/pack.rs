@@ -1,6 +1,6 @@
 //! Chain Struct Macro Implementation
 //!
-//! This module provides the `chain_struct!` macro for creating wrapper types
+//! This module provides the `pack!` macro for creating wrapper types
 //! with automatic implementations of common traits.
 
 use proc_macro::TokenStream;
@@ -9,29 +9,29 @@ use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as SynResult, Token, Type};
 
 /// Parses input in the format: `TypeName = InnerType`
-struct ChainStructInput {
+struct PackInput {
     type_name: Ident,
     inner_type: Type,
 }
 
-impl Parse for ChainStructInput {
+impl Parse for PackInput {
     fn parse(input: ParseStream) -> SynResult<Self> {
         let type_name = input.parse()?;
         input.parse::<Token![=]>()?;
         let inner_type = input.parse()?;
 
-        Ok(ChainStructInput {
+        Ok(PackInput {
             type_name,
             inner_type,
         })
     }
 }
 
-pub fn chain_struct(input: TokenStream) -> TokenStream {
-    let ChainStructInput {
+pub fn pack(input: TokenStream) -> TokenStream {
+    let PackInput {
         type_name,
         inner_type,
-    } = syn::parse_macro_input!(input as ChainStructInput);
+    } = syn::parse_macro_input!(input as PackInput);
 
     // Generate the struct definition
     #[cfg(not(feature = "serde"))]

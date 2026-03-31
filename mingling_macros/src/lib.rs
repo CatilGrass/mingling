@@ -9,9 +9,9 @@ use quote::quote;
 use syn::parse_macro_input;
 
 mod chain;
-mod chain_struct;
 mod dispatcher_chain;
 mod node;
+mod pack;
 mod render;
 mod renderer;
 
@@ -58,10 +58,10 @@ pub fn node(input: TokenStream) -> TokenStream {
 /// # Examples
 ///
 /// ```ignore
-/// use mingling_macros::chain_struct;
+/// use mingling_macros::pack;
 ///
 /// // Creates a wrapper type around String
-/// chain_struct!(NameString = String);
+/// pack!(NameString = String);
 ///
 /// // Usage:
 /// let name = NameString::new("Hello".to_string());
@@ -71,8 +71,8 @@ pub fn node(input: TokenStream) -> TokenStream {
 /// let chain_process = name2.to_chain(); // Convert to ChainProcess
 /// ```
 #[proc_macro]
-pub fn chain_struct(input: TokenStream) -> TokenStream {
-    chain_struct::chain_struct(input)
+pub fn pack(input: TokenStream) -> TokenStream {
+    pack::pack(input)
 }
 
 /// Creates a dispatcher chain for command execution.
@@ -83,11 +83,11 @@ pub fn chain_struct(input: TokenStream) -> TokenStream {
 ///
 /// # Syntax
 ///
-/// `dispatcher!("command_name", CommandStruct => ChainStruct)`
+/// `dispatcher!("command_name", CommandStruct => Packed)`
 ///
 /// - `command_name`: A string literal representing the command name
 /// - `CommandStruct`: The name of the dispatcher struct to generate
-/// - `ChainStruct`: The name of the chain wrapper struct to generate
+/// - `Packed`: The name of the chain wrapper struct to generate
 ///
 /// # Examples
 ///
@@ -115,11 +115,11 @@ pub fn dispatcher(input: TokenStream) -> TokenStream {
 ///
 /// # Syntax
 ///
-/// `dispatcher_render!("command_name", CommandStruct => ChainStruct)`
+/// `dispatcher_render!("command_name", CommandStruct => Packed)`
 ///
 /// - `command_name`: A string literal representing the command name
 /// - `CommandStruct`: The name of the dispatcher struct to generate
-/// - `ChainStruct`: The name of the chain wrapper struct to generate
+/// - `Packed`: The name of the chain wrapper struct to generate
 ///
 /// # Examples
 ///
