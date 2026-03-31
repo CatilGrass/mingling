@@ -3,7 +3,6 @@ use mingling_core::Flag;
 
 pub mod builtin;
 
-#[doc(hidden)]
 pub struct Picker {
     pub args: Argument,
 }
@@ -103,6 +102,7 @@ define_pick_structs! { Pick9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T
 define_pick_structs! { Pick10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
 define_pick_structs! { Pick11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
 define_pick_structs! { Pick12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11, T12 val_12 }
+
 impl_pick_structs! { Pick1 Pick2 val_2 T1 val_1 }
 impl_pick_structs! { Pick2 Pick3 val_3 T1 val_1, T2 val_2 }
 impl_pick_structs! { Pick3 Pick4 val_4 T1 val_1, T2 val_2, T3 val_3 }

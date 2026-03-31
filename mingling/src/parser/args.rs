@@ -1,5 +1,8 @@
+use std::mem::replace;
+
 use mingling_core::{Flag, special_argument, special_flag};
 
+#[derive(Debug, Default)]
 pub struct Argument {
     vec: Vec<String>,
 }
@@ -91,5 +94,11 @@ impl Argument {
             }
         }
         false
+    }
+
+    /// Dump all remaining arguments
+    pub fn dump_remains(&mut self) -> Vec<String> {
+        let new = Vec::new();
+        replace(&mut self.vec, new)
     }
 }

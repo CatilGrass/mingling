@@ -1,6 +1,6 @@
 use size::Size;
 
-use crate::parser::Pickable;
+use crate::parser::{Argument, Pickable};
 
 impl Pickable for String {
     type Output = String;
@@ -49,5 +49,16 @@ impl Pickable for usize {
             Ok(size) => Some(size.bytes() as usize),
             Err(_) => None,
         }
+    }
+}
+
+impl Pickable for Argument {
+    type Output = Argument;
+
+    fn pick(
+        args: &mut crate::parser::Argument,
+        _flag: mingling_core::Flag,
+    ) -> Option<Self::Output> {
+        Some(args.dump_remains().into())
     }
 }
