@@ -88,6 +88,8 @@ where
 
 pub trait ProgramCollect {
     type Enum: Display;
+    fn build_renderer_not_found(member_id: Self::Enum) -> AnyOutput<Self::Enum>;
+    fn build_dispatcher_not_found(args: Vec<String>) -> AnyOutput<Self::Enum>;
     fn render(any: AnyOutput<Self::Enum>, r: &mut RenderResult);
     fn do_chain(
         any: AnyOutput<Self::Enum>,

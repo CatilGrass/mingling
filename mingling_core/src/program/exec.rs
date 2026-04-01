@@ -28,7 +28,7 @@ where
         }
         Err(ProgramInternalExecuteError::DispatcherNotFound) => {
             // No matching Dispatcher is found
-            return Err(ProgramInternalExecuteError::DispatcherNotFound);
+            current = C::build_dispatcher_not_found(program.args);
         }
         Err(e) => return Err(e),
     };
@@ -51,8 +51,7 @@ where
             }
             // No renderer exists
             else {
-                let renderer_name = current.member_id.to_string();
-                return Err(ProgramInternalExecuteError::RendererNotFound(renderer_name));
+                C::build_renderer_not_found(current.member_id)
             }
         };
     }

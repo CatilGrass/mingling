@@ -73,7 +73,11 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
         parse_macro_input!(input as Ident)
     };
 
-    let packed_types = PACKED_TYPES.lock().unwrap().clone();
+    let mut packed_types = PACKED_TYPES.lock().unwrap().clone();
+    packed_types.push("DispatcherNotFound".to_string());
+    packed_types.push("RendererNotFound".to_string());
+    packed_types.sort();
+    packed_types.dedup();
     let renderers = RENDERERS.lock().unwrap().clone();
     let chains = CHAINS.lock().unwrap().clone();
     let renderer_exist = RENDERERS_EXIST.lock().unwrap().clone();
@@ -113,8 +117,6 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
         pub enum #name {
             #[default]
             __FallBack,
-            DispatcherNotFound,
-            RendererNotFound,
             #(#packed_types),*
         }
 
@@ -122,12 +124,6 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
             fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
                 match self {
                     #name::__FallBack => write!(f, "__FallBack"),
-                    #name::DispatcherNotFound => {
-                        write!(f, "DispatcherNotFound")
-                    }
-                    #name::RendererNotFound => {
-                        write!(f, "RendererNotFound")
-                    }
                     #(#name::#packed_types => write!(f, stringify!(#packed_types)),)*
                 }
             }
@@ -135,6 +131,12 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
 
         impl ::mingling::ProgramCollect for #name {
             type Enum = #name;
+            fn build_renderer_not_found(member_id: Self::Enum) -> ::mingling::AnyOutput<Self::Enum> {
+                ::mingling::AnyOutput::new(RendererNotFound::new(member_id.to_string()))
+            }
+            fn build_dispatcher_not_found(args: Vec<String>) -> ::mingling::AnyOutput<Self::Enum> {
+                ::mingling::AnyOutput::new(DispatcherNotFound::new(args))
+            }
             ::mingling::__dispatch_program_renderers!(
                 #(#renderer_tokens)*
             );
