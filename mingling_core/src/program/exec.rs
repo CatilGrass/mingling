@@ -15,6 +15,7 @@ where
     G: Display,
 {
     let mut current;
+    let mut stop_next = false;
 
     // Match user input
     match match_user_input(&program) {
@@ -34,6 +35,8 @@ where
     };
 
     loop {
+        let final_exec = stop_next;
+
         current = {
             // If a chain exists, execute as a chain
             if C::has_chain(&current) {
@@ -51,10 +54,16 @@ where
             }
             // No renderer exists
             else {
+                stop_next = true;
                 C::build_renderer_not_found(current.member_id)
             }
         };
+
+        if final_exec && stop_next {
+            break;
+        }
     }
+    Ok(RenderResult::default())
 }
 
 /// Match user input against registered dispatchers and return the matched dispatcher and remaining arguments.
