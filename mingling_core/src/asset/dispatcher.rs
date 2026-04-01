@@ -2,12 +2,22 @@ use std::fmt::Display;
 
 use crate::{ChainProcess, Program, asset::node::Node};
 
+/// Dispatches user input commands to specific [ChainProcess](./enum.ChainProcess.html)
+///
+/// Note: If you are using [mingling_macros](https://crates.io/crates/mingling_macros),
+/// you can use the `dispatcher!("node.subnode", CommandType => Entry)` macro to declare a `Dispatcher`
 pub trait Dispatcher<G>
 where
     G: Display,
 {
+    /// Returns a command node for matching user input
     fn node(&self) -> Node;
+
+    /// Returns a [ChainProcess](./enum.ChainProcess.html) based on user input arguments,
+    /// to be sent to the specific invocation
     fn begin(&self, args: Vec<String>) -> ChainProcess<G>;
+
+    /// Clones the current dispatcher for implementing the `Clone` trait
     fn clone_dispatcher(&self) -> Box<dyn Dispatcher<G>>;
 }
 
@@ -39,6 +49,16 @@ impl<C: crate::program::ProgramCollect, G: Display> Program<C, G> {
     }
 }
 
+/// A collection of dispatchers.
+///
+/// This struct holds a vector of boxed `Dispatcher` trait objects,
+/// allowing multiple dispatchers to be grouped together and passed
+/// to the program via `Program::with_dispatchers`.
+/// A collection of dispatchers.
+///
+/// This struct holds a vector of boxed `Dispatcher` trait objects,
+/// allowing multiple dispatchers to be grouped together and passed
+/// to the program via `Program::with_dispatchers`.
 pub struct Dispatchers<G> {
     dispatcher: Vec<Box<dyn Dispatcher<G> + 'static>>,
 }

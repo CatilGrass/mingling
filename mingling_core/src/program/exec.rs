@@ -7,6 +7,7 @@ use crate::{
     error::ProgramInternalExecuteError,
 };
 
+#[doc(hidden)]
 pub mod error;
 
 pub async fn exec<C, G>(program: Program<C, G>) -> Result<RenderResult, ProgramInternalExecuteError>

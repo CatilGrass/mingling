@@ -2,6 +2,45 @@ use std::fmt::Display;
 
 use crate::{Program, ProgramCollect};
 
+/// A wrapper for a collection of static string slices representing command-line flags or arguments.
+///
+/// `Flag` is used to store one or more static string slices (e.g., `["-h", "--help"]`) that
+/// represent command-line flags or arguments. It provides conversions from various input types
+/// (like a single `&'static str`, a slice, or an array) and dereferences to a slice of strings
+/// for easy iteration and access.
+///
+/// # Examples
+///
+/// ```
+/// use mingling_core::Flag;
+///
+/// // Create a Flag from a single string slice
+/// let flag1 = Flag::from("-h");
+/// assert_eq!(flag1.as_ref(), &["-h"]);
+///
+/// // Create a Flag from a slice of string slices
+/// let flag2 = Flag::from(&["-h", "--help"][..]);
+/// assert_eq!(flag2.as_ref(), &["-h", "--help"]);
+///
+/// // Create a Flag from an array
+/// let flag3 = Flag::from(["-v", "--verbose"]);
+/// assert_eq!(flag3.as_ref(), &["-v", "--verbose"]);
+///
+/// // Create a Flag from a reference to an array
+/// let arr = &["-f", "--file"];
+/// let flag4 = Flag::from(arr);
+/// assert_eq!(flag4.as_ref(), &["-f", "--file"]);
+///
+/// // Create an empty Flag from unit type
+/// let flag5 = Flag::from(());
+/// assert_eq!(flag5.as_ref(), &[] as &[&str]);
+///
+/// // Dereference to slice for iteration
+/// let flag = Flag::from(["-a", "-b"]);
+/// for arg in flag.iter() {
+///     println!("Flag: {}", arg);
+/// }
+/// ```
 pub struct Flag {
     vec: Vec<&'static str>,
 }
@@ -57,6 +96,7 @@ impl std::ops::Deref for Flag {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! special_flag {
     ($args:expr, $flag:expr) => {{
         let flag = $flag;
@@ -67,6 +107,7 @@ macro_rules! special_flag {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! special_argument {
     ($args:expr, $flag:expr) => {{
         let flag = $flag;

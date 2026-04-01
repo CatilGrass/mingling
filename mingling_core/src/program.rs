@@ -4,7 +4,9 @@ use crate::{
 };
 use std::{env, fmt::Display, pin::Pin};
 
+#[doc(hidden)]
 pub mod exec;
+#[doc(hidden)]
 pub mod setup;
 
 mod config;
@@ -14,6 +16,7 @@ mod flag;
 pub use flag::*;
 use tokio::io::AsyncWriteExt;
 
+/// Program, used to define the behavior of the entire command-line program
 #[derive(Default)]
 pub struct Program<C, G>
 where
@@ -86,15 +89,31 @@ where
     }
 }
 
+/// Collected program context
+///
+/// Note: It is recommended to use the `gen_program!()` macro from [mingling_macros](https://crates.io/crates/mingling_macros) to automatically create this type
 pub trait ProgramCollect {
+    /// Enum type representing internal IDs for the program
     type Enum: Display;
+
+    /// Build an [AnyOutput](./struct.AnyOutput.html) to indicate that a renderer was not found
     fn build_renderer_not_found(member_id: Self::Enum) -> AnyOutput<Self::Enum>;
+
+    /// Build an [AnyOutput](./struct.AnyOutput.html) to indicate that a dispatcher was not found
     fn build_dispatcher_not_found(args: Vec<String>) -> AnyOutput<Self::Enum>;
+
+    /// Render the input [AnyOutput](./struct.AnyOutput.html)
     fn render(any: AnyOutput<Self::Enum>, r: &mut RenderResult);
+
+    /// Find a matching chain to continue execution based on the input [AnyOutput](./struct.AnyOutput.html), returning a new [AnyOutput](./struct.AnyOutput.html)
     fn do_chain(
         any: AnyOutput<Self::Enum>,
     ) -> Pin<Box<dyn Future<Output = ChainProcess<Self::Enum>> + Send>>;
+
+    /// Whether the program has a renderer that can handle the current [AnyOutput](./struct.AnyOutput.html)
     fn has_renderer(any: &AnyOutput<Self::Enum>) -> bool;
+
+    /// Whether the program has a chain that can handle the current [AnyOutput](./struct.AnyOutput.html)
     fn has_chain(any: &AnyOutput<Self::Enum>) -> bool;
 }
 

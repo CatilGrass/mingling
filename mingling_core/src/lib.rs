@@ -1,28 +1,43 @@
+//! Mingling Core
+//!
+//! # Intro
+//! This crate is the core implementation of `mingling`, containing the complete logic for command dispatching, execution, and rendering.
+//!
+//! # Note
+//! It is not recommended to use [mingling_core](https://crates.io/crates/mingling_core) directly, as this will lose the code generation functionality of [mingling_macros](https://crates.io/crates/mingling_macros).
+//!
+//! Recommended to import [mingling](https://crates.io/crates/mingling) to use its features.
+
 mod any;
+mod asset;
+mod markers;
+mod program;
+mod renderer;
+
 pub use crate::any::group::*;
 pub use crate::any::*;
 
-mod markers;
-pub mod marker {
-    pub use crate::markers::group_process::*;
-}
+pub use crate::asset::chain::*;
+pub use crate::asset::dispatcher::*;
+pub use crate::asset::node::*;
+pub use crate::asset::renderer::*;
 
+/// All error types of `Mingling`
 pub mod error {
     pub use crate::asset::chain::error::*;
     pub use crate::exec::error::*;
 }
 
-mod program;
 pub use crate::program::*;
+
+pub use crate::renderer::render_result::*;
+
+/// All marker types of `Mingling` that serve no practical purpose
+pub mod marker {
+    pub use crate::markers::group_process::*;
+}
+
+/// `Mingling`'s Program initialization system
 pub mod setup {
     pub use crate::program::setup::*;
 }
-
-mod renderer;
-
-mod asset;
-pub use crate::asset::chain::*;
-pub use crate::asset::dispatcher::*;
-pub use crate::asset::node::*;
-pub use crate::asset::renderer::*;
-pub use crate::renderer::render_result::*;
