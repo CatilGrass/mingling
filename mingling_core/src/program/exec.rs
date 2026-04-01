@@ -68,6 +68,7 @@ where
 }
 
 /// Match user input against registered dispatchers and return the matched dispatcher and remaining arguments.
+#[allow(clippy::type_complexity)]
 fn match_user_input<C, G>(
     program: &Program<C, G>,
 ) -> Result<(&Box<dyn Dispatcher<G>>, Vec<String>), ProgramInternalExecuteError>
