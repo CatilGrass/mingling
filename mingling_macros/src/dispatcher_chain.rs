@@ -8,53 +8,123 @@ use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as SynResult, Token};
 
-/// Parses input in the format: `"command_name", CommandStruct => ChainStruct`
-struct DispatcherChainInput {
-    command_name: syn::LitStr,
-    command_struct: Ident,
-    pack: Ident,
+enum DispatcherChainInput {
+    Explicit {
+        group_name: Ident,
+        command_name: syn::LitStr,
+        command_struct: Ident,
+        pack: Ident,
+    },
+    Default {
+        command_name: syn::LitStr,
+        command_struct: Ident,
+        pack: Ident,
+    },
 }
 
 impl Parse for DispatcherChainInput {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        let command_name = input.parse()?;
-        input.parse::<Token![,]>()?;
-        let command_struct = input.parse()?;
-        input.parse::<Token![=>]>()?;
-        let pack = input.parse()?;
+        let lookahead = input.lookahead1();
 
-        Ok(DispatcherChainInput {
-            command_name,
-            command_struct,
-            pack,
-        })
+        if lookahead.peek(Ident) && input.peek2(Token![,]) && input.peek3(syn::LitStr) {
+            let group_name = input.parse()?;
+            input.parse::<Token![,]>()?;
+            let command_name = input.parse()?;
+            input.parse::<Token![,]>()?;
+            let command_struct = input.parse()?;
+            input.parse::<Token![=>]>()?;
+            let pack = input.parse()?;
+
+            Ok(DispatcherChainInput::Explicit {
+                group_name,
+                command_name,
+                command_struct,
+                pack,
+            })
+        } else if lookahead.peek(syn::LitStr) {
+            // Default format: "command_name", CommandStruct => ChainStruct
+            let command_name = input.parse()?;
+            input.parse::<Token![,]>()?;
+            let command_struct = input.parse()?;
+            input.parse::<Token![=>]>()?;
+            let pack = input.parse()?;
+
+            Ok(DispatcherChainInput::Default {
+                command_name,
+                command_struct,
+                pack,
+            })
+        } else {
+            Err(lookahead.error())
+        }
     }
 }
 
 pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
-    let DispatcherChainInput {
-        command_name,
-        command_struct,
-        pack,
-    } = syn::parse_macro_input!(input as DispatcherChainInput);
+    // Parse the input
+    let dispatcher_input = syn::parse_macro_input!(input as DispatcherChainInput);
+
+    // Determine if we're using default or explicit group
+    let (group_name, command_name, command_struct, pack, use_default) = match dispatcher_input {
+        DispatcherChainInput::Explicit {
+            group_name,
+            command_name,
+            command_struct,
+            pack,
+        } => (group_name, command_name, command_struct, pack, false),
+        DispatcherChainInput::Default {
+            command_name,
+            command_struct,
+            pack,
+        } => (
+            Ident::new("DefaultProgram", proc_macro2::Span::call_site()),
+            command_name,
+            command_struct,
+            pack,
+            true,
+        ),
+    };
 
     let command_name_str = command_name.value();
 
-    let expanded = quote! {
-        #[derive(Debug, Default)]
-        pub struct #command_struct;
+    let expanded = if use_default {
+        // For default case, use DefaultProgram
+        quote! {
+            #[derive(Debug, Default)]
+            pub struct #command_struct;
 
-        ::mingling::macros::pack!(#pack = Vec<String>);
+            ::mingling::macros::pack!(DefaultProgram, #pack = Vec<String>);
 
-        impl ::mingling::Dispatcher for #command_struct {
-            fn node(&self) -> ::mingling::Node {
-                ::mingling::macros::node!(#command_name_str)
+            impl ::mingling::Dispatcher<DefaultProgram> for #command_struct {
+                fn node(&self) -> ::mingling::Node {
+                    ::mingling::macros::node!(#command_name_str)
+                }
+                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess<DefaultProgram> {
+                    #pack::new(args).to_chain()
+                }
+                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher<DefaultProgram>> {
+                    Box::new(#command_struct)
+                }
             }
-            fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess {
-                #pack::new(args).to_chain()
-            }
-            fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher> {
-                Box::new(#command_struct)
+        }
+    } else {
+        // For explicit case, use the provided group_name
+        quote! {
+            #[derive(Debug, Default)]
+            pub struct #command_struct;
+
+            ::mingling::macros::pack!(#group_name, #pack = Vec<String>);
+
+            impl ::mingling::Dispatcher<#group_name> for #command_struct {
+                fn node(&self) -> ::mingling::Node {
+                    ::mingling::macros::node!(#command_name_str)
+                }
+                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess<#group_name> {
+                    #pack::new(args).to_chain()
+                }
+                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher<#group_name>> {
+                    Box::new(#command_struct)
+                }
             }
         }
     };
@@ -63,29 +133,70 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
 }
 
 pub fn dispatcher_render(input: TokenStream) -> TokenStream {
-    let DispatcherChainInput {
-        command_name,
-        command_struct,
-        pack,
-    } = syn::parse_macro_input!(input as DispatcherChainInput);
+    // Parse the input
+    let dispatcher_input = syn::parse_macro_input!(input as DispatcherChainInput);
+
+    // Determine if we're using default or explicit group
+    let (group_name, command_name, command_struct, pack, use_default) = match dispatcher_input {
+        DispatcherChainInput::Explicit {
+            group_name,
+            command_name,
+            command_struct,
+            pack,
+        } => (group_name, command_name, command_struct, pack, false),
+        DispatcherChainInput::Default {
+            command_name,
+            command_struct,
+            pack,
+        } => (
+            Ident::new("DefaultProgram", proc_macro2::Span::call_site()),
+            command_name,
+            command_struct,
+            pack,
+            true,
+        ),
+    };
 
     let command_name_str = command_name.value();
 
-    let expanded = quote! {
-        #[derive(Debug, Default)]
-        pub struct #command_struct;
+    let expanded = if use_default {
+        // For default case, use DefaultProgram
+        quote! {
+            #[derive(Debug, Default)]
+            pub struct #command_struct;
 
-        ::mingling::macros::pack!(#pack = Vec<String>);
+            ::mingling::macros::pack!(DefaultProgram, #pack = Vec<String>);
 
-        impl ::mingling::Dispatcher for #command_struct {
-            fn node(&self) -> ::mingling::Node {
-                ::mingling::macros::node!(#command_name_str)
+            impl ::mingling::Dispatcher for #command_struct {
+                fn node(&self) -> ::mingling::Node {
+                    ::mingling::macros::node!(#command_name_str)
+                }
+                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess {
+                    #pack::new(args).to_render()
+                }
+                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher> {
+                    Box::new(#command_struct)
+                }
             }
-            fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess {
-                #pack::new(args).to_render()
-            }
-            fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher> {
-                Box::new(#command_struct)
+        }
+    } else {
+        // For explicit case, use the provided group_name
+        quote! {
+            #[derive(Debug, Default)]
+            pub struct #command_struct;
+
+            ::mingling::macros::pack!(#group_name, #pack = Vec<String>);
+
+            impl ::mingling::Dispatcher for #command_struct {
+                fn node(&self) -> ::mingling::Node {
+                    ::mingling::macros::node!(#command_name_str)
+                }
+                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess {
+                    #pack::new(args).to_render()
+                }
+                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher> {
+                    Box::new(#command_struct)
+                }
             }
         }
     };

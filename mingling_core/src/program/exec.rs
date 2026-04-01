@@ -1,34 +1,36 @@
 #![allow(clippy::borrowed_box)]
 
+use std::fmt::Display;
+
 use crate::{
     AnyOutput, ChainProcess, Dispatcher, Next, Program, ProgramCollect, RenderResult,
     error::ProgramInternalExecuteError,
-    hint::{DispatcherNotFound, RendererNotFound},
 };
 
 pub mod error;
 
-pub async fn exec<C: ProgramCollect>(
-    program: Program<C>,
-) -> Result<RenderResult, ProgramInternalExecuteError> {
+pub async fn exec<C, G>(program: Program<C, G>) -> Result<RenderResult, ProgramInternalExecuteError>
+where
+    C: ProgramCollect<Enum = G>,
+    G: Display,
+{
+    let mut current;
+
     // Match user input
-    let matched: (Box<dyn Dispatcher>, Vec<String>) = match match_user_input(&program) {
-        Ok(r) => (r.0.clone(), r.1),
+    match match_user_input(&program) {
+        Ok((dispatcher, args)) => {
+            // Entry point
+            current = match dispatcher.begin(args) {
+                ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C, G>(any)),
+                ChainProcess::Ok((any, Next::Chain)) => any,
+                ChainProcess::Err(e) => return Err(e.into()),
+            };
+        }
         Err(ProgramInternalExecuteError::DispatcherNotFound) => {
-            // If no Dispatcher is found, dispatch to the DispatcherNotFound Dispatcher
-            // to route it to the NoDispatcherFound struct
-            let disp: Box<dyn Dispatcher> = Box::new(DispatcherNotFound);
-            (disp, program.args)
+            // No matching Dispatcher is found
+            return Err(ProgramInternalExecuteError::DispatcherNotFound);
         }
         Err(e) => return Err(e),
-    };
-
-    // Entry point
-    let (dispatcher, args) = matched;
-    let mut current = match dispatcher.begin(args) {
-        ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C>(any)),
-        ChainProcess::Ok((any, Next::Chain)) => any,
-        ChainProcess::Err(e) => return Err(e.into()),
     };
 
     loop {
@@ -36,7 +38,7 @@ pub async fn exec<C: ProgramCollect>(
             // If a chain exists, execute as a chain
             if C::has_chain(&current) {
                 match C::do_chain(current).await {
-                    ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C>(any)),
+                    ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C, G>(any)),
                     ChainProcess::Ok((any, Next::Chain)) => any,
                     ChainProcess::Err(e) => return Err(e.into()),
                 }
@@ -47,29 +49,28 @@ pub async fn exec<C: ProgramCollect>(
                 C::render(current, &mut render_result);
                 return Ok(render_result);
             }
-            // If no renderer exists, transfer to the RendererNotFound Dispatcher for execution
+            // No renderer exists
             else {
-                let disp: Box<dyn Dispatcher> = Box::new(RendererNotFound);
-
-                match disp.begin(vec![format!("{:?}", current.type_id)]) {
-                    ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C>(any)),
-                    ChainProcess::Ok((any, Next::Chain)) => any,
-                    ChainProcess::Err(e) => return Err(e.into()),
-                }
+                let renderer_name = current.member_id.to_string();
+                return Err(ProgramInternalExecuteError::RendererNotFound(renderer_name));
             }
         };
     }
 }
 
 /// Match user input against registered dispatchers and return the matched dispatcher and remaining arguments.
-fn match_user_input<C: ProgramCollect>(
-    program: &Program<C>,
-) -> Result<(&Box<dyn Dispatcher>, Vec<String>), ProgramInternalExecuteError> {
+fn match_user_input<C, G>(
+    program: &Program<C, G>,
+) -> Result<(&Box<dyn Dispatcher<G>>, Vec<String>), ProgramInternalExecuteError>
+where
+    C: ProgramCollect<Enum = G>,
+    G: Display,
+{
     let nodes = get_nodes(program);
     let command = format!("{} ", program.args.join(" "));
 
     // Find all nodes that match the command prefix
-    let matching_nodes: Vec<&(String, &Box<dyn Dispatcher>)> = nodes
+    let matching_nodes: Vec<&(String, &Box<dyn Dispatcher<G>>)> = nodes
         .iter()
         // Also add a space to the node string to ensure consistent matching logic
         .filter(|(node_str, _)| command.starts_with(&format!("{} ", node_str)))
@@ -102,14 +103,16 @@ fn match_user_input<C: ProgramCollect>(
 }
 
 #[inline(always)]
-fn render<C: ProgramCollect>(any: AnyOutput) -> RenderResult {
+fn render<C: ProgramCollect<Enum = G>, G: Display>(any: AnyOutput<G>) -> RenderResult {
     let mut render_result = RenderResult::default();
     C::render(any, &mut render_result);
     render_result
 }
 
 // Get all registered dispatcher names from the program
-fn get_nodes<C: ProgramCollect>(program: &Program<C>) -> Vec<(String, &Box<dyn Dispatcher>)> {
+fn get_nodes<C: ProgramCollect<Enum = G>, G: Display>(
+    program: &Program<C, G>,
+) -> Vec<(String, &Box<dyn Dispatcher<G>>)> {
     program
         .dispatcher
         .iter()

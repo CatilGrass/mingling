@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{Program, ProgramCollect};
 
 pub struct Flag {
@@ -88,14 +90,15 @@ macro_rules! special_argument {
     }};
 }
 
-impl<C> Program<C>
+impl<C, G> Program<C, G>
 where
     C: ProgramCollect,
+    G: Display,
 {
     /// Registers a global argument (with value) and its handler.
     pub fn global_argument<F, A>(&mut self, arguments: A, do_fn: F)
     where
-        F: Fn(&mut Program<C>, String),
+        F: Fn(&mut Program<C, G>, String),
         A: Into<Flag>,
     {
         let flag = arguments.into();
@@ -111,7 +114,7 @@ where
     /// Registers a global flag (boolean) and its handler.
     pub fn global_flag<F, A>(&mut self, flag: A, do_fn: F)
     where
-        F: Fn(&mut Program<C>),
+        F: Fn(&mut Program<C, G>),
         A: Into<Flag>,
     {
         let flag = flag.into();

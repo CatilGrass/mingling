@@ -5,6 +5,9 @@ pub enum ProgramExecuteError {
     #[error("No Dispatcher Found")]
     DispatcherNotFound,
 
+    #[error("No Renderer (`{0}`) Found")]
+    RendererNotFound(String),
+
     #[error("Other error: {0}")]
     Other(String),
 }
@@ -13,6 +16,9 @@ pub enum ProgramExecuteError {
 pub enum ProgramInternalExecuteError {
     #[error("No Dispatcher Found")]
     DispatcherNotFound,
+
+    #[error("No Renderer (`{0}`) Found")]
+    RendererNotFound(String),
 
     #[error("Other error: {0}")]
     Other(String),
@@ -27,6 +33,9 @@ impl From<ProgramInternalExecuteError> for ProgramExecuteError {
             ProgramInternalExecuteError::DispatcherNotFound => {
                 ProgramExecuteError::DispatcherNotFound
             }
+            ProgramInternalExecuteError::RendererNotFound(s) => {
+                ProgramExecuteError::RendererNotFound(s)
+            }
             ProgramInternalExecuteError::Other(s) => ProgramExecuteError::Other(s),
             ProgramInternalExecuteError::IO(e) => ProgramExecuteError::Other(format!("{}", e)),
         }
@@ -38,9 +47,6 @@ impl From<ChainProcessError> for ProgramInternalExecuteError {
         match value {
             ChainProcessError::Other(s) => ProgramInternalExecuteError::Other(s),
             ChainProcessError::IO(error) => ProgramInternalExecuteError::IO(error),
-            ChainProcessError::Broken(_) => {
-                ProgramInternalExecuteError::Other("Broken".to_string())
-            }
         }
     }
 }

@@ -4,7 +4,7 @@
 //! generating structs that implement the `Renderer` trait from functions.
 
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{ToTokens, quote};
 use syn::spanned::Spanned;
 use syn::{FnArg, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input};
 
@@ -106,20 +106,27 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     };
 
     let renderer_exist_entry = quote! {
-        id if id == std::any::TypeId::of::<#previous_type>() => true,
+        Self::#previous_type => true,
     };
 
     let mut renderers = crate::RENDERERS.lock().unwrap();
     let mut renderer_exist = crate::RENDERERS_EXIST.lock().unwrap();
+    let mut packed_types = crate::PACKED_TYPES.lock().unwrap();
 
     let renderer_entry_str = renderer_entry.to_string();
     let renderer_exist_entry_str = renderer_exist_entry.to_string();
+    let previous_type_str = previous_type.to_token_stream().to_string();
 
     if !renderers.contains(&renderer_entry_str) {
         renderers.push(renderer_entry_str);
     }
+
     if !renderer_exist.contains(&renderer_exist_entry_str) {
         renderer_exist.push(renderer_exist_entry_str);
+    }
+
+    if !packed_types.contains(&previous_type_str) {
+        packed_types.push(previous_type_str);
     }
 
     // Generate the struct and implementation

@@ -1,60 +1,66 @@
+use std::fmt::Display;
+
 use crate::{ChainProcess, Program, asset::node::Node};
 
-pub trait Dispatcher {
+pub trait Dispatcher<G>
+where
+    G: Display,
+{
     fn node(&self) -> Node;
-    fn begin(&self, args: Vec<String>) -> ChainProcess;
-    fn clone_dispatcher(&self) -> Box<dyn Dispatcher>;
+    fn begin(&self, args: Vec<String>) -> ChainProcess<G>;
+    fn clone_dispatcher(&self) -> Box<dyn Dispatcher<G>>;
 }
 
-impl Clone for Box<dyn Dispatcher> {
+impl<G> Clone for Box<dyn Dispatcher<G>>
+where
+    G: Display,
+{
     fn clone(&self) -> Self {
         self.clone_dispatcher()
     }
 }
 
-impl<C: crate::program::ProgramCollect> Program<C> {
+impl<C: crate::program::ProgramCollect, G: Display> Program<C, G> {
     /// Adds a dispatcher to the program.
-    pub fn with_dispatcher<D>(&mut self, dispatcher: D)
+    pub fn with_dispatcher<Disp>(&mut self, dispatcher: Disp)
     where
-        D: Into<Dispatchers>,
+        Disp: Dispatcher<G> + 'static,
     {
-        let dispatchers = dispatcher.into().dispatcher;
-        self.dispatcher.extend(dispatchers);
+        self.dispatcher.push(Box::new(dispatcher));
+    }
+
+    /// Add some dispatchers to the program.
+    pub fn with_dispatchers<D>(&mut self, dispatchers: D)
+    where
+        D: Into<Dispatchers<G>>,
+    {
+        let dispatchers = dispatchers.into();
+        self.dispatcher.extend(dispatchers.dispatcher);
     }
 }
 
-pub struct Dispatchers {
-    dispatcher: Vec<Box<dyn Dispatcher + 'static>>,
+pub struct Dispatchers<G> {
+    dispatcher: Vec<Box<dyn Dispatcher<G> + 'static>>,
 }
 
-impl<D> From<D> for Dispatchers
-where
-    D: Dispatcher + 'static,
-{
-    fn from(dispatcher: D) -> Self {
-        Self {
-            dispatcher: vec![Box::new(dispatcher)],
-        }
-    }
-}
-
-impl From<Vec<Box<dyn Dispatcher>>> for Dispatchers {
-    fn from(dispatcher: Vec<Box<dyn Dispatcher>>) -> Self {
+impl<G> From<Vec<Box<dyn Dispatcher<G>>>> for Dispatchers<G> {
+    fn from(dispatcher: Vec<Box<dyn Dispatcher<G>>>) -> Self {
         Self { dispatcher }
     }
 }
 
-impl From<Box<dyn Dispatcher>> for Dispatchers {
-    fn from(dispatcher: Box<dyn Dispatcher>) -> Self {
+impl<G> From<Box<dyn Dispatcher<G>>> for Dispatchers<G> {
+    fn from(dispatcher: Box<dyn Dispatcher<G>>) -> Self {
         Self {
             dispatcher: vec![dispatcher],
         }
     }
 }
 
-impl<D> From<(D,)> for Dispatchers
+impl<D, G> From<(D,)> for Dispatchers<G>
 where
-    D: Dispatcher + 'static,
+    D: Dispatcher<G> + 'static,
+    G: Display,
 {
     fn from(dispatcher: (D,)) -> Self {
         Self {
@@ -63,10 +69,11 @@ where
     }
 }
 
-impl<D1, D2> From<(D1, D2)> for Dispatchers
+impl<D1, D2, G> From<(D1, D2)> for Dispatchers<G>
 where
-    D1: Dispatcher + 'static,
-    D2: Dispatcher + 'static,
+    D1: Dispatcher<G> + 'static,
+    D2: Dispatcher<G> + 'static,
+    G: Display,
 {
     fn from(dispatchers: (D1, D2)) -> Self {
         Self {
@@ -75,11 +82,12 @@ where
     }
 }
 
-impl<D1, D2, D3> From<(D1, D2, D3)> for Dispatchers
+impl<D1, D2, D3, G> From<(D1, D2, D3)> for Dispatchers<G>
 where
-    D1: Dispatcher + 'static,
-    D2: Dispatcher + 'static,
-    D3: Dispatcher + 'static,
+    D1: Dispatcher<G> + 'static,
+    D2: Dispatcher<G> + 'static,
+    D3: Dispatcher<G> + 'static,
+    G: Display,
 {
     fn from(dispatchers: (D1, D2, D3)) -> Self {
         Self {
@@ -92,12 +100,13 @@ where
     }
 }
 
-impl<D1, D2, D3, D4> From<(D1, D2, D3, D4)> for Dispatchers
+impl<D1, D2, D3, D4, G> From<(D1, D2, D3, D4)> for Dispatchers<G>
 where
-    D1: Dispatcher + 'static,
-    D2: Dispatcher + 'static,
-    D3: Dispatcher + 'static,
-    D4: Dispatcher + 'static,
+    D1: Dispatcher<G> + 'static,
+    D2: Dispatcher<G> + 'static,
+    D3: Dispatcher<G> + 'static,
+    D4: Dispatcher<G> + 'static,
+    G: Display,
 {
     fn from(dispatchers: (D1, D2, D3, D4)) -> Self {
         Self {
@@ -111,13 +120,14 @@ where
     }
 }
 
-impl<D1, D2, D3, D4, D5> From<(D1, D2, D3, D4, D5)> for Dispatchers
+impl<D1, D2, D3, D4, D5, G> From<(D1, D2, D3, D4, D5)> for Dispatchers<G>
 where
-    D1: Dispatcher + 'static,
-    D2: Dispatcher + 'static,
-    D3: Dispatcher + 'static,
-    D4: Dispatcher + 'static,
-    D5: Dispatcher + 'static,
+    D1: Dispatcher<G> + 'static,
+    D2: Dispatcher<G> + 'static,
+    D3: Dispatcher<G> + 'static,
+    D4: Dispatcher<G> + 'static,
+    D5: Dispatcher<G> + 'static,
+    G: Display,
 {
     fn from(dispatchers: (D1, D2, D3, D4, D5)) -> Self {
         Self {
@@ -132,14 +142,15 @@ where
     }
 }
 
-impl<D1, D2, D3, D4, D5, D6> From<(D1, D2, D3, D4, D5, D6)> for Dispatchers
+impl<D1, D2, D3, D4, D5, D6, G> From<(D1, D2, D3, D4, D5, D6)> for Dispatchers<G>
 where
-    D1: Dispatcher + 'static,
-    D2: Dispatcher + 'static,
-    D3: Dispatcher + 'static,
-    D4: Dispatcher + 'static,
-    D5: Dispatcher + 'static,
-    D6: Dispatcher + 'static,
+    D1: Dispatcher<G> + 'static,
+    D2: Dispatcher<G> + 'static,
+    D3: Dispatcher<G> + 'static,
+    D4: Dispatcher<G> + 'static,
+    D5: Dispatcher<G> + 'static,
+    D6: Dispatcher<G> + 'static,
+    G: Display,
 {
     fn from(dispatchers: (D1, D2, D3, D4, D5, D6)) -> Self {
         Self {
@@ -155,15 +166,16 @@ where
     }
 }
 
-impl<D1, D2, D3, D4, D5, D6, D7> From<(D1, D2, D3, D4, D5, D6, D7)> for Dispatchers
+impl<D1, D2, D3, D4, D5, D6, D7, G> From<(D1, D2, D3, D4, D5, D6, D7)> for Dispatchers<G>
 where
-    D1: Dispatcher + 'static,
-    D2: Dispatcher + 'static,
-    D3: Dispatcher + 'static,
-    D4: Dispatcher + 'static,
-    D5: Dispatcher + 'static,
-    D6: Dispatcher + 'static,
-    D7: Dispatcher + 'static,
+    D1: Dispatcher<G> + 'static,
+    D2: Dispatcher<G> + 'static,
+    D3: Dispatcher<G> + 'static,
+    D4: Dispatcher<G> + 'static,
+    D5: Dispatcher<G> + 'static,
+    D6: Dispatcher<G> + 'static,
+    D7: Dispatcher<G> + 'static,
+    G: Display,
 {
     fn from(dispatchers: (D1, D2, D3, D4, D5, D6, D7)) -> Self {
         Self {
@@ -180,16 +192,16 @@ where
     }
 }
 
-impl std::ops::Deref for Dispatchers {
-    type Target = Vec<Box<dyn Dispatcher + 'static>>;
+impl<G> std::ops::Deref for Dispatchers<G> {
+    type Target = Vec<Box<dyn Dispatcher<G> + 'static>>;
 
     fn deref(&self) -> &Self::Target {
         &self.dispatcher
     }
 }
 
-impl From<Dispatchers> for Vec<Box<dyn Dispatcher + 'static>> {
-    fn from(val: Dispatchers) -> Self {
+impl<G> From<Dispatchers<G>> for Vec<Box<dyn Dispatcher<G> + 'static>> {
+    fn from(val: Dispatchers<G>) -> Self {
         val.dispatcher
     }
 }

@@ -1,34 +1,48 @@
+use std::fmt::Display;
+
 #[cfg(feature = "general_renderer")]
 use serde::Serialize;
 
+use crate::Groupped;
 use crate::error::ChainProcessError;
 
+pub mod group;
+
 #[derive(Debug)]
-pub struct AnyOutput {
+pub struct AnyOutput<G>
+where
+    G: Display,
+{
     inner: Box<dyn std::any::Any + Send + 'static>,
     pub type_id: std::any::TypeId,
+    pub member_id: G,
 }
 
-impl AnyOutput {
+impl<G> AnyOutput<G>
+where
+    G: Display,
+{
     #[cfg(feature = "general_renderer")]
     pub fn new<T>(value: T) -> Self
     where
-        T: Send + Serialize + 'static,
+        T: Send + Groupped<G> + Serialize + 'static,
     {
         Self {
             inner: Box::new(value),
             type_id: std::any::TypeId::of::<T>(),
+            member_id: T::member_id(),
         }
     }
 
     #[cfg(not(feature = "general_renderer"))]
     pub fn new<T>(value: T) -> Self
     where
-        T: Send + 'static,
+        T: Send + Groupped<G> + 'static,
     {
         Self {
             inner: Box::new(value),
             type_id: std::any::TypeId::of::<T>(),
+            member_id: T::member_id(),
         }
     }
 
@@ -45,17 +59,20 @@ impl AnyOutput {
     }
 
     /// Route the output to the next Chain
-    pub fn route_chain(self) -> ChainProcess {
+    pub fn route_chain(self) -> ChainProcess<G> {
         ChainProcess::Ok((self, Next::Chain))
     }
 
     /// Route the output to the Renderer, ending execution
-    pub fn route_renderer(self) -> ChainProcess {
+    pub fn route_renderer(self) -> ChainProcess<G> {
         ChainProcess::Ok((self, Next::Renderer))
     }
 }
 
-impl std::ops::Deref for AnyOutput {
+impl<G> std::ops::Deref for AnyOutput<G>
+where
+    G: Display,
+{
     type Target = dyn std::any::Any + Send + 'static;
 
     fn deref(&self) -> &Self::Target {
@@ -63,14 +80,20 @@ impl std::ops::Deref for AnyOutput {
     }
 }
 
-impl std::ops::DerefMut for AnyOutput {
+impl<G> std::ops::DerefMut for AnyOutput<G>
+where
+    G: Display,
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.inner
     }
 }
 
-pub enum ChainProcess {
-    Ok((AnyOutput, Next)),
+pub enum ChainProcess<G>
+where
+    G: Display,
+{
+    Ok((AnyOutput<G>, Next)),
     Err(ChainProcessError),
 }
 
@@ -79,7 +102,10 @@ pub enum Next {
     Renderer,
 }
 
-impl ChainProcess {
+impl<G> ChainProcess<G>
+where
+    G: Display,
+{
     pub fn is_next(&self) -> bool {
         matches!(self, Self::Ok(_))
     }
@@ -102,23 +128,23 @@ impl ChainProcess {
         }
     }
 
-    pub fn unwrap(self) -> (AnyOutput, Next) {
+    pub fn unwrap(self) -> (AnyOutput<G>, Next) {
         match self {
             Self::Ok(tuple) => tuple,
             Self::Err(_) => panic!("called `ChainProcess2::unwrap()` on an `Error` value"),
         }
     }
 
-    pub fn unwrap_or(self, default: (AnyOutput, Next)) -> (AnyOutput, Next) {
+    pub fn unwrap_or(self, default: (AnyOutput<G>, Next)) -> (AnyOutput<G>, Next) {
         match self {
             Self::Ok(tuple) => tuple,
             Self::Err(_) => default,
         }
     }
 
-    pub fn unwrap_or_else<F>(self, f: F) -> (AnyOutput, Next)
+    pub fn unwrap_or_else<F>(self, f: F) -> (AnyOutput<G>, Next)
     where
-        F: FnOnce(ChainProcessError) -> (AnyOutput, Next),
+        F: FnOnce(ChainProcessError) -> (AnyOutput<G>, Next),
     {
         match self {
             Self::Ok(tuple) => tuple,

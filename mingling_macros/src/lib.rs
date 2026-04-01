@@ -19,6 +19,7 @@ use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
 // Global variable declarations for storing chain and renderer mappings
+pub(crate) static PACKED_TYPES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static CHAINS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static RENDERERS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static CHAINS_EXIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
@@ -55,8 +56,8 @@ pub fn r_println(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn chain(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    chain::chain_attr(item)
+pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
+    chain::chain_attr(attr, item)
 }
 
 #[proc_macro_attribute]
@@ -65,13 +66,23 @@ pub fn renderer(_attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn program(input: TokenStream) -> TokenStream {
-    let name = parse_macro_input!(input as Ident);
+pub fn gen_program(input: TokenStream) -> TokenStream {
+    let name = if input.is_empty() {
+        Ident::new("DefaultProgram", proc_macro2::Span::call_site())
+    } else {
+        parse_macro_input!(input as Ident)
+    };
 
+    let packed_types = PACKED_TYPES.lock().unwrap().clone();
     let renderers = RENDERERS.lock().unwrap().clone();
     let chains = CHAINS.lock().unwrap().clone();
     let renderer_exist = RENDERERS_EXIST.lock().unwrap().clone();
     let chain_exist = CHAINS_EXIST.lock().unwrap().clone();
+
+    let packed_types: Vec<proc_macro2::TokenStream> = packed_types
+        .iter()
+        .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
+        .collect();
 
     let renderer_tokens: Vec<proc_macro2::TokenStream> = renderers
         .iter()
@@ -94,23 +105,50 @@ pub fn program(input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
-        pub struct #name;
+        ::mingling::macros::pack!(#name, RendererNotFound = String);
+        ::mingling::macros::pack!(#name, DispatcherNotFound = Vec<String>);
+
+        #[derive(Debug, Default, PartialEq, Eq, Clone)]
+        #[repr(u32)]
+        pub enum #name {
+            #[default]
+            __FallBack,
+            DispatcherNotFound,
+            RendererNotFound,
+            #(#packed_types),*
+        }
+
+        impl ::std::fmt::Display for #name {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+                match self {
+                    #name::__FallBack => write!(f, "__FallBack"),
+                    #name::DispatcherNotFound => {
+                        write!(f, "DispatcherNotFound")
+                    }
+                    #name::RendererNotFound => {
+                        write!(f, "RendererNotFound")
+                    }
+                    #(#name::#packed_types => write!(f, stringify!(#packed_types)),)*
+                }
+            }
+        }
 
         impl ::mingling::ProgramCollect for #name {
+            type Enum = #name;
             ::mingling::__dispatch_program_renderers!(
                 #(#renderer_tokens)*
             );
             ::mingling::__dispatch_program_chains!(
                 #(#chain_tokens)*
             );
-            fn has_renderer(any: &::mingling::AnyOutput) -> bool {
-                match any.type_id {
+            fn has_renderer(any: &::mingling::AnyOutput<Self::Enum>) -> bool {
+                match any.member_id {
                     #(#renderer_exist_tokens)*
                     _ => false
                 }
             }
-            fn has_chain(any: &::mingling::AnyOutput) -> bool {
-                match any.type_id {
+            fn has_chain(any: &::mingling::AnyOutput<Self::Enum>) -> bool {
+                match any.member_id {
                     #(#chain_exist_tokens)*
                     _ => false
                 }
@@ -118,7 +156,7 @@ pub fn program(input: TokenStream) -> TokenStream {
         }
 
         impl #name {
-            pub fn new() -> ::mingling::Program<#name> {
+            pub fn new() -> ::mingling::Program<#name, #name> {
                 ::mingling::Program::new()
             }
         }

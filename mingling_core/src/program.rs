@@ -2,10 +2,9 @@ use crate::{
     AnyOutput, ChainProcess, RenderResult, asset::dispatcher::Dispatcher,
     error::ProgramExecuteError,
 };
-use std::{env, pin::Pin};
+use std::{env, fmt::Display, pin::Pin};
 
 pub mod exec;
-pub mod hint;
 pub mod setup;
 
 mod config;
@@ -16,24 +15,31 @@ pub use flag::*;
 use tokio::io::AsyncWriteExt;
 
 #[derive(Default)]
-pub struct Program<C: ProgramCollect> {
+pub struct Program<C, G>
+where
+    C: ProgramCollect,
+    G: Display,
+{
     pub(crate) collect: std::marker::PhantomData<C>,
+    pub(crate) group: std::marker::PhantomData<G>,
 
     pub(crate) args: Vec<String>,
-    pub(crate) dispatcher: Vec<Box<dyn Dispatcher>>,
+    pub(crate) dispatcher: Vec<Box<dyn Dispatcher<G>>>,
 
     pub stdout_setting: ProgramStdoutSetting,
     pub user_context: ProgramUserContext,
 }
 
-impl<C> Program<C>
+impl<C, G> Program<C, G>
 where
-    C: ProgramCollect,
+    C: ProgramCollect<Enum = G>,
+    G: Display,
 {
     /// Creates a new Program instance, initializing args from environment.
     pub fn new() -> Self {
         Program {
             collect: std::marker::PhantomData,
+            group: std::marker::PhantomData,
             args: env::args().collect(),
             dispatcher: Vec::new(),
             stdout_setting: Default::default(),
@@ -57,6 +63,10 @@ where
                     eprintln!("Dispatcher not found");
                     return;
                 }
+                ProgramExecuteError::RendererNotFound(renderer_name) => {
+                    eprintln!("Renderer `{}` not found", renderer_name);
+                    return;
+                }
                 ProgramExecuteError::Other(e) => {
                     eprintln!("{}", e);
                     return;
@@ -77,24 +87,27 @@ where
 }
 
 pub trait ProgramCollect {
-    fn render(any: AnyOutput, r: &mut RenderResult);
-    fn do_chain(any: AnyOutput) -> Pin<Box<dyn Future<Output = ChainProcess> + Send>>;
-    fn has_renderer(any: &AnyOutput) -> bool;
-    fn has_chain(any: &AnyOutput) -> bool;
+    type Enum: Display;
+    fn render(any: AnyOutput<Self::Enum>, r: &mut RenderResult);
+    fn do_chain(
+        any: AnyOutput<Self::Enum>,
+    ) -> Pin<Box<dyn Future<Output = ChainProcess<Self::Enum>> + Send>>;
+    fn has_renderer(any: &AnyOutput<Self::Enum>) -> bool;
+    fn has_chain(any: &AnyOutput<Self::Enum>) -> bool;
 }
 
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __dispatch_program_renderers {
     (
-        $( $render_ty:ty => $prev_ty:ty, )*
+        $( $render_ty:ty => $prev_ty:ident, )*
     ) => {
-        fn render(any: mingling::AnyOutput, r: &mut mingling::RenderResult) {
-            match any.type_id {
+        fn render(any: mingling::AnyOutput<Self::Enum>, r: &mut mingling::RenderResult) {
+            match any.member_id {
                 $(
-                    id if id == std::any::TypeId::of::<$prev_ty>() => {
-                        // SAFETY: The `type_id` check ensures that `any` contains a value of type `$chain_prev`,
-                        // so downcasting to `$chain_prev` is safe.
+                    Self::$prev_ty => {
+                        // SAFETY: The `type_id` check ensures that `any` contains a value of type `$prev_ty`,
+                        // so downcasting to `$prev_ty` is safe.
                         let value = unsafe { any.downcast::<$prev_ty>().unwrap_unchecked() };
                         <$render_ty as mingling::Renderer>::render(value, r);
                     }
@@ -109,18 +122,18 @@ macro_rules! __dispatch_program_renderers {
 #[doc(hidden)]
 macro_rules! __dispatch_program_chains {
     (
-        $( $chain_ty:ty => $chain_prev:ty, )*
+        $( $chain_ty:ty => $chain_prev:ident, )*
     ) => {
         fn do_chain(
-            any: mingling::AnyOutput,
-        ) -> std::pin::Pin<Box<dyn Future<Output = mingling::ChainProcess> + Send>> {
-            match any.type_id {
+            any: mingling::AnyOutput<Self::Enum>,
+        ) -> std::pin::Pin<Box<dyn Future<Output = mingling::ChainProcess<Self::Enum>> + Send>> {
+            match any.member_id {
                 $(
-                    id if id == std::any::TypeId::of::<$chain_prev>() => {
+                    Self::$chain_prev => {
                         // SAFETY: The `type_id` check ensures that `any` contains a value of type `$chain_prev`,
                         // so downcasting to `$chain_prev` is safe.
                         let value = unsafe { any.downcast::<$chain_prev>().unwrap_unchecked() };
-                        let fut = async { <$chain_ty as mingling::Chain>::proc(value).await };
+                        let fut = async { <$chain_ty as mingling::Chain<Self::Enum>>::proc(value).await };
                         Box::pin(fut)
                     }
                 )*
