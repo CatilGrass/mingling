@@ -43,29 +43,40 @@
 //!
 // Output:
 //!
-//! ```
+//! ```text
 //! > mycmd hello
 //! Hello, World!
 //! > mycmd hallo
 //! Dispatcher not found for command `hallo`
 //! ```
 
-// Re-Export Core lib
+// Re-export Core lib
 pub use mingling::*;
 pub use mingling_core as mingling;
 
+/// `Mingling` argument parser
 #[cfg(feature = "parser")]
 pub mod parser;
 
+/// Re-export from `mingling_macros`
 #[allow(unused_imports)]
 pub mod macros {
+    /// Used to generate a struct implementing the `Chain` trait via a method
     pub use mingling_macros::chain;
+    /// Used to create a dispatcher that routes to a `Chain`
     pub use mingling_macros::dispatcher;
+    /// Used to create a dispatcher that routes to a `Renderer`
     pub use mingling_macros::dispatcher_render;
+    /// Used to collect data and create a command-line context
     pub use mingling_macros::gen_program;
+    /// Used to create a `Node` struct via a literal
     pub use mingling_macros::node;
+    /// Used to create a wrapper type for use with `Chain` and `Renderer`
     pub use mingling_macros::pack;
+    /// Used to print content within a `Renderer` context
     pub use mingling_macros::r_print;
+    /// Used to print content with a newline within a `Renderer` context
     pub use mingling_macros::r_println;
+    /// Used to generate a struct implementing the `Renderer` trait via a method
     pub use mingling_macros::renderer;
 }

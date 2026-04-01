@@ -1,17 +1,28 @@
 use crate::parser::Argument;
 use mingling_core::Flag;
 
+#[doc(hidden)]
 pub mod builtin;
 
+/// A builder for extracting values from command-line arguments.
+///
+/// The `Picker` struct holds parsed arguments and provides a fluent interface
+/// to extract values associated with specific flags.
 pub struct Picker {
+    /// The parsed command-line arguments.
     pub args: Argument,
 }
 
 impl Picker {
+    /// Creates a new `Picker` from a value that can be converted into `Argument`.
     pub fn new(args: impl Into<Argument>) -> Picker {
         Picker { args: args.into() }
     }
 
+    /// Extracts a value for the given flag and returns a `Pick1` builder.
+    ///
+    /// The extracted type `TNext` must implement `Pickable` and `Default`.
+    /// If the flag is not present, the default value for `TNext` is used.
     pub fn pick<TNext>(mut self, val: impl Into<Flag>) -> Pick1<TNext>
     where
         TNext: Pickable<Output = TNext> + Default,
@@ -30,8 +41,17 @@ impl<T: Into<Argument>> From<T> for Picker {
     }
 }
 
+/// Extracts values from command-line arguments
+///
+/// The `Pickable` trait defines how to extract the value of a specific flag from parsed arguments
 pub trait Pickable {
+    /// The output type produced by the extraction operation, must implement the `Default` trait
     type Output: Default;
+
+    /// Extracts the value associated with the given flag from the provided arguments
+    ///
+    /// If the flag exists and the value can be successfully extracted, returns `Some(Output)`;
+    /// otherwise returns `None`
     fn pick(args: &mut Argument, flag: Flag) -> Option<Self::Output>;
 }
 
@@ -61,6 +81,7 @@ macro_rules! define_pick_structs {
         where
             $($T: Pickable,)+
         {
+            /// Unpacks into the corresponding tuple
             pub fn unpack(self) -> ($($T,)+) {
                 ($(self.$val,)+)
             }
@@ -75,6 +96,7 @@ macro_rules! impl_pick_structs {
         where
             $($T: Pickable,)+
         {
+            /// Extracts a value for the given flag and returns a `PickN` builder.
             pub fn pick<TNext>(mut self, val: impl Into<mingling_core::Flag>) -> $next<$($T,)+ TNext>
             where
                 TNext: Pickable<Output = TNext> + Default,

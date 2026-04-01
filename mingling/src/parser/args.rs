@@ -2,6 +2,7 @@ use std::mem::replace;
 
 use mingling_core::{Flag, special_argument, special_flag};
 
+/// User input arguments
 #[derive(Debug, Default)]
 pub struct Argument {
     vec: Vec<String>,
