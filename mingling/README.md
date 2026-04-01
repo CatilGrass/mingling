@@ -11,31 +11,39 @@
 The example below shows how to use `Mingling` to create a simple command-line program:
 
 ```rust
-use mingling::{
-    hint::NoDispatcherFound,
-    macros::{dispatcher, program, r_println, renderer},
-};
+use mingling::macros::{dispatcher, gen_program, r_println, renderer};
 
 #[tokio::main]
 async fn main() {
-    let mut program = MyProgram::new();
+    let mut program = DefaultProgram::new();
     program.with_dispatcher(HelloCommand);
+
+    // Execute
     program.exec().await;
 }
 
+// Define command: "<bin> hello"
 dispatcher!("hello", HelloCommand => HelloEntry);
 
+// Render HelloEntry
 #[renderer]
-pub fn render_hello(_prev: HelloEntry) {
+fn render_hello_world(_prev: HelloEntry) {
     r_println!("Hello, World!")
 }
 
+// Fallbacks
 #[renderer]
-pub fn render_no_dispatcher_found(prev: NoDispatcherFound) {
-    r_println!("Subcommand not found: '{}'", prev.args.join(", "))
+fn fallback_dispatcher_not_found(prev: DispatcherNotFound) {
+    r_println!("Dispatcher not found for command `{}`", prev.join(", "))
 }
 
-program!(MyProgram);
+#[renderer]
+fn fallback_renderer_not_found(prev: RendererNotFound) {
+    r_println!("Renderer not found `{}`", *prev)
+}
+
+// Collect renderers and chains to generate DefaultProgram
+gen_program!();
 ```
 
 Output:
