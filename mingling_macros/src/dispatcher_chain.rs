@@ -12,7 +12,7 @@ use syn::{Ident, Result as SynResult, Token};
 struct DispatcherChainInput {
     command_name: syn::LitStr,
     command_struct: Ident,
-    chain_struct: Ident,
+    pack: Ident,
 }
 
 impl Parse for DispatcherChainInput {
@@ -21,12 +21,12 @@ impl Parse for DispatcherChainInput {
         input.parse::<Token![,]>()?;
         let command_struct = input.parse()?;
         input.parse::<Token![=>]>()?;
-        let chain_struct = input.parse()?;
+        let pack = input.parse()?;
 
         Ok(DispatcherChainInput {
             command_name,
             command_struct,
-            chain_struct,
+            pack,
         })
     }
 }
@@ -35,7 +35,7 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
     let DispatcherChainInput {
         command_name,
         command_struct,
-        chain_struct,
+        pack,
     } = syn::parse_macro_input!(input as DispatcherChainInput);
 
     let command_name_str = command_name.value();
@@ -44,14 +44,14 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
         #[derive(Debug, Default)]
         pub struct #command_struct;
 
-        ::mingling::macros::chain_struct!(#chain_struct = Vec<String>);
+        ::mingling::macros::pack!(#pack = Vec<String>);
 
         impl ::mingling::Dispatcher for #command_struct {
             fn node(&self) -> ::mingling::Node {
                 ::mingling::macros::node!(#command_name_str)
             }
             fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess {
-                #chain_struct::new(args).to_chain()
+                #pack::new(args).to_chain()
             }
             fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher> {
                 Box::new(#command_struct)
@@ -66,7 +66,7 @@ pub fn dispatcher_render(input: TokenStream) -> TokenStream {
     let DispatcherChainInput {
         command_name,
         command_struct,
-        chain_struct,
+        pack,
     } = syn::parse_macro_input!(input as DispatcherChainInput);
 
     let command_name_str = command_name.value();
@@ -75,14 +75,14 @@ pub fn dispatcher_render(input: TokenStream) -> TokenStream {
         #[derive(Debug, Default)]
         pub struct #command_struct;
 
-        ::mingling::macros::chain_struct!(#chain_struct = Vec<String>);
+        ::mingling::macros::pack!(#pack = Vec<String>);
 
         impl ::mingling::Dispatcher for #command_struct {
             fn node(&self) -> ::mingling::Node {
                 ::mingling::macros::node!(#command_name_str)
             }
             fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess {
-                #chain_struct::new(args).to_render()
+                #pack::new(args).to_render()
             }
             fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher> {
                 Box::new(#command_struct)
