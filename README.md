@@ -52,7 +52,7 @@ Output:
 > mycmd hello
 Hello, World!
 > mycmd hallo
-Subcommand not found: 'mycmd hallo'
+Dispatcher not found for command `hallo`
 ```
 
 ## Core Concepts
