@@ -104,9 +104,14 @@ impl Argument {
         }
 
         let flag: Flag = flag.into();
-        for argument in flag.iter() {
-            let value = special_arguments!(self.vec, argument);
+        if flag.len() < 1 {
+            let value = special_arguments!(self.vec, "");
             str_result.extend(value);
+        } else {
+            for argument in flag.iter() {
+                let value = special_arguments!(self.vec, argument);
+                str_result.extend(value);
+            }
         }
 
         str_result

@@ -141,13 +141,18 @@ macro_rules! special_arguments {
         while i < $args.len() {
             if &$args[i] == flag {
                 $args.remove(i);
-                while i < $args.len() && !$args[i].starts_with('-') {
+                while i < $args.len() && (flag.is_empty() || !$args[i].starts_with('-')) {
                     values.push($args[i].clone());
                     $args.remove(i);
                 }
                 break;
             }
             i += 1;
+        }
+        if flag.is_empty() {
+            while !$args.is_empty() && !$args[0].starts_with('-') {
+                values.push($args.remove(0));
+            }
         }
         values
     }};
@@ -448,6 +453,17 @@ mod tests {
         let result = special_arguments!(args, "--list");
         assert_eq!(result, Vec::<String>::new());
         assert_eq!(args, vec!["-a", "-b", "--next", "1"]);
+
+        // Test extracting with empty flag
+        let mut args = vec![
+            "a".to_string(),
+            "b".to_string(),
+            "--next".to_string(),
+            "1".to_string(),
+        ];
+        let result = special_arguments!(args, "");
+        assert_eq!(result, vec!["a", "b"]);
+        assert_eq!(args, vec!["--next", "1"]);
     }
 }
 
