@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::parser::Argument;
 use mingling_core::Flag;
 
@@ -8,22 +10,27 @@ pub mod builtin;
 ///
 /// The `Picker` struct holds parsed arguments and provides a fluent interface
 /// to extract values associated with specific flags.
-pub struct Picker {
+pub struct Picker<G> {
     /// The parsed command-line arguments.
     pub args: Argument,
+
+    _phantom: PhantomData<G>,
 }
 
-impl Picker {
+impl<R> Picker<R> {
     /// Creates a new `Picker` from a value that can be converted into `Argument`.
-    pub fn new(args: impl Into<Argument>) -> Picker {
-        Picker { args: args.into() }
+    pub fn new(args: impl Into<Argument>) -> Picker<R> {
+        Picker {
+            args: args.into(),
+            _phantom: PhantomData,
+        }
     }
 
     /// Extracts a value for the given flag and returns a `Pick1` builder.
     ///
     /// The extracted type `TNext` must implement `Pickable` and `Default`.
     /// If the flag is not present, the default value for `TNext` is used.
-    pub fn pick<TNext>(mut self, val: impl Into<Flag>) -> Pick1<TNext>
+    pub fn pick<TNext>(mut self, val: impl Into<Flag>) -> Pick1<TNext, R>
     where
         TNext: Pickable<Output = TNext> + Default,
     {
@@ -31,11 +38,76 @@ impl Picker {
         Pick1 {
             args: self.args,
             val_1: v,
+            route: None,
+        }
+    }
+
+    /// Extracts a value for the given flag, returning the provided default value if not present,
+    /// and returns a `Pick1` builder.
+    ///
+    /// The extracted type `TNext` must implement `Pickable`.
+    /// If the flag is not present, the provided `or` value is used.
+    pub fn pick_or<TNext>(mut self, val: impl Into<Flag>, or: TNext) -> Pick1<TNext, R>
+    where
+        TNext: Pickable<Output = TNext>,
+    {
+        let v = TNext::pick(&mut self.args, val.into()).unwrap_or(or);
+        Pick1 {
+            args: self.args,
+            val_1: v,
+            route: None,
+        }
+    }
+
+    /// Extracts a value for the given flag, storing the provided route if the flag is not present,
+    /// and returns a `Pick1` builder.
+    ///
+    /// The extracted type `TNext` must implement `Pickable` and `Default`.
+    /// If the flag is not present, the default value for `TNext` is used and the provided `route`
+    /// is stored in the returned builder for later error handling.
+    pub fn pick_or_route<TNext>(mut self, val: impl Into<Flag>, route: R) -> Pick1<TNext, R>
+    where
+        TNext: Pickable<Output = TNext> + Default,
+    {
+        let v = match TNext::pick(&mut self.args, val.into()) {
+            Some(value) => value,
+            None => {
+                return Pick1 {
+                    args: self.args,
+                    val_1: TNext::default(),
+                    route: Some(route),
+                };
+            }
+        };
+        Pick1 {
+            args: self.args,
+            val_1: v,
+            route: None,
+        }
+    }
+
+    /// Extracts a value for the given flag, returning `None` if the flag is not present,
+    /// and returns an `Option<Pick1<TNext>>` builder.
+    ///
+    /// The extracted type `TNext` must implement `Pickable`.
+    /// If the flag is not present, `None` is returned.
+    pub fn require<TNext>(mut self, val: impl Into<Flag>) -> Option<Pick1<TNext, R>>
+    where
+        TNext: Pickable<Output = TNext>,
+    {
+        let v = TNext::pick(&mut self.args, val.into());
+        match v {
+            Some(s) => Some(Pick1 {
+                args: self.args,
+                val_1: s,
+                route: None,
+            }),
+            None => None,
         }
     }
 }
 
-impl<T: Into<Argument>> From<T> for Picker {
+impl<T: Into<Argument>, G> From<T> for Picker<G> {
     fn from(value: T) -> Self {
         Picker::new(value)
     }
@@ -59,30 +131,46 @@ pub trait Pickable {
 macro_rules! define_pick_structs {
     ($n:tt $($T:ident $val:ident),+) => {
         #[doc(hidden)]
-        pub struct $n<$($T),+>
+        pub struct $n<$($T,)+ R>
         where
             $($T: Pickable,)+
         {
             #[allow(dead_code)]
             args: Argument,
             $(pub $val: $T,)+
+            route: Option<R>,
         }
 
-        impl<$($T),+> From<$n<$($T),+>> for ($($T,)+)
+        impl<$($T,)+ R> From<$n<$($T,)+ R>> for ($($T,)+)
         where
             $($T: Pickable,)+
         {
-            fn from(pick: $n<$($T),+>) -> Self {
+            fn from(pick: $n<$($T,)+ R>) -> Self {
                 ($(pick.$val,)+)
             }
         }
 
-        impl<$($T),+> $n<$($T),+>
+        impl<$($T,)+ R> $n<$($T,)+ R>
         where
             $($T: Pickable,)+
         {
-            /// Unpacks into the corresponding tuple
-            pub fn unpack(self) -> ($($T,)+) {
+            /// Unpacks the builder into a tuple of extracted values.
+            ///
+            /// Returns `Ok((T1, T2, ...))` if all required flags were present.
+            /// Returns `Err(R)` if a required flag was missing and a route was provided via `pick_or_route`.
+            pub fn unpack(self) -> Result<($($T,)+), R> {
+                match self.route {
+                    Some(route) => Err(route),
+                    None => Ok(($(self.$val,)+)),
+                }
+            }
+
+            /// Unpacks the builder into a tuple of extracted values.
+            ///
+            /// Returns the tuple of extracted values regardless of whether any required flags were missing.
+            /// If a required flag was missing and a route was provided via `pick_or_route`, the default value
+            /// for that type is included in the tuple.
+            pub fn unpack_directly(self) -> ($($T,)+) {
                 ($(self.$val,)+)
             }
         }
@@ -92,12 +180,12 @@ macro_rules! define_pick_structs {
 #[doc(hidden)]
 macro_rules! impl_pick_structs {
     ($n:ident $next:ident $next_val:ident $($T:ident $val:ident),+) => {
-        impl<$($T),+> $n<$($T),+>
+        impl<$($T,)+ R> $n<$($T,)+ R>
         where
             $($T: Pickable,)+
         {
             /// Extracts a value for the given flag and returns a `PickN` builder.
-            pub fn pick<TNext>(mut self, val: impl Into<mingling_core::Flag>) -> $next<$($T,)+ TNext>
+            pub fn pick<TNext>(mut self, val: impl Into<mingling_core::Flag>) -> $next<$($T,)+ TNext, R>
             where
                 TNext: Pickable<Output = TNext> + Default,
             {
@@ -106,6 +194,82 @@ macro_rules! impl_pick_structs {
                     args: self.args,
                     $($val: self.$val,)+
                     $next_val: v,
+                    route: self.route,
+                }
+            }
+
+            /// Extracts a value for the given flag, returning the provided default value if not present,
+            /// and returns a `PickN` builder.
+            ///
+            /// The extracted type `TNext` must implement `Pickable`.
+            /// If the flag is not present, the provided `or` value is used.
+            pub fn pick_or<TNext>(mut self, val: impl Into<mingling_core::Flag>, or: TNext) -> $next<$($T,)+ TNext, R>
+            where
+                TNext: Pickable<Output = TNext>,
+            {
+                let v = TNext::pick(&mut self.args, val.into()).unwrap_or(or);
+                $next {
+                    args: self.args,
+                    $($val: self.$val,)+
+                    $next_val: v,
+                    route: self.route,
+                }
+            }
+
+            /// Extracts a value for the given flag, storing the provided route if the flag is not present,
+            /// and returns a `PickN` builder.
+            ///
+            /// The extracted type `TNext` must implement `Pickable` and `Default`.
+            /// If the flag is not present, the default value for `TNext` is used and the provided `route`
+            /// is stored in the returned builder for later error handling.
+            ///
+            /// If a route was already stored from a previous `pick_or_route` call (i.e., `self.route` is `Some`),
+            /// the existing route is preserved and the new `route` parameter is ignored.
+            pub fn pick_or_route<TNext>(mut self, val: impl Into<mingling_core::Flag>, route: R) -> $next<$($T,)+ TNext, R>
+            where
+                TNext: Pickable<Output = TNext> + Default,
+            {
+                let v = match TNext::pick(&mut self.args, val.into()) {
+                    Some(value) => value,
+                    None => {
+                        let new_route = match self.route {
+                            Some(existing_route) => Some(existing_route),
+                            None => Some(route),
+                        };
+                        return $next {
+                            args: self.args,
+                            $($val: self.$val,)+
+                            $next_val: TNext::default(),
+                            route: new_route,
+                        };
+                    }
+                };
+                $next {
+                    args: self.args,
+                    $($val: self.$val,)+
+                    $next_val: v,
+                    route: self.route,
+                }
+            }
+
+            /// Extracts a value for the given flag, returning `None` if the flag is not present,
+            /// and returns an `Option<PickN<TNext>>` builder.
+            ///
+            /// The extracted type `TNext` must implement `Pickable`.
+            /// If the flag is not present, `None` is returned.
+            pub fn require<TNext>(mut self, val: impl Into<mingling_core::Flag>) -> Option<$next<$($T,)+ TNext, R>>
+            where
+                TNext: Pickable<Output = TNext>,
+            {
+                let v = TNext::pick(&mut self.args, val.into());
+                match v {
+                    Some(s) => Some($next {
+                        args: self.args,
+                        $($val: self.$val,)+
+                        $next_val: s,
+                        route: self.route,
+                    }),
+                    None => None,
                 }
             }
         }
