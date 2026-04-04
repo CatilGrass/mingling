@@ -129,7 +129,7 @@ pub trait Pickable {
 
 #[doc(hidden)]
 macro_rules! define_pick_structs {
-    ($n:tt $($T:ident $val:ident),+) => {
+    ($n:tt $final:ident $final_val:ident $($T:ident $val:ident),+) => {
         #[doc(hidden)]
         pub struct $n<$($T,)+ R>
         where
@@ -172,6 +172,19 @@ macro_rules! define_pick_structs {
             /// for that type is included in the tuple.
             pub fn unpack_directly(self) -> ($($T,)+) {
                 ($(self.$val,)+)
+            }
+
+            /// Applies a transformation to the last extracted value.
+            ///
+            /// Takes a closure that receives the last extracted value and returns a new value of the same type.
+            /// The transformed value replaces the original value in the builder.
+            /// This method can be used to modify or validate the extracted value before final unpacking.
+            pub fn after<F>(mut self, edit: F) -> Self
+            where
+                F: Fn($final) -> $final,
+            {
+                self.$final_val = edit(self.$final_val);
+                self
             }
         }
     };
@@ -276,18 +289,18 @@ macro_rules! impl_pick_structs {
     };
 }
 
-define_pick_structs! { Pick1 T1 val_1 }
-define_pick_structs! { Pick2 T1 val_1, T2 val_2 }
-define_pick_structs! { Pick3 T1 val_1, T2 val_2, T3 val_3 }
-define_pick_structs! { Pick4 T1 val_1, T2 val_2, T3 val_3, T4 val_4 }
-define_pick_structs! { Pick5 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5 }
-define_pick_structs! { Pick6 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6 }
-define_pick_structs! { Pick7 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7 }
-define_pick_structs! { Pick8 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8 }
-define_pick_structs! { Pick9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9 }
-define_pick_structs! { Pick10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
-define_pick_structs! { Pick11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
-define_pick_structs! { Pick12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11, T12 val_12 }
+define_pick_structs! { Pick1 T1 val_1 T1 val_1 }
+define_pick_structs! { Pick2 T2 val_2 T1 val_1, T2 val_2 }
+define_pick_structs! { Pick3 T3 val_3 T1 val_1, T2 val_2, T3 val_3 }
+define_pick_structs! { Pick4 T4 val_4 T1 val_1, T2 val_2, T3 val_3, T4 val_4 }
+define_pick_structs! { Pick5 T5 val_5 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5 }
+define_pick_structs! { Pick6 T6 val_6 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6 }
+define_pick_structs! { Pick7 T7 val_7 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7 }
+define_pick_structs! { Pick8 T8 val_8 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8 }
+define_pick_structs! { Pick9 T9 val_9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9 }
+define_pick_structs! { Pick10 T10 val_10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
+define_pick_structs! { Pick11 T11 val_11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
+define_pick_structs! { Pick12 T12 val_12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11, T12 val_12 }
 
 impl_pick_structs! { Pick1 Pick2 val_2 T1 val_1 }
 impl_pick_structs! { Pick2 Pick3 val_3 T1 val_1, T2 val_2 }
