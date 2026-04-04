@@ -10,6 +10,14 @@ impl Pickable for String {
     }
 }
 
+impl Pickable for Vec<String> {
+    type Output = Vec<String>;
+
+    fn pick(args: &mut crate::parser::Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
+        Some(args.pick_arguments(flag))
+    }
+}
+
 macro_rules! impl_pickable_for_number {
     ($($t:ty),*) => {
         $(
@@ -21,6 +29,23 @@ macro_rules! impl_pickable_for_number {
                         return None;
                     };
                     picked.parse().ok()
+                }
+            }
+
+            impl Pickable for Vec<$t> {
+                type Output = Vec<$t>;
+
+                fn pick(args: &mut crate::parser::Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
+                    let picked_vec = args.pick_arguments(flag);
+                    let mut result = Vec::new();
+                    for picked in picked_vec {
+                        if let Ok(parsed) = picked.parse() {
+                            result.push(parsed);
+                        } else {
+                            return None;
+                        }
+                    }
+                    Some(result)
                 }
             }
         )*
@@ -49,6 +74,23 @@ impl Pickable for usize {
             Ok(size) => Some(size.bytes() as usize),
             Err(_) => None,
         }
+    }
+}
+
+impl Pickable for Vec<usize> {
+    type Output = Vec<usize>;
+
+    fn pick(args: &mut crate::parser::Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
+        let picked_vec = args.pick_arguments(flag);
+        let mut result = Vec::new();
+        for picked in picked_vec {
+            let size_parse = Size::from_str(picked.as_str());
+            match size_parse {
+                Ok(size) => result.push(size.bytes() as usize),
+                Err(_) => return None,
+            }
+        }
+        Some(result)
     }
 }
 

@@ -1,6 +1,6 @@
 use std::mem::replace;
 
-use mingling_core::{Flag, special_argument, special_flag};
+use mingling_core::{Flag, special_argument, special_arguments, special_flag};
 
 /// User input arguments
 #[derive(Debug, Default)]
@@ -67,32 +67,79 @@ impl std::ops::DerefMut for Argument {
 }
 
 impl Argument {
-    /// Extracts argument (with value) from arguments
+    /// Picks a single argument with the given flag
     pub fn pick_argument<F>(&mut self, flag: F) -> Option<String>
     where
         F: Into<Flag>,
     {
+        if self.len() < 1 {
+            return None;
+        }
+
         let flag: Flag = flag.into();
-        for argument in flag.iter() {
-            let value = special_argument!(self.vec, argument);
-            if value.is_some() {
-                return value;
+        if flag.len() > 0 {
+            // Has any flag
+            for argument in flag.iter() {
+                let value = special_argument!(self.vec, argument);
+                if value.is_some() {
+                    return value;
+                }
             }
+        } else {
+            // No flag
+            return Some(self.vec.remove(0));
         }
         None
     }
 
-    /// Extracts flags from arguments
+    /// Picks arguments with the given flag
+    pub fn pick_arguments<F>(&mut self, flag: F) -> Vec<String>
+    where
+        F: Into<Flag>,
+    {
+        let mut str_result = Vec::new();
+
+        if self.len() < 1 {
+            return str_result;
+        }
+
+        let flag: Flag = flag.into();
+        for argument in flag.iter() {
+            let value = special_arguments!(self.vec, argument);
+            str_result.extend(value);
+        }
+
+        str_result
+    }
+
+    /// Picks a flag with the given flag
     pub fn pick_flag<F>(&mut self, flag: F) -> bool
     where
         F: Into<Flag>,
     {
+        if self.len() < 1 {
+            return false;
+        }
+
         let flag: Flag = flag.into();
-        for argument in flag.iter() {
-            let enabled = special_flag!(self.vec, argument);
-            if enabled {
-                return enabled;
+        if flag.len() > 0 {
+            // Has any flag
+            for argument in flag.iter() {
+                let enabled = special_flag!(self.vec, argument);
+                if enabled {
+                    return enabled;
+                }
             }
+        } else {
+            let first = self.vec.remove(0);
+            let first_lower = first.to_lowercase();
+            let trimmed = first_lower.trim();
+            let result = match trimmed {
+                "y" | "yes" | "true" | "1" => return true,
+                "n" | "no" | "false" | "0" => return false,
+                _ => false,
+            };
+            return result;
         }
         false
     }
