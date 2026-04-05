@@ -49,6 +49,10 @@
 //! > mycmd hallo
 //! Dispatcher not found for command `hallo`
 //! ```
+//!
+//! # Features
+//! - `parser` enables the `mingling::parser` module [More](./docs/parser/index.html)
+//! - `general_renderer` adds support for serialized output formats such as JSON and YAML
 
 // Re-export Core lib
 pub use mingling::*;
@@ -81,4 +85,165 @@ pub mod macros {
     pub use mingling_macros::r_println;
     /// Used to generate a struct implementing the `Renderer` trait via a method
     pub use mingling_macros::renderer;
+}
+
+pub mod docs {
+    pub mod basic {
+        //! # Basic Usage
+        //!
+        //! This module demonstrates basic usage of Mingling with a simple "hello" command.
+        //!
+        //! ## Example
+        //!
+        //! ```rust
+        //! use mingling::{
+        //!     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
+        //!     marker::NextProcess,
+        //! };
+        //!
+        //! // Define dispatcher `HelloCommand`, directing subcommand "hello" to `HelloEntry`
+        //! dispatcher!("hello", HelloCommand => HelloEntry);
+        //!
+        //! #[tokio::main]
+        //! async fn main() {
+        //!     // Create program
+        //!     let mut program = DefaultProgram::new();
+        //!
+        //!     // Add dispatcher `HelloCommand`
+        //!     program.with_dispatcher(HelloCommand);
+        //!
+        //!     // Run program
+        //!     program.exec().await;
+        //! }
+        //!
+        //! // Register wrapper type `Hello`, setting inner to `String`
+        //! pack!(Hello = String);
+        //!
+        //! // Register chain to `DefaultProgram`, handling logic from `HelloEntry`
+        //! #[chain]
+        //! async fn parse_name(prev: HelloEntry) -> NextProcess {
+        //!     // Extract string from `HelloEntry` as argument
+        //!     let name = prev.get(0).cloned().unwrap_or_else(|| "World".to_string());
+        //!
+        //!     // Build `Hello` type and route to renderer
+        //!     Hello::new(name).to_render()
+        //! }
+        //!
+        //! // Register renderer to `DefaultProgram`, handling rendering of `Hello`
+        //! #[renderer]
+        //! fn render_hello_who(prev: Hello) {
+        //!     // Print message
+        //!     r_println!("Hello, {}!", *prev);
+        //!
+        //!     // Program ends here
+        //! }
+        //!
+        //! // Generate program, default is `DefaultProgram`
+        //! gen_program!();
+        //! ```
+        //!
+        //! ## Output
+        //!
+        //! ```text
+        //! > mycmd hello
+        //! Hello, World!
+        //! > mycmd hello Alice
+        //! Hello, Alice!
+        //! ```
+    }
+
+    pub mod parser {
+        //! # Feature `parser` Usage
+        //!
+        //! This module demonstrates advanced usage of Mingling with the `Picker` utility for argument parsing.
+        //!
+        //! ## Example
+        //!
+        //! ```rust
+        //! use mingling::{
+        //!     AnyOutput,
+        //!     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
+        //!     marker::NextProcess,
+        //!     parser::Picker,
+        //! };
+        //!
+        //! // Define dispatcher `RepeatCommand`, directing subcommand "repeat" to `RepeatEntry`
+        //! dispatcher!("repeat", RepeatCommand => RepeatEntry);
+        //!
+        //! #[tokio::main]
+        //! async fn main() {
+        //!     // Create program
+        //!     let mut program = DefaultProgram::new();
+        //!
+        //!     // Add dispatcher `RepeatCommand`
+        //!     program.with_dispatcher(RepeatCommand);
+        //!
+        //!     // Run program
+        //!     program.exec().await;
+        //! }
+        //!
+        //! // Register wrapper type `RepeatArgument`, setting inner to `(i32, String)`
+        //! pack!(RepeatArgument = (i32, String));
+        //!
+        //! // Register error type
+        //! pack!(ErrorContentRequired = ());
+        //!
+        //! // Register chain to `DefaultProgram`, handling logic for `RepeatEntry`
+        //! #[chain]
+        //! async fn parse_repeat_args(prev: RepeatEntry) -> NextProcess {
+        //!     let picker = Picker::new(prev.inner); // Create Picker from user arguments
+        //!     let picked = picker
+        //!         .pick_or::<i32>("--time", 1) // Extract argument `--time`
+        //!         .after(|n| n.clamp(1, 20)) // Clamp extracted number between 1 - 20
+        //!         // Extract first remaining argument as content, route to type `ErrorContentRequired` if not found
+        //!         .pick_or_route((), AnyOutput::new(ErrorContentRequired::default()))
+        //!         .unpack(); // Unpack
+        //!
+        //!     match picked {
+        //!         Ok(args) => {
+        //!             // Build `RepeatArgument` type and route to renderer
+        //!             RepeatArgument::new(args).to_render()
+        //!         }
+        //!         Err(e) => {
+        //!             // Extraction failed, route to error type
+        //!             e.route_renderer()
+        //!         }
+        //!     }
+        //! }
+        //!
+        //! // Render `RepeatArgument`
+        //! #[renderer]
+        //! fn render_repeat(prev: RepeatArgument) {
+        //!     let (times, content) = prev.inner;
+        //!     for _ in 0..times {
+        //!         r_println!("{}", content);
+        //!     }
+        //! }
+        //!
+        //! // Render `ErrorContentRequired`
+        //! #[renderer]
+        //! fn render_error_content_required(_prev: ErrorContentRequired) {
+        //!     r_println!("Error: content is required");
+        //! }
+        //!
+        //! // Generate program, default is `DefaultProgram`
+        //! gen_program!();
+        //! ```
+        //!
+        //! ## Output
+        //!
+        //! ```text
+        //! > mycmd repeat --time 3 Hello
+        //! Hello
+        //! Hello
+        //! Hello
+        //! > mycmd repeat --time 25 Hello
+        //! Hello
+        //! Hello
+        //! Hello
+        //! ... (repeated 20 times, clamped from 25)
+        //! > mycmd repeat --time 3
+        //! Error: content is required
+        //! ```
+    }
 }

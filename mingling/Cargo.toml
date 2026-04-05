@@ -11,6 +11,8 @@ categories = ["command-line-interface"]
 repository = "https://github.com/catilgrass/mingling"
 
 [dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
 mingling = { path = ".", features = ["full"] }
 
 [features]
