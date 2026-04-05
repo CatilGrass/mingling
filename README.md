@@ -81,7 +81,7 @@ You can read the following docs to learn more about the `Mingling` framework:
 ## Roadmap
 
 - [ ] Parallel Chains ( Parallel\<AnyOutput, AnyOutput\> )
-- [ ] General Renderers ( Json, Yaml, Toml, Ron )
+- [x] General Renderers ( Json, Yaml, Toml, Ron )
 - [ ] Completion
 - [ ] ...
 
