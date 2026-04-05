@@ -112,7 +112,9 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     #[cfg(feature = "general_renderer")]
     let general_renderer_entry = quote! {
         Self::#previous_type => {
-            let raw = any.restore::<#previous_type>().unwrap();
+            // SAFETY: Only types that match will enter this branch for forced conversion,
+            // and `AnyOutput::new` ensures the type implements serde::Serialize
+            let raw = unsafe { any.restore::<#previous_type>().unwrap_unchecked() };
             let mut r = ::mingling::RenderResult::default();
             ::mingling::GeneralRenderer::render(&raw, setting, &mut r)?;
             Ok(r)
