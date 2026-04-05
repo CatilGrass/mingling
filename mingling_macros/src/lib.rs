@@ -10,6 +10,7 @@ use syn::parse_macro_input;
 
 mod chain;
 mod dispatcher_chain;
+mod groupped;
 mod node;
 mod pack;
 mod program_setup;
@@ -72,6 +73,17 @@ pub fn renderer(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn program_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
     program_setup::setup_attr(attr, item)
+}
+
+#[proc_macro_derive(Groupped, attributes(group))]
+pub fn derive_groupped(input: TokenStream) -> TokenStream {
+    groupped::derive_groupped(input)
+}
+
+#[cfg(feature = "general_renderer")]
+#[proc_macro_derive(GrouppedSerialize, attributes(group))]
+pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
+    groupped::derive_groupped_serialize(input)
 }
 
 #[proc_macro]

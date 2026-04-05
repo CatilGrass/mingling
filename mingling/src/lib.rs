@@ -87,6 +87,9 @@ pub mod macros {
     pub use mingling_macros::renderer;
 }
 
+/// derive macro Groupped
+pub use mingling_macros::Groupped;
+
 pub mod docs {
     pub mod basic {
         //! # Basic Usage
