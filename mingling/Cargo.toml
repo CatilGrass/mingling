@@ -19,7 +19,7 @@ full = ["mingling_core/full", "general_renderer", "parser"]
 general_renderer = [
     "mingling_core/general_renderer",
     "dep:serde",
-    "mingling_macros/serde",
+    "mingling_macros/general_renderer",
 ]
 
 parser = ["dep:size"]

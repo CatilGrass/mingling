@@ -14,6 +14,9 @@ mod markers;
 mod program;
 mod renderer;
 
+#[cfg(feature = "general_renderer")]
+pub use crate::renderer::general::GeneralRenderer;
+
 pub use crate::any::group::*;
 pub use crate::any::*;
 
@@ -26,6 +29,8 @@ pub use crate::asset::renderer::*;
 pub mod error {
     pub use crate::asset::chain::error::*;
     pub use crate::exec::error::*;
+    #[cfg(feature = "general_renderer")]
+    pub use crate::renderer::general::error::*;
 }
 
 pub use crate::program::*;
@@ -34,7 +39,8 @@ pub use crate::renderer::render_result::*;
 
 /// All marker types of `Mingling` that serve no practical purpose
 pub mod marker {
-    pub use crate::markers::group_process::*;
+    pub use crate::markers::next_process::*;
+    pub use crate::markers::this_program::*;
 }
 
 /// `Mingling`'s Program initialization system

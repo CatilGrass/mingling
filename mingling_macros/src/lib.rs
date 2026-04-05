@@ -12,6 +12,7 @@ mod chain;
 mod dispatcher_chain;
 mod node;
 mod pack;
+mod program_setup;
 mod render;
 mod renderer;
 
@@ -19,6 +20,9 @@ use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
 // Global variable declarations for storing chain and renderer mappings
+#[cfg(feature = "general_renderer")]
+pub(crate) static GENERAL_RENDERERS: Lazy<Mutex<Vec<String>>> =
+    Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static PACKED_TYPES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static CHAINS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static RENDERERS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
@@ -65,6 +69,11 @@ pub fn renderer(_attr: TokenStream, item: TokenStream) -> TokenStream {
     renderer::renderer_attr(item)
 }
 
+#[proc_macro_attribute]
+pub fn program_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
+    program_setup::setup_attr(attr, item)
+}
+
 #[proc_macro]
 pub fn gen_program(input: TokenStream) -> TokenStream {
     let name = if input.is_empty() {
@@ -82,6 +91,9 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
     let chains = CHAINS.lock().unwrap().clone();
     let renderer_exist = RENDERERS_EXIST.lock().unwrap().clone();
     let chain_exist = CHAINS_EXIST.lock().unwrap().clone();
+
+    #[cfg(feature = "general_renderer")]
+    let general_renderers = GENERAL_RENDERERS.lock().unwrap().clone();
 
     let packed_types: Vec<proc_macro2::TokenStream> = packed_types
         .iter()
@@ -107,6 +119,28 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
         .iter()
         .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
         .collect();
+
+    #[cfg(feature = "general_renderer")]
+    let general_renderer_tokens: Vec<proc_macro2::TokenStream> = general_renderers
+        .iter()
+        .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
+        .collect();
+
+    #[cfg(feature = "general_renderer")]
+    let general_render = quote! {
+        fn general_render(
+            any: ::mingling::AnyOutput<Self::Enum>,
+            setting: &::mingling::GeneralRendererSetting,
+        ) -> Result<::mingling::RenderResult, ::mingling::error::GeneralRendererSerializeError> {
+            match any.member_id {
+                #(#general_renderer_tokens)*
+                _ => Ok(::mingling::RenderResult::default()),
+            }
+        }
+    };
+
+    #[cfg(not(feature = "general_renderer"))]
+    let general_render = quote! {};
 
     let expanded = quote! {
         ::mingling::macros::pack!(#name, RendererNotFound = String);
@@ -155,6 +189,7 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
                     _ => false
                 }
             }
+            #general_render
         }
 
         impl #name {

@@ -77,7 +77,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
     };
 
     // Generate the struct definition
-    #[cfg(not(feature = "serde"))]
+    #[cfg(not(feature = "general_renderer"))]
     let struct_def = quote! {
         #[derive(Debug)]
         pub struct #type_name {
@@ -85,7 +85,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
         }
     };
 
-    #[cfg(feature = "serde")]
+    #[cfg(feature = "general_renderer")]
     let struct_def = quote! {
         #[derive(Debug, serde::Serialize)]
         pub struct #type_name {

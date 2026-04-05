@@ -9,10 +9,21 @@ repository = "https://github.com/catilgrass/mingling"
 [features]
 default = []
 full = ["general_renderer"]
-general_renderer = ["dep:serde"]
+general_renderer = [
+    "dep:serde",
+    "dep:ron",
+    "dep:serde_json",
+    "dep:serde_yaml",
+    "dep:toml",
+]
 
 [dependencies]
 just_fmt = "0.1.2"
 serde = { version = "1.0", features = ["derive"], optional = true }
 thiserror = "2"
 tokio = { version = "1", features = ["io-std", "io-util"] }
+
+ron = { version = "0.12.1", optional = true }
+serde_json = { version = "1", optional = true }
+serde_yaml = { version = "0.9", optional = true }
+toml = { version = "0.9.8", optional = true }

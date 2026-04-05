@@ -73,6 +73,8 @@ pub mod macros {
     pub use mingling_macros::node;
     /// Used to create a wrapper type for use with `Chain` and `Renderer`
     pub use mingling_macros::pack;
+    // Used to generate program setup
+    pub use mingling_macros::program_setup;
     /// Used to print content within a `Renderer` context
     pub use mingling_macros::r_print;
     /// Used to print content with a newline within a `Renderer` context

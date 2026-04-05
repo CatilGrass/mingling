@@ -109,13 +109,29 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         Self::#previous_type => true,
     };
 
+    #[cfg(feature = "general_renderer")]
+    let general_renderer_entry = quote! {
+        Self::#previous_type => {
+            let raw = any.restore::<#previous_type>().unwrap();
+            let mut r = ::mingling::RenderResult::default();
+            ::mingling::GeneralRenderer::render(&raw, setting, &mut r)?;
+            Ok(r)
+        }
+    };
+
     let mut renderers = crate::RENDERERS.lock().unwrap();
     let mut renderer_exist = crate::RENDERERS_EXIST.lock().unwrap();
     let mut packed_types = crate::PACKED_TYPES.lock().unwrap();
 
+    #[cfg(feature = "general_renderer")]
+    let mut general_renderers = crate::GENERAL_RENDERERS.lock().unwrap();
+
     let renderer_entry_str = renderer_entry.to_string();
     let renderer_exist_entry_str = renderer_exist_entry.to_string();
     let previous_type_str = previous_type.to_token_stream().to_string();
+
+    #[cfg(feature = "general_renderer")]
+    let general_renderer_entry_str = general_renderer_entry.to_string();
 
     if !renderers.contains(&renderer_entry_str) {
         renderers.push(renderer_entry_str);
@@ -127,6 +143,11 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
 
     if !packed_types.contains(&previous_type_str) {
         packed_types.push(previous_type_str);
+    }
+
+    #[cfg(feature = "general_renderer")]
+    if !general_renderers.contains(&general_renderer_entry_str) {
+        general_renderers.push(general_renderer_entry_str);
     }
 
     // Generate the struct and implementation

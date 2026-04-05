@@ -1,0 +1,96 @@
+use crate::{
+    GeneralRendererSetting, RenderResult, renderer::general::error::GeneralRendererSerializeError,
+};
+use serde::Serialize;
+
+pub mod error;
+pub struct GeneralRenderer;
+
+impl GeneralRenderer {
+    // Renders data in the specified format to the given RenderResult.
+    pub fn render<T: Serialize + Send>(
+        data: &T,
+        setting: &GeneralRendererSetting,
+        r: &mut RenderResult,
+    ) -> Result<(), GeneralRendererSerializeError> {
+        match setting {
+            GeneralRendererSetting::Disable => Ok(()),
+            GeneralRendererSetting::Json => Self::render_to_json(data, r),
+            GeneralRendererSetting::JsonPretty => Self::render_to_json_pretty(data, r),
+            GeneralRendererSetting::Yaml => Self::render_to_yaml(data, r),
+            GeneralRendererSetting::Toml => Self::render_to_toml(data, r),
+            GeneralRendererSetting::Ron => Self::render_to_ron(data, r),
+            GeneralRendererSetting::RonPretty => Self::render_to_ron_pretty(data, r),
+        }
+    }
+
+    /// Serializes data to JSON format and writes it to the render result.
+    pub fn render_to_json<T: Serialize + Send>(
+        data: &T,
+        r: &mut RenderResult,
+    ) -> Result<(), GeneralRendererSerializeError> {
+        let json_string = serde_json::to_string(data)
+            .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
+        r.print(format!("{}", json_string).as_str());
+        Ok(())
+    }
+
+    /// Serializes data to pretty-printed JSON format and writes it to the render result.
+    pub fn render_to_json_pretty<T: Serialize + Send>(
+        data: &T,
+        r: &mut RenderResult,
+    ) -> Result<(), GeneralRendererSerializeError> {
+        let json_string = serde_json::to_string_pretty(data)
+            .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
+        r.print(format!("{}", json_string).as_str());
+        Ok(())
+    }
+
+    /// Serializes data to RON format and writes it to the render result.
+    pub fn render_to_ron<T: Serialize + Send>(
+        data: &T,
+        r: &mut RenderResult,
+    ) -> Result<(), GeneralRendererSerializeError> {
+        let ron_string = ron::ser::to_string(data)
+            .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
+        r.print(format!("{}", ron_string).as_str());
+        Ok(())
+    }
+
+    /// Serializes data to pretty-printed RON format and writes it to the render result.
+    pub fn render_to_ron_pretty<T: Serialize + Send>(
+        data: &T,
+        r: &mut RenderResult,
+    ) -> Result<(), GeneralRendererSerializeError> {
+        let mut pretty_config = ron::ser::PrettyConfig::new();
+        pretty_config.new_line = std::borrow::Cow::from("\n");
+        pretty_config.indentor = std::borrow::Cow::from("  ");
+
+        let ron_string = ron::ser::to_string_pretty(data, pretty_config)
+            .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
+        r.print(format!("{}", ron_string).as_str());
+        Ok(())
+    }
+
+    /// Serializes data to TOML format and writes it to the render result.
+    pub fn render_to_toml<T: Serialize + Send>(
+        data: &T,
+        r: &mut RenderResult,
+    ) -> Result<(), GeneralRendererSerializeError> {
+        let toml_string =
+            toml::to_string(data).map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
+        r.print(format!("{}", toml_string).as_str());
+        Ok(())
+    }
+
+    /// Serializes data to YAML format and writes it to the render result.
+    pub fn render_to_yaml<T: Serialize + Send>(
+        data: &T,
+        r: &mut RenderResult,
+    ) -> Result<(), GeneralRendererSerializeError> {
+        let yaml_string = serde_yaml::to_string(data)
+            .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
+        r.print(format!("{}", yaml_string).as_str());
+        Ok(())
+    }
+}

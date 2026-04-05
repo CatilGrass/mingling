@@ -1,3 +1,5 @@
+#[cfg(feature = "general_renderer")]
+use crate::error::GeneralRendererSerializeError;
 use crate::{
     AnyOutput, ChainProcess, RenderResult, asset::dispatcher::Dispatcher,
     error::ProgramExecuteError,
@@ -31,6 +33,9 @@ where
 
     pub stdout_setting: ProgramStdoutSetting,
     pub user_context: ProgramUserContext,
+
+    #[cfg(feature = "general_renderer")]
+    pub general_renderer_name: GeneralRendererSetting,
 }
 
 impl<C, G> Program<C, G>
@@ -47,6 +52,9 @@ where
             dispatcher: Vec::new(),
             stdout_setting: Default::default(),
             user_context: Default::default(),
+
+            #[cfg(feature = "general_renderer")]
+            general_renderer_name: GeneralRendererSetting::Disable,
         }
     }
 
@@ -115,6 +123,13 @@ pub trait ProgramCollect {
 
     /// Whether the program has a chain that can handle the current [AnyOutput](./struct.AnyOutput.html)
     fn has_chain(any: &AnyOutput<Self::Enum>) -> bool;
+
+    /// Perform general rendering and presentation of any type
+    #[cfg(feature = "general_renderer")]
+    fn general_render(
+        any: AnyOutput<Self::Enum>,
+        setting: &GeneralRendererSetting,
+    ) -> Result<RenderResult, GeneralRendererSerializeError>;
 }
 
 #[macro_export]

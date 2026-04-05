@@ -17,7 +17,7 @@ impl Default for ProgramStdoutSetting {
     }
 }
 
-/// Program stdout settings
+/// Program user context
 #[derive(Debug, Clone, Default)]
 pub struct ProgramUserContext {
     /// View help information instead of running the command
@@ -25,4 +25,64 @@ pub struct ProgramUserContext {
 
     /// Skip user confirmation step
     pub confirm: bool,
+}
+
+#[cfg(feature = "general_renderer")]
+#[derive(Debug, Clone, Default)]
+pub enum GeneralRendererSetting {
+    #[default]
+    Disable,
+    Json,
+    JsonPretty,
+    Yaml,
+    Toml,
+    Ron,
+    RonPretty,
+}
+
+#[cfg(feature = "general_renderer")]
+impl std::str::FromStr for GeneralRendererSetting {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match just_fmt::kebab_case!(s).as_str() {
+            "disable" => Ok(GeneralRendererSetting::Disable),
+            "json" => Ok(GeneralRendererSetting::Json),
+            "json-pretty" => Ok(GeneralRendererSetting::JsonPretty),
+            "yaml" => Ok(GeneralRendererSetting::Yaml),
+            "toml" => Ok(GeneralRendererSetting::Toml),
+            "ron" => Ok(GeneralRendererSetting::Ron),
+            "ron-pretty" => Ok(GeneralRendererSetting::RonPretty),
+            _ => Err(format!("Invalid renderer: '{}'", s)),
+        }
+    }
+}
+
+#[cfg(feature = "general_renderer")]
+impl From<&str> for GeneralRendererSetting {
+    fn from(s: &str) -> Self {
+        s.parse().unwrap_or(GeneralRendererSetting::Disable)
+    }
+}
+
+#[cfg(feature = "general_renderer")]
+impl From<String> for GeneralRendererSetting {
+    fn from(s: String) -> Self {
+        s.as_str().into()
+    }
+}
+
+#[cfg(feature = "general_renderer")]
+impl std::fmt::Display for GeneralRendererSetting {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GeneralRendererSetting::Disable => write!(f, "disable"),
+            GeneralRendererSetting::Json => write!(f, "json"),
+            GeneralRendererSetting::JsonPretty => write!(f, "json-pretty"),
+            GeneralRendererSetting::Yaml => write!(f, "yaml"),
+            GeneralRendererSetting::Toml => write!(f, "toml"),
+            GeneralRendererSetting::Ron => write!(f, "ron"),
+            GeneralRendererSetting::RonPretty => write!(f, "ron-pretty"),
+        }
+    }
 }

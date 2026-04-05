@@ -23,14 +23,16 @@ where
         Ok((dispatcher, args)) => {
             // Entry point
             current = match dispatcher.begin(args) {
-                ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C, G>(any)),
+                ChainProcess::Ok((any, Next::Renderer)) => {
+                    return Ok(render::<C, G>(&program, any));
+                }
                 ChainProcess::Ok((any, Next::Chain)) => any,
                 ChainProcess::Err(e) => return Err(e.into()),
             };
         }
         Err(ProgramInternalExecuteError::DispatcherNotFound) => {
             // No matching Dispatcher is found
-            current = C::build_dispatcher_not_found(program.args);
+            current = C::build_dispatcher_not_found(program.args.clone());
         }
         Err(e) => return Err(e),
     };
@@ -42,16 +44,16 @@ where
             // If a chain exists, execute as a chain
             if C::has_chain(&current) {
                 match C::do_chain(current).await {
-                    ChainProcess::Ok((any, Next::Renderer)) => return Ok(render::<C, G>(any)),
+                    ChainProcess::Ok((any, Next::Renderer)) => {
+                        return Ok(render::<C, G>(&program, any));
+                    }
                     ChainProcess::Ok((any, Next::Chain)) => any,
                     ChainProcess::Err(e) => return Err(e.into()),
                 }
             }
             // If no chain exists, attempt to render
             else if C::has_renderer(&current) {
-                let mut render_result = RenderResult::default();
-                C::render(current, &mut render_result);
-                return Ok(render_result);
+                return Ok(render::<C, G>(&program, current));
             }
             // No renderer exists
             else {
@@ -113,10 +115,28 @@ where
 }
 
 #[inline(always)]
-fn render<C: ProgramCollect<Enum = G>, G: Display>(any: AnyOutput<G>) -> RenderResult {
-    let mut render_result = RenderResult::default();
-    C::render(any, &mut render_result);
-    render_result
+#[allow(unused_variables)]
+fn render<C: ProgramCollect<Enum = G>, G: Display>(
+    program: &Program<C, G>,
+    any: AnyOutput<G>,
+) -> RenderResult {
+    #[cfg(not(feature = "general_renderer"))]
+    {
+        let mut render_result = RenderResult::default();
+        C::render(any, &mut render_result);
+        render_result
+    }
+    #[cfg(feature = "general_renderer")]
+    {
+        match program.general_renderer_name {
+            super::GeneralRendererSetting::Disable => {
+                let mut render_result = RenderResult::default();
+                C::render(any, &mut render_result);
+                render_result
+            }
+            _ => C::general_render(any, &program.general_renderer_name).unwrap(),
+        }
+    }
 }
 
 // Get all registered dispatcher names from the program

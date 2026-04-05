@@ -1,2 +1,4 @@
 #[doc(hidden)]
-pub mod group_process;
+pub mod next_process;
+#[doc(hidden)]
+pub mod this_program;

@@ -93,11 +93,11 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         Err(e) => return e.to_compile_error().into(),
     };
 
-    // Ensure the return type is named "GroupProcess"
-    if return_type.path.segments.last().unwrap().ident != "GroupProcess" {
+    // Ensure the return type is named "NextProcess"
+    if return_type.path.segments.last().unwrap().ident != "NextProcess" {
         return syn::Error::new(
             return_type.span(),
-            "Return type must be 'mingling::marker::GroupProcess'",
+            "Return type must be 'mingling::marker::NextProcess'",
         )
         .to_compile_error()
         .into();
@@ -134,7 +134,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
                 async fn proc(#prev_param: Self::Previous) ->
                     ::mingling::ChainProcess<DefaultProgram>
                 {
-                    let _ = GroupProcess;
+                    let _ = NextProcess;
                     // Call the original function
                     #fn_name(#prev_param).await
                 }
@@ -159,7 +159,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
                 async fn proc(#prev_param: Self::Previous) ->
                     ::mingling::ChainProcess<#group_name>
                 {
-                    let _ = GroupProcess;
+                    let _ = NextProcess;
                     // Call the original function
                     #fn_name(#prev_param).await
                 }

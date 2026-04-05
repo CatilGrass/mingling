@@ -5,6 +5,11 @@ use crate::{ProgramCollect, program::Program};
 mod basic;
 pub use basic::*;
 
+#[cfg(feature = "general_renderer")]
+mod general_renderer;
+#[cfg(feature = "general_renderer")]
+pub use general_renderer::*;
+
 pub trait ProgramSetup<C, G>
 where
     C: ProgramCollect,

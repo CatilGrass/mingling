@@ -1,0 +1,61 @@
+use std::fmt::Display;
+
+use crate::{
+    ProgramCollect,
+    program::{Program, setup::ProgramSetup},
+};
+
+/// Sets up the general renderer for the program:
+///
+/// - Adds a `--renderer` global argument to specify the renderer type
+pub struct GeneralRendererSimpleSetup;
+
+impl<C, G> ProgramSetup<C, G> for GeneralRendererSimpleSetup
+where
+    C: ProgramCollect,
+    G: Display,
+{
+    fn setup(&mut self, program: &mut Program<C, G>) {
+        program.global_argument("--renderer", |p, renderer| {
+            p.general_renderer_name = renderer.into();
+        });
+    }
+}
+
+/// Sets up the general renderer for the program:
+///
+/// - Adds global flags to specify the renderer type:
+///   * `--json` for JSON output
+///   * `--json-pretty` for pretty-printed JSON output
+///   * `--yaml` for YAML output
+///   * `--toml` for TOML output
+///   * `--ron` for RON output
+///   * `--ron-pretty` for pretty-printed RON output
+pub struct GeneralRendererSetup;
+
+impl<C, G> ProgramSetup<C, G> for GeneralRendererSetup
+where
+    C: ProgramCollect,
+    G: Display,
+{
+    fn setup(&mut self, program: &mut Program<C, G>) {
+        program.global_flag("--json", |p| {
+            p.general_renderer_name = crate::GeneralRendererSetting::Json
+        });
+        program.global_flag("--json-pretty", |p| {
+            p.general_renderer_name = crate::GeneralRendererSetting::JsonPretty.into();
+        });
+        program.global_flag("--yaml", |p| {
+            p.general_renderer_name = crate::GeneralRendererSetting::Yaml.into();
+        });
+        program.global_flag("--toml", |p| {
+            p.general_renderer_name = crate::GeneralRendererSetting::Toml.into();
+        });
+        program.global_flag("--ron", |p| {
+            p.general_renderer_name = crate::GeneralRendererSetting::Ron.into();
+        });
+        program.global_flag("--ron-pretty", |p| {
+            p.general_renderer_name = crate::GeneralRendererSetting::RonPretty.into();
+        });
+    }
+}

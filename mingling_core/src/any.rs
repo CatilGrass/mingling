@@ -23,7 +23,7 @@ pub struct AnyOutput<G>
 where
     G: Display,
 {
-    inner: Box<dyn std::any::Any + Send + 'static>,
+    pub(crate) inner: Box<dyn std::any::Any + Send + 'static>,
     pub type_id: std::any::TypeId,
     pub member_id: G,
 }
@@ -80,6 +80,19 @@ where
     /// Route the output to the Renderer, ending execution
     pub fn route_renderer(self) -> ChainProcess<G> {
         ChainProcess::Ok((self, Next::Renderer))
+    }
+
+    #[cfg(feature = "general_renderer")]
+    /// Restore AnyOutput back to the original Serialize type
+    pub fn restore<T: Serialize + 'static>(self) -> Option<T> {
+        if self.type_id == std::any::TypeId::of::<T>() {
+            match self.inner.downcast::<T>() {
+                Ok(boxed) => Some(*boxed),
+                Err(_) => None,
+            }
+        } else {
+            None
+        }
     }
 }
 
