@@ -1,0 +1,12 @@
+    ┌────────────────────────────────────┐
+    │              Mingling              │
+    │       The Rust CLI Framework       │
+    │                                    │
+    │ USE:                               │
+    │  Run command in your project       │
+    │   > cargo add mingling             │
+    │                                    │
+    │  Or add this to your Cargo.toml    │
+    │   > mingling = "0.1.4"             │
+    │                                    │
+    └────────────────────────────────────┘

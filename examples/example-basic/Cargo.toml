@@ -1,0 +1,9 @@
+[package]
+name = "example-basic"
+version.workspace = true
+edition = "2024"
+
+[dependencies]
+mingling.workspace = true
+tokio.workspace = true
+serde.workspace = true

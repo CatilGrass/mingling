@@ -1,0 +1,9 @@
+[package]
+name = "example-general-renderer"
+version.workspace = true
+edition = "2024"
+
+[dependencies]
+mingling.workspace = true
+tokio.workspace = true
+serde.workspace = true

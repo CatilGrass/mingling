@@ -1,0 +1,23 @@
+[package]
+name = "mingling-workspace"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+package.version = "0.1.0"
+members = [
+    "mingling",
+    "mingling_cli",
+    "mingling_core",
+    "mingling_macros",
+    "examples/example-basic",
+    "examples/example-general-renderer",
+    "examples/example-picker",
+]
+
+resolver = "2"
+
+[workspace.dependencies]
+mingling = { version = "0.1.4", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
