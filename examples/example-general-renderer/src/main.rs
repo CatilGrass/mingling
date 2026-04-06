@@ -23,6 +23,14 @@
 //! cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22 --json
 //! cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22 --yaml
 //! ```
+//!
+//! Will print:
+//! ```plain
+//! Bob is 22 years old
+//! {"member_name":"Bob","member_age":22}
+//! member_name: Bob
+//! member_age: 22
+//! ```
 
 use mingling::{
     AnyOutput, Groupped,
