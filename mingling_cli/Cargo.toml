@@ -1,0 +1,13 @@
+[package]
+name = "mingling_cli"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "mling"
+path = "src/main.rs"
+
+[dependencies]
+mingling = { path = "../mingling", features = ["parser"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
