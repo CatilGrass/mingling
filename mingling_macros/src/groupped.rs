@@ -11,14 +11,12 @@ use syn::{Attribute, DeriveInput, Ident, parse_macro_input};
 /// Parses the `#[group(...)]` attribute to extract the group type
 fn parse_group_attribute(attrs: &[Attribute]) -> Option<Ident> {
     for attr in attrs {
-        if attr.path().is_ident("group") {
-            if let Ok(meta) = attr.parse_args::<syn::Meta>() {
-                if let syn::Meta::Path(path) = meta {
-                    if let Some(segment) = path.segments.last() {
-                        return Some(segment.ident.clone());
-                    }
-                }
-            }
+        if attr.path().is_ident("group")
+            && let Ok(meta) = attr.parse_args::<syn::Meta>()
+            && let syn::Meta::Path(path) = meta
+            && let Some(segment) = path.segments.last()
+        {
+            return Some(segment.ident.clone());
         }
     }
     None
