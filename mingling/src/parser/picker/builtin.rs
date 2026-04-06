@@ -25,9 +25,7 @@ macro_rules! impl_pickable_for_number {
                 type Output = $t;
 
                 fn pick(args: &mut crate::parser::Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
-                    let Some(picked) = args.pick_argument(flag) else {
-                        return None;
-                    };
+                    let picked = args.pick_argument(flag)?;
                     picked.parse().ok()
                 }
             }
@@ -66,9 +64,7 @@ impl Pickable for usize {
     type Output = usize;
 
     fn pick(args: &mut crate::parser::Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
-        let Some(picked) = args.pick_argument(flag) else {
-            return None;
-        };
+        let picked = args.pick_argument(flag)?;
         let size_parse = Size::from_str(picked.as_str());
         match size_parse {
             Ok(size) => Some(size.bytes() as usize),

@@ -72,12 +72,12 @@ impl Argument {
     where
         F: Into<Flag>,
     {
-        if self.len() < 1 {
+        if self.is_empty() {
             return None;
         }
 
         let flag: Flag = flag.into();
-        if flag.len() > 0 {
+        if !flag.is_empty() {
             // Has any flag
             for argument in flag.iter() {
                 let value = special_argument!(self.vec, argument);
@@ -99,12 +99,12 @@ impl Argument {
     {
         let mut str_result = Vec::new();
 
-        if self.len() < 1 {
+        if self.is_empty() {
             return str_result;
         }
 
         let flag: Flag = flag.into();
-        if flag.len() < 1 {
+        if flag.is_empty() {
             let value = special_arguments!(self.vec, "");
             str_result.extend(value);
         } else {
@@ -122,12 +122,12 @@ impl Argument {
     where
         F: Into<Flag>,
     {
-        if self.len() < 1 {
+        if self.is_empty() {
             return false;
         }
 
         let flag: Flag = flag.into();
-        if flag.len() > 0 {
+        if !flag.is_empty() {
             // Has any flag
             for argument in flag.iter() {
                 let enabled = special_flag!(self.vec, argument);
