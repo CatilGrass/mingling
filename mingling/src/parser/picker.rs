@@ -6,6 +6,9 @@ use mingling_core::Flag;
 #[doc(hidden)]
 pub mod builtin;
 
+#[doc(hidden)]
+pub mod bools;
+
 /// A builder for extracting values from command-line arguments.
 ///
 /// The `Picker` struct holds parsed arguments and provides a fluent interface
