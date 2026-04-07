@@ -41,6 +41,7 @@ use crate::{Program, ProgramCollect};
 ///     println!("Flag: {}", arg);
 /// }
 /// ```
+#[derive(Debug, Clone)]
 pub struct Flag {
     vec: Vec<&'static str>,
 }
