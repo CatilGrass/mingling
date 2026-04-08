@@ -10,7 +10,9 @@ use crate::{
 #[doc(hidden)]
 pub mod error;
 
-pub async fn exec<C, G>(program: Program<C, G>) -> Result<RenderResult, ProgramInternalExecuteError>
+pub async fn exec<C, G>(
+    program: &Program<C, G>,
+) -> Result<RenderResult, ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = G>,
     G: Display,
@@ -73,7 +75,7 @@ where
 #[allow(clippy::type_complexity)]
 fn match_user_input<C, G>(
     program: &Program<C, G>,
-) -> Result<(&Box<dyn Dispatcher<G>>, Vec<String>), ProgramInternalExecuteError>
+) -> Result<(&Box<dyn Dispatcher<G> + Send + Sync>, Vec<String>), ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = G>,
     G: Display,
@@ -82,7 +84,7 @@ where
     let command = format!("{} ", program.args.join(" "));
 
     // Find all nodes that match the command prefix
-    let matching_nodes: Vec<&(String, &Box<dyn Dispatcher<G>>)> = nodes
+    let matching_nodes: Vec<&(String, &Box<dyn Dispatcher<G> + Send + Sync>)> = nodes
         .iter()
         // Also add a space to the node string to ensure consistent matching logic
         .filter(|(node_str, _)| command.starts_with(&format!("{} ", node_str)))
@@ -142,7 +144,7 @@ fn render<C: ProgramCollect<Enum = G>, G: Display>(
 // Get all registered dispatcher names from the program
 fn get_nodes<C: ProgramCollect<Enum = G>, G: Display>(
     program: &Program<C, G>,
-) -> Vec<(String, &Box<dyn Dispatcher<G>>)> {
+) -> Vec<(String, &Box<dyn Dispatcher<G> + Send + Sync>)> {
     program
         .dispatcher
         .iter()

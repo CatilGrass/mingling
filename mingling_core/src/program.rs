@@ -4,7 +4,7 @@ use crate::{
     AnyOutput, ChainProcess, RenderResult, asset::dispatcher::Dispatcher,
     error::ProgramExecuteError,
 };
-use std::{env, fmt::Display, pin::Pin};
+use std::{env, fmt::Display, pin::Pin, sync::OnceLock};
 
 #[doc(hidden)]
 pub mod exec;
@@ -18,6 +18,28 @@ mod flag;
 pub use flag::*;
 use tokio::io::AsyncWriteExt;
 
+/// Global static reference to the current program instance
+static THIS_PROGRAM: OnceLock<Option<Box<dyn std::any::Any + Send + Sync>>> = OnceLock::new();
+
+/// Returns a reference to the current program instance, panics if not set.
+pub fn this<C>() -> &'static Program<C, C>
+where
+    C: ProgramCollect + Display + 'static,
+{
+    try_get_this_program().expect("Program not initialized")
+}
+
+/// Returns a reference to the current program instance, if set.
+fn try_get_this_program<C>() -> Option<&'static Program<C, C>>
+where
+    C: ProgramCollect + Display + 'static,
+{
+    THIS_PROGRAM
+        .get()?
+        .as_ref()?
+        .downcast_ref::<Program<C, C>>()
+}
+
 /// Program, used to define the behavior of the entire command-line program
 #[derive(Default)]
 pub struct Program<C, G>
@@ -29,7 +51,7 @@ where
     pub(crate) group: std::marker::PhantomData<G>,
 
     pub(crate) args: Vec<String>,
-    pub(crate) dispatcher: Vec<Box<dyn Dispatcher<G>>>,
+    pub(crate) dispatcher: Vec<Box<dyn Dispatcher<G> + Send + Sync>>,
 
     pub stdout_setting: ProgramStdoutSetting,
     pub user_context: ProgramUserContext,
@@ -58,14 +80,57 @@ where
         }
     }
 
-    /// Run the command line program
-    pub async fn exec_without_render(mut self) -> Result<RenderResult, ProgramExecuteError> {
-        self.args = self.args.iter().skip(1).cloned().collect();
-        crate::exec::exec(self).await.map_err(|e| e.into())
+    /// Returns a reference to the current program instance, if set.
+    pub async fn this_program() -> &'static Program<C, G>
+    where
+        C: 'static,
+        G: 'static,
+    {
+        THIS_PROGRAM
+            .get()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .downcast_ref::<Program<C, G>>()
+            .unwrap()
+    }
+
+    /// Sets the current program instance and runs the provided async function.
+    async fn set_instance_and_run<F, Fut>(self, f: F) -> Fut::Output
+    where
+        C: 'static + Send + Sync,
+        G: 'static + Send + Sync,
+        F: FnOnce(&'static Program<C, G>) -> Fut + Send + Sync,
+        Fut: Future + Send,
+    {
+        THIS_PROGRAM.get_or_init(|| Some(Box::new(self)));
+        let program = THIS_PROGRAM
+            .get()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .downcast_ref::<Program<C, G>>()
+            .unwrap();
+        f(program).await
     }
 
     /// Run the command line program
-    pub async fn exec(self) {
+    pub async fn exec_without_render(mut self) -> Result<RenderResult, ProgramExecuteError>
+    where
+        C: 'static + Send + Sync,
+        G: 'static + Send + Sync,
+    {
+        self.args = self.args.iter().skip(1).cloned().collect();
+        self.set_instance_and_run(|p| async { crate::exec::exec(p).await.map_err(|e| e.into()) })
+            .await
+    }
+
+    /// Run the command line program
+    pub async fn exec(self)
+    where
+        C: 'static + Send + Sync,
+        G: 'static + Send + Sync,
+    {
         let stdout_setting = self.stdout_setting.clone();
         let result = match self.exec_without_render().await {
             Ok(r) => r,

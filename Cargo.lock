@@ -173,6 +173,7 @@ name = "mingling_core"
 version = "0.1.4"
 dependencies = [
  "just_fmt",
+ "once_cell",
  "ron",
  "serde",
  "serde_json",
