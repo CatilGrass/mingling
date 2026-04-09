@@ -75,14 +75,16 @@ The Mingling project consists of two main parts:
 
 You can read the following docs to learn more about the `Mingling` framework:
 
-- Check out **[mingling/README.md](mingling/README.md)** to learn about the core library.
+- Check out **[Mingling Examples](examples/)** to learn about the core library.
 - Check out **[mingling_macros/README.md](mingling_macros/README.md)** to learn how to use the macro system.
 
 ## Roadmap
 
-- [ ] Parallel Chains ( Parallel\<AnyOutput, AnyOutput\> )
-- [x] General Renderers ( Json, Yaml, Toml, Ron )
-- [ ] Completion
+- [ ] core: \[**unplanned**\] Parallel Chains
+- [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
+- [ ] core: \[**0.1.5**\] Completion *( Bash Zsh Fish Pwsl )*
+- [ ] \[**unplanned**\] Helpdoc
+- [ ] \[**unplanned**\] Parser Theme
 - [ ] ...
 
 ## License
