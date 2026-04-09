@@ -99,10 +99,10 @@ fn extract_return_type(sig: &Signature) -> syn::Result<()> {
 
 pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the attribute arguments (e.g., MyProgram from #[setup(MyProgram)])
-    // If no argument is provided, use DefaultProgram
+    // If no argument is provided, use ThisProgram
     let (program_name, use_crate_prefix) = if attr.is_empty() {
         (
-            Ident::new("DefaultProgram", proc_macro2::Span::call_site()),
+            Ident::new("ThisProgram", proc_macro2::Span::call_site()),
             true,
         )
     } else {
@@ -160,8 +160,8 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             #(#fn_attrs)*
             #vis struct #struct_name;
 
-            impl ::mingling::setup::ProgramSetup<DefaultProgram, DefaultProgram> for #struct_name {
-                fn setup(&mut self, program: &mut ::mingling::Program<DefaultProgram, DefaultProgram>) {
+            impl ::mingling::setup::ProgramSetup<ThisProgram, ThisProgram> for #struct_name {
+                fn setup(&mut self, program: &mut ::mingling::Program<ThisProgram, ThisProgram>) {
                     let _ = ThisProgram;
                     // Call the original function with the actual Program type
                     #fn_name(program);
@@ -170,7 +170,7 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             // Keep the original function for internal use
             #(#fn_attrs)*
-            #vis fn #fn_name(#program_param: &mut ::mingling::Program<DefaultProgram, DefaultProgram>) {
+            #vis fn #fn_name(#program_param: &mut ::mingling::Program<ThisProgram, ThisProgram>) {
                 #fn_body
             }
         }

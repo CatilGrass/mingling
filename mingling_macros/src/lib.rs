@@ -99,7 +99,7 @@ pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn gen_program(input: TokenStream) -> TokenStream {
     let name = if input.is_empty() {
-        Ident::new("DefaultProgram", proc_macro2::Span::call_site())
+        Ident::new("ThisProgram", proc_macro2::Span::call_site())
     } else {
         parse_macro_input!(input as Ident)
     };

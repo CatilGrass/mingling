@@ -29,7 +29,7 @@ pub fn derive_groupped(input: TokenStream) -> TokenStream {
 
     // Parse attributes to find #[group(...)]
     let group_ident = parse_group_attribute(&input.attrs)
-        .unwrap_or_else(|| Ident::new("DefaultProgram", Span::call_site()));
+        .unwrap_or_else(|| Ident::new("ThisProgram", Span::call_site()));
 
     // Generate the Groupped trait implementation
     let expanded = quote! {
@@ -51,7 +51,7 @@ pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
 
     // Parse attributes to find #[group(...)]
     let group_ident = parse_group_attribute(&input_parsed.attrs)
-        .unwrap_or_else(|| Ident::new("DefaultProgram", Span::call_site()));
+        .unwrap_or_else(|| Ident::new("ThisProgram", Span::call_site()));
 
     // Generate both Serialize and Groupped implementations
     let expanded = quote! {

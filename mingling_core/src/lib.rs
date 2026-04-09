@@ -42,7 +42,6 @@ pub use crate::renderer::render_result::*;
 /// All marker types of `Mingling` that serve no practical purpose
 pub mod marker {
     pub use crate::markers::next_process::*;
-    pub use crate::markers::this_program::*;
 }
 
 /// `Mingling`'s Program initialization system

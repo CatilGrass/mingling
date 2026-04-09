@@ -61,10 +61,10 @@ fn extract_return_type(sig: &Signature) -> syn::Result<TypePath> {
 
 pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the attribute arguments (e.g., MyProgram from #[chain(MyProgram)])
-    // If no argument is provided, use DefaultProgram
+    // If no argument is provided, use ThisProgram
     let (group_name, use_crate_prefix) = if attr.is_empty() {
         (
-            Ident::new("DefaultProgram", proc_macro2::Span::call_site()),
+            Ident::new("ThisProgram", proc_macro2::Span::call_site()),
             true,
         )
     } else {
@@ -128,11 +128,11 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             #(#fn_attrs)*
             #vis struct #struct_name;
 
-            impl ::mingling::Chain<DefaultProgram> for #struct_name {
+            impl ::mingling::Chain<ThisProgram> for #struct_name {
                 type Previous = #previous_type;
 
                 async fn proc(#prev_param: Self::Previous) ->
-                    ::mingling::ChainProcess<DefaultProgram>
+                    ::mingling::ChainProcess<ThisProgram>
                 {
                     let _ = NextProcess;
                     // Call the original function
@@ -143,7 +143,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             // Keep the original function for internal use
             #(#fn_attrs)*
             #vis async fn #fn_name(#prev_param: #previous_type)
-                -> ::mingling::ChainProcess<DefaultProgram>
+                -> ::mingling::ChainProcess<ThisProgram>
             {
                 #fn_body
             }

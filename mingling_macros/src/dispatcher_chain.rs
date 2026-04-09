@@ -77,7 +77,7 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
             command_struct,
             pack,
         } => (
-            Ident::new("DefaultProgram", proc_macro2::Span::call_site()),
+            Ident::new("ThisProgram", proc_macro2::Span::call_site()),
             command_name,
             command_struct,
             pack,
@@ -88,21 +88,21 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
     let command_name_str = command_name.value();
 
     let expanded = if use_default {
-        // For default case, use DefaultProgram
+        // For default case, use ThisProgram
         quote! {
             #[derive(Debug, Default)]
             pub struct #command_struct;
 
-            ::mingling::macros::pack!(DefaultProgram, #pack = Vec<String>);
+            ::mingling::macros::pack!(ThisProgram, #pack = Vec<String>);
 
-            impl ::mingling::Dispatcher<DefaultProgram> for #command_struct {
+            impl ::mingling::Dispatcher<ThisProgram> for #command_struct {
                 fn node(&self) -> ::mingling::Node {
                     ::mingling::macros::node!(#command_name_str)
                 }
-                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess<DefaultProgram> {
+                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess<ThisProgram> {
                     #pack::new(args).to_chain()
                 }
-                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher<DefaultProgram>> {
+                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher<ThisProgram>> {
                     Box::new(#command_struct)
                 }
             }
@@ -149,7 +149,7 @@ pub fn dispatcher_render(input: TokenStream) -> TokenStream {
             command_struct,
             pack,
         } => (
-            Ident::new("DefaultProgram", proc_macro2::Span::call_site()),
+            Ident::new("ThisProgram", proc_macro2::Span::call_site()),
             command_name,
             command_struct,
             pack,
@@ -160,12 +160,12 @@ pub fn dispatcher_render(input: TokenStream) -> TokenStream {
     let command_name_str = command_name.value();
 
     let expanded = if use_default {
-        // For default case, use DefaultProgram
+        // For default case, use ThisProgram
         quote! {
             #[derive(Debug, Default)]
             pub struct #command_struct;
 
-            ::mingling::macros::pack!(DefaultProgram, #pack = Vec<String>);
+            ::mingling::macros::pack!(ThisProgram, #pack = Vec<String>);
 
             impl ::mingling::Dispatcher for #command_struct {
                 fn node(&self) -> ::mingling::Node {
