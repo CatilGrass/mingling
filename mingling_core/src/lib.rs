@@ -21,6 +21,8 @@ pub use crate::any::group::*;
 pub use crate::any::*;
 
 pub use crate::asset::chain::*;
+#[cfg(feature = "comp")]
+pub use crate::asset::comp::*;
 pub use crate::asset::dispatcher::*;
 pub use crate::asset::node::*;
 pub use crate::asset::renderer::*;

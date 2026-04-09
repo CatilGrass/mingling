@@ -67,6 +67,9 @@ pub mod parser;
 pub mod macros {
     /// Used to generate a struct implementing the `Chain` trait via a method
     pub use mingling_macros::chain;
+    /// Used to generate completion entry
+    #[cfg(feature = "comp")]
+    pub use mingling_macros::completion;
     /// Used to create a dispatcher that routes to a `Chain`
     pub use mingling_macros::dispatcher;
     /// Used to create a dispatcher that routes to a `Renderer`
@@ -85,6 +88,9 @@ pub mod macros {
     pub use mingling_macros::r_println;
     /// Used to generate a struct implementing the `Renderer` trait via a method
     pub use mingling_macros::renderer;
+    #[cfg(feature = "comp")]
+    /// Used to generate suggestions
+    pub use mingling_macros::suggest;
 }
 
 /// derive macro Groupped

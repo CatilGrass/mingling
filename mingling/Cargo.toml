@@ -17,13 +17,14 @@ mingling = { path = ".", features = ["full"] }
 
 [features]
 default = ["mingling_core/default"]
-full = ["mingling_core/full", "general_renderer", "parser"]
+full = ["mingling_core/full", "mingling_macros/full", "comp", "parser"]
 general_renderer = [
     "mingling_core/general_renderer",
     "dep:serde",
     "mingling_macros/general_renderer",
 ]
 
+comp = ["mingling_core/comp", "mingling_macros/comp"]
 parser = ["dep:size"]
 
 [dependencies]

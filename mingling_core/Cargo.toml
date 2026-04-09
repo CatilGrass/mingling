@@ -8,7 +8,8 @@ repository = "https://github.com/catilgrass/mingling"
 
 [features]
 default = []
-full = ["general_renderer"]
+full = ["comp", "general_renderer"]
+comp = []
 general_renderer = [
     "dep:serde",
     "dep:ron",

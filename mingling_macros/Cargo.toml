@@ -11,6 +11,8 @@ proc-macro = true
 
 [features]
 default = []
+full = ["comp", "general_renderer"]
+comp = []
 general_renderer = []
 
 [dependencies]

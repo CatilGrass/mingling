@@ -9,6 +9,8 @@ use quote::quote;
 use syn::parse_macro_input;
 
 mod chain;
+#[cfg(feature = "comp")]
+mod completion;
 mod dispatcher_chain;
 mod groupped;
 mod node;
@@ -16,6 +18,8 @@ mod pack;
 mod program_setup;
 mod render;
 mod renderer;
+#[cfg(feature = "comp")]
+mod suggest;
 
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
@@ -68,6 +72,12 @@ pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn renderer(_attr: TokenStream, item: TokenStream) -> TokenStream {
     renderer::renderer_attr(item)
+}
+
+#[cfg(feature = "comp")]
+#[proc_macro_attribute]
+pub fn completion(attr: TokenStream, item: TokenStream) -> TokenStream {
+    completion::completion_attr(attr, item)
 }
 
 #[proc_macro_attribute]
@@ -242,4 +252,10 @@ pub fn __register_renderer(input: TokenStream) -> TokenStream {
     RENDERERS.lock().unwrap().push(entry_str);
 
     TokenStream::new()
+}
+
+#[cfg(feature = "comp")]
+#[proc_macro]
+pub fn suggest(input: TokenStream) -> TokenStream {
+    suggest::suggest(input)
 }
