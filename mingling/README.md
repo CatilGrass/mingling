@@ -15,7 +15,7 @@ use mingling::macros::{dispatcher, gen_program, r_println, renderer};
 
 #[tokio::main]
 async fn main() {
-    let mut program = DefaultProgram::new();
+    let mut program = ThisProgram::new();
     program.with_dispatcher(HelloCommand);
 
     // Execute
@@ -42,7 +42,7 @@ fn fallback_renderer_not_found(prev: RendererNotFound) {
     r_println!("Renderer not found `{}`", *prev)
 }
 
-// Collect renderers and chains to generate DefaultProgram
+// Collect renderers and chains to generate ThisProgram
 gen_program!();
 ```
 

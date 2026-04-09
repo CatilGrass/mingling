@@ -28,7 +28,7 @@ dispatcher!("pick", PickCommand => PickEntry);
 
 #[tokio::main]
 async fn main() {
-    let mut program = DefaultProgram::new();
+    let mut program = ThisProgram::new();
     program.with_dispatcher(PickCommand);
     program.exec().await;
 }

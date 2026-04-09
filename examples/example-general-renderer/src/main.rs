@@ -45,7 +45,7 @@ dispatcher!("render", RenderCommand => RenderCommandEntry);
 
 #[tokio::main]
 async fn main() {
-    let mut program = DefaultProgram::new();
+    let mut program = ThisProgram::new();
     // Add `GeneralRendererSetup` to receive user input `--json` `--yaml` parameters
     program.with_setup(GeneralRendererSetup);
     program.with_dispatcher(RenderCommand);
@@ -63,7 +63,7 @@ struct Info {
 
 #[chain]
 async fn parse_render(prev: RenderCommandEntry) -> NextProcess {
-    let (name, age) = Picker::<AnyOutput<DefaultProgram>>::new(prev.inner)
+    let (name, age) = Picker::<AnyOutput<ThisProgram>>::new(prev.inner)
         .pick::<String>(())
         .pick::<i32>(())
         .unpack_directly();

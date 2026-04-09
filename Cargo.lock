@@ -43,7 +43,7 @@ dependencies = [
 name = "example-basic"
 version = "0.1.0"
 dependencies = [
- "mingling 0.1.4",
+ "mingling",
  "serde",
  "tokio",
 ]
@@ -52,7 +52,7 @@ dependencies = [
 name = "example-general-renderer"
 version = "0.1.0"
 dependencies = [
- "mingling 0.1.4",
+ "mingling",
  "serde",
  "tokio",
 ]
@@ -61,7 +61,7 @@ dependencies = [
 name = "example-picker"
 version = "0.1.0"
 dependencies = [
- "mingling 0.1.4",
+ "mingling",
  "serde",
  "tokio",
 ]
@@ -117,23 +117,11 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "mingling"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44649f30155978a64f833b8acc2ed78e79ff8e399c2476374cee874718b30575"
-dependencies = [
- "mingling_core 0.1.3",
- "mingling_macros 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde",
- "size",
-]
-
-[[package]]
-name = "mingling"
 version = "0.1.5"
 dependencies = [
- "mingling 0.1.5",
- "mingling_core 0.1.4",
- "mingling_macros 0.1.3",
+ "mingling",
+ "mingling_core",
+ "mingling_macros",
  "serde",
  "size",
  "tokio",
@@ -147,25 +135,9 @@ version = "0.1.0"
 name = "mingling_cli"
 version = "0.1.0"
 dependencies = [
- "mingling 0.1.5",
+ "mingling",
  "serde",
  "tokio",
-]
-
-[[package]]
-name = "mingling_core"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b764c83f1577a83cad7fea3dec1155da2f6e603332e9b80aac71d2ad3da974a"
-dependencies = [
- "just_fmt",
- "ron",
- "serde",
- "serde_json",
- "serde_yaml",
- "thiserror",
- "tokio",
- "toml",
 ]
 
 [[package]]
@@ -186,19 +158,6 @@ dependencies = [
 [[package]]
 name = "mingling_macros"
 version = "0.1.3"
-dependencies = [
- "just_fmt",
- "once_cell",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "mingling_macros"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a057b9d00ed35217f5d6ebf3cfe42e0061526cfecaf206f3e4a4f1567916e9c"
 dependencies = [
  "just_fmt",
  "once_cell",

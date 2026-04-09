@@ -10,7 +10,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let mut program = DefaultProgram::new();
+//!     let mut program = ThisProgram::new();
 //!     program.with_dispatcher(HelloCommand);
 //!
 //!     // Execute
@@ -37,7 +37,7 @@
 //!     r_println!("Renderer not found `{}`", *prev)
 //! }
 //!
-//! // Collect renderers and chains to generate DefaultProgram
+//! // Collect renderers and chains to generate ThisProgram
 //! gen_program!();
 //! ```
 //!
@@ -116,7 +116,7 @@ pub mod docs {
         //! #[tokio::main]
         //! async fn main() {
         //!     // Create program
-        //!     let mut program = DefaultProgram::new();
+        //!     let mut program = ThisProgram::new();
         //!
         //!     // Add dispatcher `HelloCommand`
         //!     program.with_dispatcher(HelloCommand);
@@ -128,7 +128,7 @@ pub mod docs {
         //! // Register wrapper type `Hello`, setting inner to `String`
         //! pack!(Hello = String);
         //!
-        //! // Register chain to `DefaultProgram`, handling logic from `HelloEntry`
+        //! // Register chain to `ThisProgram`, handling logic from `HelloEntry`
         //! #[chain]
         //! async fn parse_name(prev: HelloEntry) -> NextProcess {
         //!     // Extract string from `HelloEntry` as argument
@@ -138,7 +138,7 @@ pub mod docs {
         //!     Hello::new(name).to_render()
         //! }
         //!
-        //! // Register renderer to `DefaultProgram`, handling rendering of `Hello`
+        //! // Register renderer to `ThisProgram`, handling rendering of `Hello`
         //! #[renderer]
         //! fn render_hello_who(prev: Hello) {
         //!     // Print message
@@ -147,7 +147,7 @@ pub mod docs {
         //!     // Program ends here
         //! }
         //!
-        //! // Generate program, default is `DefaultProgram`
+        //! // Generate program, default is `ThisProgram`
         //! gen_program!();
         //! ```
         //!
@@ -182,7 +182,7 @@ pub mod docs {
         //! #[tokio::main]
         //! async fn main() {
         //!     // Create program
-        //!     let mut program = DefaultProgram::new();
+        //!     let mut program = ThisProgram::new();
         //!
         //!     // Add dispatcher `RepeatCommand`
         //!     program.with_dispatcher(RepeatCommand);
@@ -197,7 +197,7 @@ pub mod docs {
         //! // Register error type
         //! pack!(ErrorContentRequired = ());
         //!
-        //! // Register chain to `DefaultProgram`, handling logic for `RepeatEntry`
+        //! // Register chain to `ThisProgram`, handling logic for `RepeatEntry`
         //! #[chain]
         //! async fn parse_repeat_args(prev: RepeatEntry) -> NextProcess {
         //!     let picker = Picker::new(prev.inner); // Create Picker from user arguments
@@ -235,7 +235,7 @@ pub mod docs {
         //!     r_println!("Error: content is required");
         //! }
         //!
-        //! // Generate program, default is `DefaultProgram`
+        //! // Generate program, default is `ThisProgram`
         //! gen_program!();
         //! ```
         //!

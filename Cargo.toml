@@ -18,6 +18,6 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-mingling = { version = "0.1.4", features = ["full"] }
+mingling = { path = "mingling", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }

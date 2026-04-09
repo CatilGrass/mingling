@@ -16,7 +16,7 @@ dispatcher!("hello", HelloCommand => HelloEntry);
 #[tokio::main]
 async fn main() {
     // Create program
-    let mut program = DefaultProgram::new();
+    let mut program = ThisProgram::new();
 
     // Add dispatcher `HelloCommand`
     program.with_dispatcher(HelloCommand);
@@ -28,7 +28,7 @@ async fn main() {
 // Register wrapper type `Hello`, setting inner to `String`
 pack!(Hello = String);
 
-// Register chain to `DefaultProgram`, handling logic from `HelloEntry`
+// Register chain to `ThisProgram`, handling logic from `HelloEntry`
 #[chain]
 async fn parse_name(prev: HelloEntry) -> NextProcess {
     // Extract string from `HelloEntry` as argument
@@ -38,7 +38,7 @@ async fn parse_name(prev: HelloEntry) -> NextProcess {
     Hello::new(name).to_render()
 }
 
-// Register renderer to `DefaultProgram`, handling rendering of `Hello`
+// Register renderer to `ThisProgram`, handling rendering of `Hello`
 #[renderer]
 fn render_hello_who(prev: Hello) {
     // Print message
@@ -47,5 +47,5 @@ fn render_hello_who(prev: Hello) {
     // Program ends here
 }
 
-// Generate program, default is `DefaultProgram`
+// Generate program, default is `ThisProgram`
 gen_program!();
