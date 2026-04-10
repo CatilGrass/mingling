@@ -93,9 +93,7 @@ pub fn completion_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let mut completions = crate::COMPLETIONS.lock().unwrap();
     let completion_str = completion_entry.to_string();
-    if !completions.contains(&completion_str) {
-        completions.push(completion_str);
-    }
+    completions.insert(completion_str);
 
     expanded.into()
 }

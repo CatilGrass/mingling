@@ -176,13 +176,8 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     // Record the chain mapping
-    let chain_entry = quote! {
-        #struct_name => #previous_type,
-    };
-
-    let chain_exist_entry = quote! {
-        Self::#previous_type => true,
-    };
+    let chain_entry = build_chain_arm(&struct_name, &previous_type);
+    let chain_exist_entry = build_chain_exist_arm(&previous_type);
 
     let mut chains = crate::CHAINS.lock().unwrap();
     let mut chain_exist = crate::CHAINS_EXIST.lock().unwrap();
@@ -192,17 +187,23 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let chain_exist_entry = chain_exist_entry.to_string();
     let previous_type_str = previous_type.to_token_stream().to_string();
 
-    if !chains.contains(&chain_entry) {
-        chains.push(chain_entry);
-    }
-
-    if !chain_exist.contains(&chain_exist_entry) {
-        chain_exist.push(chain_exist_entry);
-    }
-
-    if !packed_types.contains(&previous_type_str) {
-        packed_types.push(previous_type_str);
-    }
+    chains.insert(chain_entry);
+    chain_exist.insert(chain_exist_entry);
+    packed_types.insert(previous_type_str);
 
     expanded.into()
+}
+
+/// Builds a match arm for chain mapping
+pub fn build_chain_arm(struct_name: &Ident, previous_type: &TypePath) -> proc_macro2::TokenStream {
+    quote! {
+        #struct_name => #previous_type,
+    }
+}
+
+/// Builds a match arm for chain existence check
+pub fn build_chain_exist_arm(previous_type: &TypePath) -> proc_macro2::TokenStream {
+    quote! {
+        Self::#previous_type => true,
+    }
 }

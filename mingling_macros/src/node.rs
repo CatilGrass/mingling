@@ -39,7 +39,13 @@ pub fn node(input: TokenStream) -> TokenStream {
     // Split the path by dots
     let parts: Vec<String> = path_str
         .split('.')
-        .map(|s| kebab_case!(s).to_string())
+        .map(|s| {
+            if s.starts_with('_') {
+                s.to_string()
+            } else {
+                kebab_case!(s).to_string()
+            }
+        })
         .collect();
 
     // Build the expression starting from Node::default()

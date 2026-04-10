@@ -101,25 +101,10 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     let struct_name = syn::Ident::new(&pascal_case_name, fn_name.span());
 
     // Register the renderer in the global list
-    let renderer_entry = quote! {
-        #struct_name => #previous_type,
-    };
-
-    let renderer_exist_entry = quote! {
-        Self::#previous_type => true,
-    };
-
+    let renderer_entry = build_renderer_entry(&struct_name, &previous_type);
+    let renderer_exist_entry = build_renderer_exist_entry(&previous_type);
     #[cfg(feature = "general_renderer")]
-    let general_renderer_entry = quote! {
-        Self::#previous_type => {
-            // SAFETY: Only types that match will enter this branch for forced conversion,
-            // and `AnyOutput::new` ensures the type implements serde::Serialize
-            let raw = unsafe { any.restore::<#previous_type>().unwrap_unchecked() };
-            let mut r = ::mingling::RenderResult::default();
-            ::mingling::GeneralRenderer::render(&raw, setting, &mut r)?;
-            Ok(r)
-        }
-    };
+    let general_renderer_entry = build_general_renderer_entry(&previous_type);
 
     let mut renderers = crate::RENDERERS.lock().unwrap();
     let mut renderer_exist = crate::RENDERERS_EXIST.lock().unwrap();
@@ -135,22 +120,12 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     #[cfg(feature = "general_renderer")]
     let general_renderer_entry_str = general_renderer_entry.to_string();
 
-    if !renderers.contains(&renderer_entry_str) {
-        renderers.push(renderer_entry_str);
-    }
-
-    if !renderer_exist.contains(&renderer_exist_entry_str) {
-        renderer_exist.push(renderer_exist_entry_str);
-    }
-
-    if !packed_types.contains(&previous_type_str) {
-        packed_types.push(previous_type_str);
-    }
+    renderers.insert(renderer_entry_str);
+    renderer_exist.insert(renderer_exist_entry_str);
+    packed_types.insert(previous_type_str);
 
     #[cfg(feature = "general_renderer")]
-    if !general_renderers.contains(&general_renderer_entry_str) {
-        general_renderers.push(general_renderer_entry_str);
-    }
+    general_renderers.insert(general_renderer_entry_str);
 
     // Generate the struct and implementation
     // We need to create a wrapper function that adds the r parameter
@@ -184,4 +159,36 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     };
 
     expanded.into()
+}
+
+/// Builds the renderer entry for the global renderers list
+pub fn build_renderer_entry(
+    struct_name: &syn::Ident,
+    previous_type: &TypePath,
+) -> proc_macro2::TokenStream {
+    quote! {
+        #struct_name => #previous_type,
+    }
+}
+
+/// Builds the renderer existence check entry
+pub fn build_renderer_exist_entry(previous_type: &TypePath) -> proc_macro2::TokenStream {
+    quote! {
+        Self::#previous_type => true,
+    }
+}
+
+/// Builds the general renderer entry
+#[cfg(feature = "general_renderer")]
+pub fn build_general_renderer_entry(previous_type: &TypePath) -> proc_macro2::TokenStream {
+    quote! {
+        Self::#previous_type => {
+            // SAFETY: Only types that match will enter this branch for forced conversion,
+            // and `AnyOutput::new` ensures the type implements serde::Serialize
+            let raw = unsafe { any.restore::<#previous_type>().unwrap_unchecked() };
+            let mut r = ::mingling::RenderResult::default();
+            ::mingling::GeneralRenderer::render(&raw, setting, &mut r)?;
+            Ok(r)
+        }
+    }
 }

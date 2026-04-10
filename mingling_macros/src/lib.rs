@@ -3,9 +3,12 @@
 //! This crate provides procedural macros for the Mingling framework.
 //! Macros are implemented in separate modules and re-exported here.
 
+use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
+use std::collections::BTreeSet;
+use std::sync::Mutex;
 use syn::parse_macro_input;
 
 mod chain;
@@ -21,21 +24,23 @@ mod renderer;
 #[cfg(feature = "comp")]
 mod suggest;
 
-use once_cell::sync::Lazy;
-use std::sync::Mutex;
-
 // Global variables
 #[cfg(feature = "general_renderer")]
-pub(crate) static GENERAL_RENDERERS: Lazy<Mutex<Vec<String>>> =
-    Lazy::new(|| Mutex::new(Vec::new()));
+pub(crate) static GENERAL_RENDERERS: Lazy<Mutex<BTreeSet<String>>> =
+    Lazy::new(|| Mutex::new(BTreeSet::new()));
 #[cfg(feature = "comp")]
-pub(crate) static COMPLETIONS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+pub(crate) static COMPLETIONS: Lazy<Mutex<BTreeSet<String>>> =
+    Lazy::new(|| Mutex::new(BTreeSet::new()));
 
-pub(crate) static PACKED_TYPES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
-pub(crate) static CHAINS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
-pub(crate) static RENDERERS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
-pub(crate) static CHAINS_EXIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
-pub(crate) static RENDERERS_EXIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+pub(crate) static PACKED_TYPES: Lazy<Mutex<BTreeSet<String>>> =
+    Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static CHAINS: Lazy<Mutex<BTreeSet<String>>> = Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static RENDERERS: Lazy<Mutex<BTreeSet<String>>> =
+    Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static CHAINS_EXIST: Lazy<Mutex<BTreeSet<String>>> =
+    Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static RENDERERS_EXIST: Lazy<Mutex<BTreeSet<String>>> =
+    Lazy::new(|| Mutex::new(BTreeSet::new()));
 
 #[proc_macro]
 pub fn node(input: TokenStream) -> TokenStream {
@@ -101,24 +106,69 @@ pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn gen_program(input: TokenStream) -> TokenStream {
-    let name = if input.is_empty() {
-        Ident::new("ThisProgram", proc_macro2::Span::call_site())
-    } else {
-        parse_macro_input!(input as Ident)
-    };
-
-    let mut packed_types = PACKED_TYPES.lock().unwrap().clone();
-    packed_types.push("DispatcherNotFound".to_string());
-    packed_types.push("RendererNotFound".to_string());
+    let name = read_name(&input);
 
     #[cfg(feature = "comp")]
-    {
-        packed_types.push("CompletionContext".to_string());
-        packed_types.push("CompletionSuggest".to_string());
-    }
+    let out = TokenStream::from(quote! {
+        ::mingling::macros::program_gen_completion!(#name);
+        ::mingling::macros::program_final_gen!(#name);
+    });
+    #[cfg(not(feature = "comp"))]
+    let out = TokenStream::from(quote! {
+        ::mingling::macros::program_final_gen!(#name);
+    });
 
-    packed_types.sort();
-    packed_types.dedup();
+    out
+}
+
+#[proc_macro]
+#[cfg(feature = "comp")]
+pub fn program_gen_completion(input: TokenStream) -> TokenStream {
+    let name = read_name(&input);
+
+    let comp_dispatcher = quote! {
+        #[allow(unused)]
+        use __completion_gen::*;
+        pub mod __completion_gen {
+            use super::*;
+            use mingling::marker::NextProcess;
+            ::mingling::macros::dispatcher!(#name, "__comp", CompletionDispatcher => CompletionContext);
+            ::mingling::macros::pack!(
+                #name,
+                CompletionSuggest = (::mingling::ShellContext, ::mingling::Suggest)
+            );
+
+            #[::mingling::macros::chain(#name)]
+            pub async fn __exec_completion(prev: CompletionContext) -> NextProcess {
+                let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
+                match read_ctx {
+                    Ok(ctx) => {
+                        let suggest = ::mingling::CompletionHelper::exec_completion::<#name>(&ctx);
+                        CompletionSuggest::new((ctx, suggest)).to_render()
+                    }
+                    Err(_) => std::process::exit(1),
+                }
+            }
+
+            #[::mingling::macros::renderer(#name)]
+            pub fn __render_completion(prev: CompletionSuggest) {
+                let (ctx, suggest) = prev.inner;
+                ::mingling::CompletionHelper::render_suggest::<#name>(ctx, suggest);
+            }
+        }
+    };
+
+    TokenStream::from(comp_dispatcher)
+}
+
+#[proc_macro]
+pub fn program_final_gen(input: TokenStream) -> TokenStream {
+    let name = read_name(&input);
+
+    let mut packed_types = PACKED_TYPES.lock().unwrap().clone();
+    packed_types.insert("DispatcherNotFound".to_string());
+    packed_types.insert("RendererNotFound".to_string());
+
     let renderers = RENDERERS.lock().unwrap().clone();
     let chains = CHAINS.lock().unwrap().clone();
     let renderer_exist = RENDERERS_EXIST.lock().unwrap().clone();
@@ -178,36 +228,6 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
     let general_render = quote! {};
 
     #[cfg(feature = "comp")]
-    let comp_dispatcher = quote! {
-        ::mingling::macros::dispatcher!(#name, "__comp", CompletionDispatcher => CompletionContext);
-        ::mingling::macros::pack!(
-            #name,
-            CompletionSuggest = (::mingling::ShellContext, ::mingling::Suggest)
-        );
-
-        #[::mingling::macros::chain]
-        async fn __completion(prev: CompletionContext) -> NextProcess {
-            let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
-            match read_ctx {
-                Ok(ctx) => {
-                    let suggest = ::mingling::CompletionHelper::exec_completion::<#name>(&ctx);
-                    CompletionSuggest::new((ctx, suggest)).to_render()
-                }
-                Err(_) => std::process::exit(1),
-            }
-        }
-
-        #[::mingling::macros::renderer]
-        fn __render_completion(prev: CompletionSuggest) {
-            let (ctx, suggest) = prev.inner;
-            ::mingling::CompletionHelper::render_suggest::<#name>(ctx, suggest);
-        }
-    };
-
-    #[cfg(not(feature = "comp"))]
-    let comp_dispatcher = quote! {};
-
-    #[cfg(feature = "comp")]
     let completion_tokens: Vec<proc_macro2::TokenStream> = completions
         .iter()
         .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
@@ -237,8 +257,6 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
             __FallBack,
             #(#packed_types),*
         }
-
-        #comp_dispatcher
 
         impl ::std::fmt::Display for #name {
             fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
@@ -299,7 +317,7 @@ pub fn __register_chain(input: TokenStream) -> TokenStream {
     let chain_entry = parse_macro_input!(input as syn::LitStr);
     let entry_str = chain_entry.value();
 
-    CHAINS.lock().unwrap().push(entry_str);
+    CHAINS.lock().unwrap().insert(entry_str);
 
     TokenStream::new()
 }
@@ -314,7 +332,7 @@ pub fn __register_renderer(input: TokenStream) -> TokenStream {
     let renderer_entry = parse_macro_input!(input as syn::LitStr);
     let entry_str = renderer_entry.value();
 
-    RENDERERS.lock().unwrap().push(entry_str);
+    RENDERERS.lock().unwrap().insert(entry_str);
 
     TokenStream::new()
 }
@@ -323,4 +341,12 @@ pub fn __register_renderer(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn suggest(input: TokenStream) -> TokenStream {
     suggest::suggest(input)
+}
+
+fn read_name(input: &TokenStream) -> Ident {
+    if input.is_empty() {
+        Ident::new("ThisProgram", proc_macro2::Span::call_site())
+    } else {
+        syn::parse(input.clone()).unwrap()
+    }
 }
