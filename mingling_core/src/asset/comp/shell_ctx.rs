@@ -4,6 +4,7 @@ use crate::ShellFlag;
 /// providing information about the current command line state
 /// to guide how completions should be generated.
 #[derive(Default, Debug)]
+#[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
 pub struct ShellContext {
     /// The full command line (-f / --command-line)
     pub command_line: String,

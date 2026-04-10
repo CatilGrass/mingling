@@ -24,10 +24,13 @@ mod suggest;
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
-// Global variable declarations for storing chain and renderer mappings
+// Global variables
 #[cfg(feature = "general_renderer")]
 pub(crate) static GENERAL_RENDERERS: Lazy<Mutex<Vec<String>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
+#[cfg(feature = "comp")]
+pub(crate) static COMPLETIONS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+
 pub(crate) static PACKED_TYPES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static CHAINS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 pub(crate) static RENDERERS: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
@@ -107,6 +110,13 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
     let mut packed_types = PACKED_TYPES.lock().unwrap().clone();
     packed_types.push("DispatcherNotFound".to_string());
     packed_types.push("RendererNotFound".to_string());
+
+    #[cfg(feature = "comp")]
+    {
+        packed_types.push("CompletionContext".to_string());
+        packed_types.push("CompletionSuggest".to_string());
+    }
+
     packed_types.sort();
     packed_types.dedup();
     let renderers = RENDERERS.lock().unwrap().clone();
@@ -116,6 +126,9 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
 
     #[cfg(feature = "general_renderer")]
     let general_renderers = GENERAL_RENDERERS.lock().unwrap().clone();
+
+    #[cfg(feature = "comp")]
+    let completions = COMPLETIONS.lock().unwrap().clone();
 
     let packed_types: Vec<proc_macro2::TokenStream> = packed_types
         .iter()
@@ -164,6 +177,55 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
     #[cfg(not(feature = "general_renderer"))]
     let general_render = quote! {};
 
+    #[cfg(feature = "comp")]
+    let comp_dispatcher = quote! {
+        ::mingling::macros::dispatcher!(#name, "__comp", CompletionDispatcher => CompletionContext);
+        ::mingling::macros::pack!(
+            #name,
+            CompletionSuggest = (::mingling::ShellContext, ::mingling::Suggest)
+        );
+
+        #[::mingling::macros::chain]
+        async fn __completion(prev: CompletionContext) -> NextProcess {
+            let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
+            match read_ctx {
+                Ok(ctx) => {
+                    let suggest = ::mingling::CompletionHelper::exec_completion::<#name>(&ctx);
+                    CompletionSuggest::new((ctx, suggest)).to_render()
+                }
+                Err(_) => std::process::exit(1),
+            }
+        }
+
+        #[::mingling::macros::renderer]
+        fn __render_completion(prev: CompletionSuggest) {
+            let (ctx, suggest) = prev.inner;
+            ::mingling::CompletionHelper::render_suggest::<#name>(ctx, suggest);
+        }
+    };
+
+    #[cfg(not(feature = "comp"))]
+    let comp_dispatcher = quote! {};
+
+    #[cfg(feature = "comp")]
+    let completion_tokens: Vec<proc_macro2::TokenStream> = completions
+        .iter()
+        .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
+        .collect();
+
+    #[cfg(feature = "comp")]
+    let comp = quote! {
+        fn do_comp(any: &::mingling::AnyOutput<Self::Enum>, ctx: &::mingling::ShellContext) -> ::mingling::Suggest {
+            match any.member_id {
+                #(#completion_tokens)*
+                _ => ::mingling::Suggest::FileCompletion,
+            }
+        }
+    };
+
+    #[cfg(not(feature = "comp"))]
+    let comp = quote! {};
+
     let expanded = quote! {
         ::mingling::macros::pack!(#name, RendererNotFound = String);
         ::mingling::macros::pack!(#name, DispatcherNotFound = Vec<String>);
@@ -175,6 +237,8 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
             __FallBack,
             #(#packed_types),*
         }
+
+        #comp_dispatcher
 
         impl ::std::fmt::Display for #name {
             fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
@@ -212,6 +276,7 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
                 }
             }
             #general_render
+            #comp
         }
 
         impl #name {

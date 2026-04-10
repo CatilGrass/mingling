@@ -1,6 +1,7 @@
 use just_fmt::snake_case;
 
 #[derive(Default, Debug, Clone)]
+#[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
 pub enum ShellFlag {
     #[default]
     Bash,

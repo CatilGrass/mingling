@@ -1,5 +1,9 @@
+#[cfg(feature = "comp")]
+use crate::{ShellContext, Suggest};
+
 #[cfg(feature = "general_renderer")]
 use crate::error::GeneralRendererSerializeError;
+
 use crate::{
     AnyOutput, ChainProcess, RenderResult, asset::dispatcher::Dispatcher,
     error::ProgramExecuteError,
@@ -182,6 +186,10 @@ pub trait ProgramCollect {
     fn do_chain(
         any: AnyOutput<Self::Enum>,
     ) -> Pin<Box<dyn Future<Output = ChainProcess<Self::Enum>> + Send>>;
+
+    /// Match and execute specific completion logic based on any Entry
+    #[cfg(feature = "comp")]
+    fn do_comp(any: &AnyOutput<Self::Enum>, ctx: &ShellContext) -> Suggest;
 
     /// Whether the program has a renderer that can handle the current [AnyOutput](./struct.AnyOutput.html)
     fn has_renderer(any: &AnyOutput<Self::Enum>) -> bool;

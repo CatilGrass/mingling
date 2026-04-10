@@ -1,7 +1,7 @@
 //! Dispatcher Chain and Dispatcher Render Macros
 //!
 //! This module provides macros for creating dispatcher chain and dispatcher render structs
-//! with automatic implementations of the `DispatcherChain` trait.
+//! with automatic implementations of the `Dispatcher` trait.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -60,6 +60,13 @@ impl Parse for DispatcherChainInput {
     }
 }
 
+// NOTICE: This implementation contains significant code duplication between the explicit
+// and default cases in both `dispatcher_chain` and `dispatcher_render` functions.
+// The logic for handling default vs explicit group names and generating the appropriate
+// code should be extracted into common helper functions to reduce redundancy.
+// Additionally, the token stream generation patterns are nearly identical between
+// the two main functions and could benefit from refactoring.
+
 pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
     // Parse the input
     let dispatcher_input = syn::parse_macro_input!(input as DispatcherChainInput);
@@ -87,6 +94,8 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
 
     let command_name_str = command_name.value();
 
+    let comp_entry = get_comp_entry(&pack);
+
     let expanded = if use_default {
         // For default case, use ThisProgram
         quote! {
@@ -94,6 +103,8 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
             pub struct #command_struct;
 
             ::mingling::macros::pack!(ThisProgram, #pack = Vec<String>);
+
+            #comp_entry
 
             impl ::mingling::Dispatcher<ThisProgram> for #command_struct {
                 fn node(&self) -> ::mingling::Node {
@@ -114,6 +125,8 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
             pub struct #command_struct;
 
             ::mingling::macros::pack!(#group_name, #pack = Vec<String>);
+
+            #comp_entry
 
             impl ::mingling::Dispatcher<#group_name> for #command_struct {
                 fn node(&self) -> ::mingling::Node {
@@ -159,6 +172,8 @@ pub fn dispatcher_render(input: TokenStream) -> TokenStream {
 
     let command_name_str = command_name.value();
 
+    let comp_entry = get_comp_entry(&pack);
+
     let expanded = if use_default {
         // For default case, use ThisProgram
         quote! {
@@ -166,6 +181,8 @@ pub fn dispatcher_render(input: TokenStream) -> TokenStream {
             pub struct #command_struct;
 
             ::mingling::macros::pack!(ThisProgram, #pack = Vec<String>);
+
+            #comp_entry
 
             impl ::mingling::Dispatcher for #command_struct {
                 fn node(&self) -> ::mingling::Node {
@@ -187,6 +204,8 @@ pub fn dispatcher_render(input: TokenStream) -> TokenStream {
 
             ::mingling::macros::pack!(#group_name, #pack = Vec<String>);
 
+            #comp_entry
+
             impl ::mingling::Dispatcher for #command_struct {
                 fn node(&self) -> ::mingling::Node {
                     ::mingling::macros::node!(#command_name_str)
@@ -202,4 +221,21 @@ pub fn dispatcher_render(input: TokenStream) -> TokenStream {
     };
 
     expanded.into()
+}
+
+#[cfg(feature = "comp")]
+fn get_comp_entry(entry_name: &Ident) -> proc_macro2::TokenStream {
+    let comp_entry = quote! {
+        impl ::mingling::CompletionEntry for #entry_name {
+            fn get_input(self) -> Vec<String> {
+                self.inner.clone()
+            }
+        }
+    };
+    comp_entry
+}
+
+#[cfg(not(feature = "comp"))]
+fn get_comp_entry(_entry_name: &Ident) -> proc_macro2::TokenStream {
+    quote! {}
 }
