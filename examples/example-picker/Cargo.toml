@@ -6,4 +6,3 @@ edition = "2024"
 [dependencies]
 mingling = { path = "../../mingling", features = ["parser"] }
 tokio.workspace = true
-serde.workspace = true
