@@ -11,10 +11,10 @@
 <p align="center">
 	<img src="https://img.shields.io/github/stars/CatilGrass/mingling?style=for-the-badge"> 
 	<a href="https://crates.io/crates/mingling">
-		<img src="https://img.shields.io/badge/Crates.io-0.1.4-yellow?style=for-the-badge">
+		<img src="https://img.shields.io/badge/Crates.io-0.1.5-yellow?style=for-the-badge">
 	</a>
 	<a href="https://docs.rs/mingling/0.1.4/mingling/">
-    <img src="https://img.shields.io/badge/Docs.rs-0.1.4-orange?style=for-the-badge">
+    <img src="https://img.shields.io/badge/Docs.rs-0.1.5-orange?style=for-the-badge">
 	</a>	
 	<img src="https://img.shields.io/badge/Current-0.1.5-green?style=for-the-badge">
 </p>
@@ -131,7 +131,7 @@ You can read the following docs to learn more about the `Mingling` framework:
 
 - [ ] core: \[**unplanned**\] Parallel Chains
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
-- [x] core: \[**0.1.5**\] Completion *( Bash Zsh Fish Pwsl )* **\[unreleased\]**
+- [x] core: \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] Completion *( Bash Zsh Fish Pwsl )*
 - [ ] \[**unplanned**\] Helpdoc
 - [ ] \[**unplanned**\] Parser Theme
 - [ ] ...
