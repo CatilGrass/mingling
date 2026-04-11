@@ -9,7 +9,7 @@ repository = "https://github.com/catilgrass/mingling"
 [features]
 default = []
 full = ["comp", "general_renderer"]
-comp = []
+comp = ["dep:just_template"]
 general_renderer = [
     "dep:serde",
     "dep:ron",
@@ -20,6 +20,7 @@ general_renderer = [
 
 [dependencies]
 just_fmt = "0.1.2"
+just_template = { version = "0.1.3", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 thiserror = "2"
 tokio = { version = "1", features = ["io-std", "io-util"] }

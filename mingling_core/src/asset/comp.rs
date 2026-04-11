@@ -11,7 +11,7 @@ pub use shell_ctx::*;
 #[doc(hidden)]
 pub use suggest::*;
 
-use crate::{ProgramCollect, this};
+use crate::{ProgramCollect, exec::match_user_input, this};
 
 /// Trait for implementing completion logic.
 ///
@@ -36,15 +36,34 @@ pub struct CompletionHelper;
 impl CompletionHelper {
     pub fn exec_completion<P>(ctx: &ShellContext) -> Suggest
     where
-        P: ProgramCollect + Display + 'static,
+        P: ProgramCollect<Enum = P> + Display + 'static,
     {
         let program = this::<P>();
-        Suggest::FileCompletion
+        let suggest = if let Some((dispatcher, args)) = match_user_input(program).ok() {
+            let begin = dispatcher.begin(args);
+            if let crate::ChainProcess::Ok((any, _)) = begin {
+                Some(P::do_comp(&any, ctx))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        match suggest {
+            Some(suggest) => suggest,
+            None => default_completion(ctx),
+        }
     }
 
     pub fn render_suggest<P>(ctx: ShellContext, suggest: Suggest)
     where
-        P: ProgramCollect + Display + 'static,
+        P: ProgramCollect<Enum = P> + Display + 'static,
     {
+        todo!()
     }
+}
+
+fn default_completion(ctx: &ShellContext) -> Suggest {
+    todo!()
 }

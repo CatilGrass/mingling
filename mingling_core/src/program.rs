@@ -164,6 +164,11 @@ where
             }
         }
     }
+
+    // Get all registered dispatcher names from the program
+    pub fn get_nodes(&self) -> Vec<(String, &Box<dyn Dispatcher<G> + Send + Sync>)> {
+        get_nodes(self)
+    }
 }
 
 /// Collected program context
@@ -250,4 +255,23 @@ macro_rules! __dispatch_program_chains {
             }
         }
     };
+}
+
+// Get all registered dispatcher names from the program
+pub fn get_nodes<C: ProgramCollect<Enum = G>, G: Display>(
+    program: &Program<C, G>,
+) -> Vec<(String, &Box<dyn Dispatcher<G> + Send + Sync>)> {
+    program
+        .dispatcher
+        .iter()
+        .map(|disp| {
+            let node_str = disp
+                .node()
+                .to_string()
+                .split('.')
+                .collect::<Vec<_>>()
+                .join(" ");
+            (node_str, disp)
+        })
+        .collect()
 }

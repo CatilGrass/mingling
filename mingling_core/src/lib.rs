@@ -48,3 +48,10 @@ pub mod marker {
 pub mod setup {
     pub use crate::program::setup::*;
 }
+
+#[doc(hidden)]
+pub mod builds;
+pub mod build {
+    #[cfg(feature = "comp")]
+    pub use crate::builds::comp::*;
+}

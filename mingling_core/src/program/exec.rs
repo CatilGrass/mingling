@@ -73,14 +73,14 @@ where
 
 /// Match user input against registered dispatchers and return the matched dispatcher and remaining arguments.
 #[allow(clippy::type_complexity)]
-fn match_user_input<C, G>(
+pub fn match_user_input<C, G>(
     program: &Program<C, G>,
 ) -> Result<(&Box<dyn Dispatcher<G> + Send + Sync>, Vec<String>), ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = G>,
     G: Display,
 {
-    let nodes = get_nodes(program);
+    let nodes = program.get_nodes();
     let command = format!("{} ", program.args.join(" "));
 
     // Find all nodes that match the command prefix
@@ -139,23 +139,4 @@ fn render<C: ProgramCollect<Enum = G>, G: Display>(
             _ => C::general_render(any, &program.general_renderer_name).unwrap(),
         }
     }
-}
-
-// Get all registered dispatcher names from the program
-fn get_nodes<C: ProgramCollect<Enum = G>, G: Display>(
-    program: &Program<C, G>,
-) -> Vec<(String, &Box<dyn Dispatcher<G> + Send + Sync>)> {
-    program
-        .dispatcher
-        .iter()
-        .map(|disp| {
-            let node_str = disp
-                .node()
-                .to_string()
-                .split('.')
-                .collect::<Vec<_>>()
-                .join(" ");
-            (node_str, disp)
-        })
-        .collect()
 }
