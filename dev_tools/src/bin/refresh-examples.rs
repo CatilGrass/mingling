@@ -61,7 +61,7 @@ impl ExampleContent {
         // Collect header lines (starting with //!)
         while let Some(line) = lines.next() {
             if line.trim_start().starts_with("//!") {
-                let trimmed = line.trim_start_matches("//!").trim();
+                let trimmed = line.trim_start_matches("//!");
                 header.push_str(trimmed);
                 header.push('\n');
             } else {
