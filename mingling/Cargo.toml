@@ -16,6 +16,7 @@ tokio = { version = "1", features = ["full"] }
 mingling = { path = ".", features = ["full"] }
 
 [features]
+debug = ["mingling_core/debug"]
 default = ["mingling_core/default"]
 full = ["mingling_core/full", "mingling_macros/full", "comp", "parser"]
 general_renderer = [
