@@ -1,6 +1,6 @@
 [package]
 name = "example-general-renderer"
-version.workspace = true
+version = "0.0.1"
 edition = "2024"
 
 [dependencies]
@@ -8,5 +8,5 @@ mingling = { path = "../../mingling", features = [
     "parser",
     "general_renderer",
 ] }
-tokio.workspace = true
-serde.workspace = true
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }

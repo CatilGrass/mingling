@@ -1,8 +1,8 @@
 [package]
 name = "example-basic"
-version.workspace = true
+version = "0.0.1"
 edition = "2024"
 
 [dependencies]
 mingling = { path = "../../mingling" }
-tokio.workspace = true
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
