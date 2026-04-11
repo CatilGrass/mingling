@@ -253,7 +253,7 @@ dependencies = [
 
 [[package]]
 name = "mingling_macros"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "just_fmt",
  "once_cell",
