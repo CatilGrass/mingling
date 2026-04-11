@@ -71,6 +71,13 @@ The Mingling project consists of two main parts:
 - **[mingling/](mingling/)** - The core runtime library, containing type definitions, error handling, and basic functionality.
 - **[mingling_macros/](mingling_macros/)** - The procedural macro library, providing declarative macros to simplify development.
 
+Example Projects
+
+- **[`examples/example-basic/`](examples/example-basic/src/main.rs)** - A simple "Hello, World!" example demonstrating the most basic usage of a Dispatcher and Renderer.
+- **[`examples/example-picker/`](examples/example-picker/src/main.rs)** - Demonstrates how to use a Chain to process and transform command arguments.
+- **[`examples/example-general-renderer/`](examples/example-general-renderer/src/main.rs)** - Shows how to use a general renderer for different data types (e.g., JSON, YAML, TOML, RON).
+- **[`examples/example-completion/`](examples/example-completion/src/main.rs)** - An example implementing auto-completion for the shell.
+
 ## Next Steps
 
 You can read the following docs to learn more about the `Mingling` framework:
