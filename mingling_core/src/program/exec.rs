@@ -21,7 +21,7 @@ where
     let mut stop_next = false;
 
     // Match user input
-    match match_user_input(&program) {
+    match match_user_input(&program, program.args.clone()) {
         Ok((dispatcher, args)) => {
             // Entry point
             current = match dispatcher.begin(args) {
@@ -75,13 +75,14 @@ where
 #[allow(clippy::type_complexity)]
 pub fn match_user_input<C, G>(
     program: &Program<C, G>,
+    args: Vec<String>,
 ) -> Result<(&Box<dyn Dispatcher<G> + Send + Sync>, Vec<String>), ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = G>,
     G: Display,
 {
     let nodes = program.get_nodes();
-    let command = format!("{} ", program.args.join(" "));
+    let command = format!("{} ", args.join(" "));
 
     // Find all nodes that match the command prefix
     let matching_nodes: Vec<&(String, &Box<dyn Dispatcher<G> + Send + Sync>)> = nodes
@@ -98,7 +99,7 @@ where
         1 => {
             let matched_prefix = matching_nodes[0];
             let prefix_len = matched_prefix.0.split_whitespace().count();
-            let trimmed_args: Vec<String> = program.args.iter().skip(prefix_len).cloned().collect();
+            let trimmed_args: Vec<String> = args.iter().skip(prefix_len).cloned().collect();
             Ok((matched_prefix.1, trimmed_args))
         }
         _ => {
@@ -110,7 +111,7 @@ where
                 .unwrap();
 
             let prefix_len = matched_prefix.0.split_whitespace().count();
-            let trimmed_args: Vec<String> = program.args.iter().skip(prefix_len).cloned().collect();
+            let trimmed_args: Vec<String> = args.iter().skip(prefix_len).cloned().collect();
             Ok((matched_prefix.1, trimmed_args))
         }
     }

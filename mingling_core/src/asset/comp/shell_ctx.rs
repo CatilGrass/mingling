@@ -74,22 +74,17 @@ impl TryFrom<Vec<String>> for ShellContext {
             .map(ShellFlag::from)
             .unwrap_or(ShellFlag::Other("unknown".to_string()));
 
-        // Build all_words from command_line using basic whitespace splitting
-        // Note: External input replaces '-' with '^' in arguments, so we need to restore them
         let all_words = command_line
             .split_whitespace()
             .map(|s| s.replace('^', "-"))
             .collect();
 
-        // Also restore the original command_line with proper hyphens
-        let command_line = command_line.replace('^', "-");
-
         Ok(ShellContext {
-            command_line,
+            command_line: command_line.replace('^', "-"),
             cursor_position,
-            current_word,
-            previous_word,
-            command_name,
+            current_word: current_word.replace('^', "-"),
+            previous_word: previous_word.replace('^', "-"),
+            command_name: command_name.replace('^', "-"),
             word_index,
             all_words,
             shell_flag,

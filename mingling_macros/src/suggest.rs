@@ -58,11 +58,11 @@ pub fn suggest(input: TokenStream) -> TokenStream {
 
     let expanded = if items.is_empty() {
         quote! {
-            ::mingling::Suggest::default()
+            ::mingling::Suggest::new()
         }
     } else {
         quote! {{
-            let mut suggest = ::mingling::Suggest::default();
+            let mut suggest = ::mingling::Suggest::new();
             #(suggest.insert(#items);)*
             suggest
         }}
