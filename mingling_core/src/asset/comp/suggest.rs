@@ -80,7 +80,7 @@ impl PartialOrd for SuggestItem {
 
 impl Ord for SuggestItem {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.suggest().cmp(&other.suggest())
+        self.suggest().cmp(other.suggest())
     }
 }
 

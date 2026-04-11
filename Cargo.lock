@@ -132,7 +132,6 @@ name = "example-basic"
 version = "0.1.0"
 dependencies = [
  "mingling",
- "serde",
  "tokio",
 ]
 
@@ -141,7 +140,6 @@ name = "example-completion"
 version = "0.1.0"
 dependencies = [
  "mingling",
- "serde",
  "tokio",
 ]
 
@@ -159,7 +157,6 @@ name = "example-picker"
 version = "0.1.0"
 dependencies = [
  "mingling",
- "serde",
  "tokio",
 ]
 

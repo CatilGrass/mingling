@@ -31,7 +31,7 @@ impl GeneralRenderer {
     ) -> Result<(), GeneralRendererSerializeError> {
         let json_string = serde_json::to_string(data)
             .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
-        r.print(format!("{}", json_string).as_str());
+        r.print(json_string.to_string().as_str());
         Ok(())
     }
 
@@ -42,7 +42,7 @@ impl GeneralRenderer {
     ) -> Result<(), GeneralRendererSerializeError> {
         let json_string = serde_json::to_string_pretty(data)
             .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
-        r.print(format!("{}", json_string).as_str());
+        r.print(json_string.to_string().as_str());
         Ok(())
     }
 
@@ -53,7 +53,7 @@ impl GeneralRenderer {
     ) -> Result<(), GeneralRendererSerializeError> {
         let ron_string = ron::ser::to_string(data)
             .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
-        r.print(format!("{}", ron_string).as_str());
+        r.print(ron_string.to_string().as_str());
         Ok(())
     }
 
@@ -68,7 +68,7 @@ impl GeneralRenderer {
 
         let ron_string = ron::ser::to_string_pretty(data, pretty_config)
             .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
-        r.print(format!("{}", ron_string).as_str());
+        r.print(ron_string.to_string().as_str());
         Ok(())
     }
 
@@ -79,7 +79,7 @@ impl GeneralRenderer {
     ) -> Result<(), GeneralRendererSerializeError> {
         let toml_string =
             toml::to_string(data).map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
-        r.print(format!("{}", toml_string).as_str());
+        r.print(toml_string.to_string().as_str());
         Ok(())
     }
 
@@ -90,7 +90,7 @@ impl GeneralRenderer {
     ) -> Result<(), GeneralRendererSerializeError> {
         let yaml_string = serde_yaml::to_string(data)
             .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
-        r.print(format!("{}", yaml_string).as_str());
+        r.print(yaml_string.to_string().as_str());
         Ok(())
     }
 }

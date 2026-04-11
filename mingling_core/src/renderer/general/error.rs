@@ -23,8 +23,8 @@ impl std::ops::Deref for GeneralRendererSerializeError {
     }
 }
 
-impl Into<String> for GeneralRendererSerializeError {
-    fn into(self) -> String {
-        self.error
+impl From<GeneralRendererSerializeError> for String {
+    fn from(val: GeneralRendererSerializeError) -> Self {
+        val.error
     }
 }

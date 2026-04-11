@@ -166,7 +166,7 @@ where
     }
 
     // Get all registered dispatcher names from the program
-    pub fn get_nodes(&self) -> Vec<(String, &Box<dyn Dispatcher<G> + Send + Sync>)> {
+    pub fn get_nodes(&self) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
         get_nodes(self)
     }
 }
@@ -260,7 +260,7 @@ macro_rules! __dispatch_program_chains {
 // Get all registered dispatcher names from the program
 pub fn get_nodes<C: ProgramCollect<Enum = G>, G: Display>(
     program: &Program<C, G>,
-) -> Vec<(String, &Box<dyn Dispatcher<G> + Send + Sync>)> {
+) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
     program
         .dispatcher
         .iter()
@@ -271,7 +271,7 @@ pub fn get_nodes<C: ProgramCollect<Enum = G>, G: Display>(
                 .split('.')
                 .collect::<Vec<_>>()
                 .join(" ");
-            (node_str, disp)
+            (node_str, &**disp)
         })
         .collect()
 }

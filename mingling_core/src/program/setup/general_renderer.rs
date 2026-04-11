@@ -43,19 +43,19 @@ where
             p.general_renderer_name = crate::GeneralRendererSetting::Json
         });
         program.global_flag("--json-pretty", |p| {
-            p.general_renderer_name = crate::GeneralRendererSetting::JsonPretty.into();
+            p.general_renderer_name = crate::GeneralRendererSetting::JsonPretty;
         });
         program.global_flag("--yaml", |p| {
-            p.general_renderer_name = crate::GeneralRendererSetting::Yaml.into();
+            p.general_renderer_name = crate::GeneralRendererSetting::Yaml;
         });
         program.global_flag("--toml", |p| {
-            p.general_renderer_name = crate::GeneralRendererSetting::Toml.into();
+            p.general_renderer_name = crate::GeneralRendererSetting::Toml;
         });
         program.global_flag("--ron", |p| {
-            p.general_renderer_name = crate::GeneralRendererSetting::Ron.into();
+            p.general_renderer_name = crate::GeneralRendererSetting::Ron;
         });
         program.global_flag("--ron-pretty", |p| {
-            p.general_renderer_name = crate::GeneralRendererSetting::RonPretty.into();
+            p.general_renderer_name = crate::GeneralRendererSetting::RonPretty;
         });
     }
 }

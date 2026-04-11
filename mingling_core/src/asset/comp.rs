@@ -46,7 +46,7 @@ impl CompletionHelper {
 
         let program = this::<P>();
         let args = ctx.all_words.iter().skip(1).cloned().collect::<Vec<_>>();
-        let suggest = if let Some((dispatcher, args)) = match_user_input(program, args).ok() {
+        let suggest = if let Ok((dispatcher, args)) = match_user_input(program, args) {
             trace!(
                 "dispatcher matched, dispatcher=\"{}\", args={:?}",
                 dispatcher.node().to_string(),

@@ -21,12 +21,12 @@ where
     let mut stop_next = false;
 
     // Match user input
-    match match_user_input(&program, program.args.clone()) {
+    match match_user_input(program, program.args.clone()) {
         Ok((dispatcher, args)) => {
             // Entry point
             current = match dispatcher.begin(args) {
                 ChainProcess::Ok((any, Next::Renderer)) => {
-                    return Ok(render::<C, G>(&program, any));
+                    return Ok(render::<C, G>(program, any));
                 }
                 ChainProcess::Ok((any, Next::Chain)) => any,
                 ChainProcess::Err(e) => return Err(e.into()),
@@ -47,7 +47,7 @@ where
             if C::has_chain(&current) {
                 match C::do_chain(current).await {
                     ChainProcess::Ok((any, Next::Renderer)) => {
-                        return Ok(render::<C, G>(&program, any));
+                        return Ok(render::<C, G>(program, any));
                     }
                     ChainProcess::Ok((any, Next::Chain)) => any,
                     ChainProcess::Err(e) => return Err(e.into()),
@@ -55,7 +55,7 @@ where
             }
             // If no chain exists, attempt to render
             else if C::has_renderer(&current) {
-                return Ok(render::<C, G>(&program, current));
+                return Ok(render::<C, G>(program, current));
             }
             // No renderer exists
             else {
@@ -76,7 +76,7 @@ where
 pub fn match_user_input<C, G>(
     program: &Program<C, G>,
     args: Vec<String>,
-) -> Result<(&Box<dyn Dispatcher<G> + Send + Sync>, Vec<String>), ProgramInternalExecuteError>
+) -> Result<(&(dyn Dispatcher<G> + Send + Sync), Vec<String>), ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = G>,
     G: Display,
@@ -85,7 +85,7 @@ where
     let command = format!("{} ", args.join(" "));
 
     // Find all nodes that match the command prefix
-    let matching_nodes: Vec<&(String, &Box<dyn Dispatcher<G> + Send + Sync>)> = nodes
+    let matching_nodes: Vec<&(String, &(dyn Dispatcher<G> + Send + Sync))> = nodes
         .iter()
         // Also add a space to the node string to ensure consistent matching logic
         .filter(|(node_str, _)| command.starts_with(&format!("{} ", node_str)))
