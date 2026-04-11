@@ -288,6 +288,7 @@ fn print_suggest_with_description_fish(suggestions: BTreeSet<SuggestItem>) {
     std::process::exit(0);
 }
 
+#[cfg(feature = "debug")]
 fn trace_ctx(ctx: &ShellContext) {
     trace!("=== SHELL CTX BEGIN ===");
     trace!("command_line={}", ctx.command_line);
