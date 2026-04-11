@@ -82,7 +82,7 @@ You can read the following docs to learn more about the `Mingling` framework:
 
 - [ ] core: \[**unplanned**\] Parallel Chains
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
-- [ ] core: \[**0.1.5**\] Completion *( Bash Zsh Fish Pwsl )*
+- [x] core: \[**0.1.5**\] Completion *( Bash Zsh Fish Pwsl )*
 - [ ] \[**unplanned**\] Helpdoc
 - [ ] \[**unplanned**\] Parser Theme
 - [ ] ...
