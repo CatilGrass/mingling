@@ -1,113 +1,109 @@
 use crate::parser::Pickable;
 
 #[derive(Debug, Default)]
-pub enum YesOrNo {
+pub enum Yes {
     Yes,
     #[default]
     No,
 }
 
-impl From<bool> for YesOrNo {
+impl From<bool> for Yes {
     fn from(b: bool) -> Self {
-        if b { YesOrNo::Yes } else { YesOrNo::No }
+        if b { Yes::Yes } else { Yes::No }
     }
 }
 
-impl From<YesOrNo> for bool {
-    fn from(val: YesOrNo) -> Self {
+impl From<Yes> for bool {
+    fn from(val: Yes) -> Self {
         match val {
-            YesOrNo::Yes => true,
-            YesOrNo::No => false,
+            Yes::Yes => true,
+            Yes::No => false,
         }
     }
 }
 
-impl std::ops::Deref for YesOrNo {
+impl std::ops::Deref for Yes {
     type Target = bool;
 
     fn deref(&self) -> &Self::Target {
         static TRUE: bool = true;
         static FALSE: bool = false;
         match self {
-            YesOrNo::Yes => &TRUE,
-            YesOrNo::No => &FALSE,
+            Yes::Yes => &TRUE,
+            Yes::No => &FALSE,
         }
     }
 }
 
-impl YesOrNo {
+impl Yes {
     pub fn is_yes(&self) -> bool {
-        matches!(self, YesOrNo::Yes)
+        matches!(self, Yes::Yes)
     }
 
     pub fn is_no(&self) -> bool {
-        matches!(self, YesOrNo::No)
+        matches!(self, Yes::No)
     }
 }
 
-impl Pickable for YesOrNo {
-    type Output = YesOrNo;
+impl Pickable for Yes {
+    type Output = Yes;
 
     fn pick(args: &mut crate::parser::Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
-        let value = pick_bool(args, flag, &["y", "yes"], &["n", "no"]);
+        let value = pick_bool(args, flag, &["y", "yes"]);
         Some(value.into())
     }
 }
 
 #[derive(Debug, Default)]
-pub enum TrueOrFalse {
+pub enum True {
     True,
     #[default]
     False,
 }
 
-impl From<bool> for TrueOrFalse {
+impl From<bool> for True {
     fn from(b: bool) -> Self {
-        if b {
-            TrueOrFalse::True
-        } else {
-            TrueOrFalse::False
-        }
+        if b { True::True } else { True::False }
     }
 }
 
-impl From<TrueOrFalse> for bool {
-    fn from(val: TrueOrFalse) -> Self {
+impl From<True> for bool {
+    fn from(val: True) -> Self {
         match val {
-            TrueOrFalse::True => true,
-            TrueOrFalse::False => false,
+            True::True => true,
+            True::False => false,
         }
     }
 }
 
-impl std::ops::Deref for TrueOrFalse {
+impl std::ops::Deref for True {
     type Target = bool;
 
     fn deref(&self) -> &Self::Target {
         static TRUE: bool = true;
         static FALSE: bool = false;
         match self {
-            TrueOrFalse::True => &TRUE,
-            TrueOrFalse::False => &FALSE,
+            True::True => &TRUE,
+            True::False => &FALSE,
         }
     }
 }
 
-impl TrueOrFalse {
+impl True {
     pub fn is_true(&self) -> bool {
-        matches!(self, TrueOrFalse::True)
+        matches!(self, True::True)
     }
 
     pub fn is_false(&self) -> bool {
-        matches!(self, TrueOrFalse::False)
+        matches!(self, True::False)
     }
 }
 
-impl Pickable for TrueOrFalse {
-    type Output = TrueOrFalse;
+impl Pickable for True {
+    type Output = True;
 
     fn pick(args: &mut crate::parser::Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
-        let value = pick_bool(args, flag, &["true", "t"], &["false", "f"]);
+        let value = pick_bool(args, flag, &["true", "t"]);
         Some(value.into())
     }
 }
@@ -116,7 +112,6 @@ fn pick_bool(
     args: &mut crate::parser::Argument,
     flag: mingling_core::Flag,
     positive: &[&str],
-    negative: &[&str],
 ) -> bool {
     let has_flag = args.pick_flag(flag.clone());
     if !has_flag {
@@ -124,13 +119,7 @@ fn pick_bool(
         match content {
             Some(content) => {
                 let s = content.as_str();
-                if positive.contains(&s) {
-                    true
-                } else if negative.contains(&s) {
-                    false
-                } else {
-                    false
-                }
+                positive.contains(&s)
             }
             None => false,
         }
