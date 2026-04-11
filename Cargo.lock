@@ -137,6 +137,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "example-completion"
+version = "0.1.0"
+dependencies = [
+ "mingling",
+ "serde",
+ "tokio",
+]
+
+[[package]]
 name = "example-general-renderer"
 version = "0.1.0"
 dependencies = [

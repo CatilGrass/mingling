@@ -1,9 +1,9 @@
 [package]
-name = "example-basic"
+name = "example-completion"
 version.workspace = true
 edition = "2024"
 
 [dependencies]
-mingling = { path = "../../mingling" }
+mingling = { path = "../../mingling", features = ["comp", "parser"] }
 tokio.workspace = true
 serde.workspace = true

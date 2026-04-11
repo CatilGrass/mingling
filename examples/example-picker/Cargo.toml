@@ -4,6 +4,6 @@ version.workspace = true
 edition = "2024"
 
 [dependencies]
-mingling.workspace = true
+mingling = { path = "../../mingling", features = ["parser"] }
 tokio.workspace = true
 serde.workspace = true
