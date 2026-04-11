@@ -51,8 +51,13 @@
 //! ```
 //!
 //! # Features
-//! - `parser` enables the `mingling::parser` module [More](./docs/parser/index.html)
-//! - `general_renderer` adds support for serialized output formats such as JSON and YAML
+//! - `comp` enables command completion functionality, see [example](_mingling_examples/example_completion/index.html) for details
+//! - `parser` enables the `mingling::parser` module, see [example](_mingling_examples/example_picker/index.html) for details
+//! - `general_renderer` adds support for serialized output formats such as JSON and YAML, see [example](_mingling_examples/example_general_renderer/index.html) for details
+//!
+//! # Examples
+//! `Mingling` provides detailed usage examples for your reference.
+//! See [Examples](_mingling_examples/index.html)
 
 // Re-export Core lib
 pub use mingling::*;
