@@ -97,6 +97,15 @@ Mingling abstracts command execution into the following parts:
 3. **Renderer** - Stops the chain and prints the currently processed type to the terminal.
 4. **Program** - Manages the lifecycle and configuration of the entire CLI application.
 
+<details>
+  <summary>Architecture Diagram</summary>
+	<p align="center">
+   		<a href="https://github.com/CatilGrass/mingling">
+        	<img alt="Mingling" src="res/graph.png" width="75%">
+    	</a>
+	</p>
+</details>
+
 ## Project Structure
 
 The Mingling project consists of two main parts:
