@@ -36,21 +36,27 @@ dispatcher!("fruit", FruitCommand => FruitEntry);
 
 #[completion(FruitEntry)]
 fn comp_fruit_command(ctx: &ShellContext) -> Suggest {
+    // When the user is filling "--name" for the first time
     if ctx.filling_argument_first("--name") {
         return suggest!();
     }
+    // When the user is filling "--type" for the first time
     if ctx.filling_argument_first("--type") {
         return suggest! {
             "apple", "banana"
         };
     }
+    // When the user is typing an argument
     if ctx.typing_argument() {
         return suggest! {
             "--name": "Fruit name",
             "--type": "Fruit type"
         }
+        // Strip already typed arguments
         .strip_typed_argument(ctx);
     }
+
+    // Return empty suggestion, indicating Shell should not perform any completion logic
     return suggest!();
 }
 
