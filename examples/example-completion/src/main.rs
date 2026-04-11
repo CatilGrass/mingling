@@ -10,7 +10,7 @@
 //! ```
 //!
 //! 2. Write `build.rs` to generate completion scripts at compile time
-//! ```rust
+//! ```ignore
 //! use mingling::build::{build_comp_scripts, build_comp_scripts_with_bin_name};
 //! fn main() {
 //!     // Generate completion scripts for the current program

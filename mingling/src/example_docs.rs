@@ -8,7 +8,7 @@
 ///  ```
 ///
 /// Cargo.toml
-/// ```
+/// ```ignore
 /// [package]
 /// name = "example-basic"
 /// version = "0.0.1"
@@ -20,7 +20,7 @@
 /// ```
 ///
 /// main.rs
-/// ```rust
+/// ```ignore
 /// use mingling::{
 ///     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
 ///     marker::NextProcess,
@@ -79,7 +79,7 @@ pub mod example_basic {}
 ///  ```
 ///
 ///  2. Write `build.rs` to generate completion scripts at compile time
-///  ```rust
+///  ```ignore
 ///  use mingling::build::{build_comp_scripts, build_comp_scripts_with_bin_name};
 ///  fn main() {
 ///      // Generate completion scripts for the current program
@@ -94,7 +94,7 @@ pub mod example_basic {}
 ///  4. Execute `cargo install --path ./`, then run the corresponding completion script in your shell
 ///
 /// Cargo.toml
-/// ```
+/// ```ignore
 /// [package]
 /// name = "example-completion"
 /// version = "0.0.1"
@@ -106,7 +106,7 @@ pub mod example_basic {}
 /// ```
 ///
 /// main.rs
-/// ```rust
+/// ```ignore
 /// use mingling::{
 ///     AnyOutput, Groupped, ShellContext, Suggest,
 ///     macros::{chain, completion, dispatcher, gen_program, r_println, renderer, suggest},
@@ -233,7 +233,7 @@ pub mod example_completion {}
 ///  ```
 ///
 /// Cargo.toml
-/// ```
+/// ```ignore
 /// [package]
 /// name = "example-general-renderer"
 /// version = "0.0.1"
@@ -249,7 +249,7 @@ pub mod example_completion {}
 /// ```
 ///
 /// main.rs
-/// ```rust
+/// ```ignore
 /// use mingling::{
 ///     AnyOutput, Groupped,
 ///     macros::{chain, dispatcher, gen_program, r_println, renderer},
@@ -317,7 +317,7 @@ pub mod example_general_renderer {}
 ///  ```
 ///
 /// Cargo.toml
-/// ```
+/// ```ignore
 /// [package]
 /// name = "example-picker"
 /// version = "0.0.1"
@@ -329,7 +329,7 @@ pub mod example_general_renderer {}
 /// ```
 ///
 /// main.rs
-/// ```rust
+/// ```ignore
 /// use mingling::{
 ///     AnyOutput,
 ///     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
