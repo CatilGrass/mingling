@@ -115,33 +115,38 @@ fn default_completion<P>(ctx: &ShellContext) -> Suggest
 where
     P: ProgramCollect<Enum = P> + Display + 'static,
 {
-    try_comp_cmd_nodes::<P>(ctx)
-}
-
-fn try_comp_cmd_nodes<P>(ctx: &ShellContext) -> Suggest
-where
-    P: ProgramCollect<Enum = P> + Display + 'static,
-{
     let cmd_nodes: Vec<String> = this::<P>()
         .get_nodes()
         .into_iter()
+        .filter(|(s, _)| s != "__comp")
         .map(|(s, _)| s)
         .collect();
+    debug!("cmd_nodes: {:?}", cmd_nodes);
 
     // If the current position is less than 1, do not perform completion
     if ctx.word_index < 1 {
+        debug!("word_index < 1, returning file suggestions");
         return file_suggest();
     };
 
     // Get the current input path
-    let input_path: Vec<&str> = ctx.all_words[1..ctx.word_index]
+    debug!(
+        "input_path before filter: {:?}",
+        &ctx.all_words.get(1..ctx.word_index).unwrap_or(&[])
+    );
+
+    let input_path: Vec<&str> = ctx
+        .all_words
+        .get(1..ctx.word_index)
+        .unwrap_or(&[])
         .iter()
         .filter(|s| !s.is_empty())
         .map(|s| s.as_str())
         .collect();
+    debug!("input_path after filter: {:?}", input_path);
 
     debug!(
-        "try_comp_cmd_nodes: input_path = {:?}, word_index = {}, all_words = {:?}",
+        "default_completion: input_path = {:?}, word_index = {}, all_words = {:?}",
         input_path, ctx.word_index, ctx.all_words
     );
 
@@ -178,7 +183,7 @@ where
                 suggestions.sort();
                 suggestions.dedup();
                 debug!(
-                    "try_comp_cmd_nodes: current word suggestions = {:?}",
+                    "default_completion: current word suggestions = {:?}",
                     suggestions
                 );
                 return suggestions.into();
@@ -229,7 +234,7 @@ where
     suggestions.sort();
     suggestions.dedup();
 
-    debug!("try_comp_cmd_nodes: suggestions = {:?}", suggestions);
+    debug!("default_completion: suggestions = {:?}", suggestions);
 
     if suggestions.is_empty() {
         file_suggest()
