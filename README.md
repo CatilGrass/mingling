@@ -131,7 +131,7 @@ You can read the following docs to learn more about the `Mingling` framework:
 ## Roadmap
 
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
-- [x] core: \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] Completion *( Bash Zsh Fish Pwsl )*
+- [x] core: \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] Completion *( Bash Zsh Fish Pwsh )*
 - [ ] core: \[**0.2.0**\] Parallel Chains
 - [ ] \[**0.2.1**\] Helpdoc
 - [ ] \[**unplanned**\] Parser Theme

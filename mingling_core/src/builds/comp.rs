@@ -5,7 +5,7 @@ use crate::ShellFlag;
 const TMPL_COMP_BASH: &str = include_str!("../../tmpls/comps/bash.sh");
 const TMPL_COMP_ZSH: &str = include_str!("../../tmpls/comps/zsh.zsh");
 const TMPL_COMP_FISH: &str = include_str!("../../tmpls/comps/fish.fish");
-const TMPL_COMP_PWSL: &str = include_str!("../../tmpls/comps/pwsl.ps1");
+const TMPL_COMP_PWSH: &str = include_str!("../../tmpls/comps/pwsh.ps1");
 
 /// Generate shell completion scripts for the current binary.
 /// On Windows, generates PowerShell completion.
@@ -74,7 +74,7 @@ fn get_tmpl(shell_flag: &ShellFlag) -> (&'static str, &'static str) {
         ShellFlag::Bash => (TMPL_COMP_BASH, ".sh"),
         ShellFlag::Zsh => (TMPL_COMP_ZSH, ".zsh"),
         ShellFlag::Fish => (TMPL_COMP_FISH, ".fish"),
-        ShellFlag::Powershell => (TMPL_COMP_PWSL, ".ps1"),
+        ShellFlag::Powershell => (TMPL_COMP_PWSH, ".ps1"),
         ShellFlag::Other(_) => (TMPL_COMP_BASH, ".sh"),
     }
 }

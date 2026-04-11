@@ -17,7 +17,7 @@ impl From<String> for ShellFlag {
             "zsh" => ShellFlag::Zsh,
             "bash" => ShellFlag::Bash,
             "fish" => ShellFlag::Fish,
-            "pwsl" | "ps1" | "powershell" => ShellFlag::Powershell,
+            "pwsh" | "ps1" | "powershell" => ShellFlag::Powershell,
             other => ShellFlag::Other(snake_case!(other)),
         }
     }
