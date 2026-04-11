@@ -1,5 +1,7 @@
 use std::collections::BTreeSet;
 
+use crate::ShellContext;
+
 /// A completion suggestion that tells the shell how to perform completion.
 /// This can be either a set of specific suggestion items or a request for file completion.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
@@ -22,6 +24,11 @@ impl Suggest {
     /// Creates a FileCompletion variant.
     pub fn file_comp() -> Self {
         Self::FileCompletion
+    }
+
+    /// Filters out already typed flag arguments from suggestion results.
+    pub fn strip_typed_argument(self, ctx: &ShellContext) -> Self {
+        ctx.strip_typed_argument(self)
     }
 }
 

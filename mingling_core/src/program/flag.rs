@@ -46,6 +46,12 @@ pub struct Flag {
     vec: Vec<&'static str>,
 }
 
+impl From<&Flag> for Flag {
+    fn from(value: &Flag) -> Self {
+        value.clone()
+    }
+}
+
 impl From<()> for Flag {
     fn from(_: ()) -> Self {
         Flag { vec: vec![] }

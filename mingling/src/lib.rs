@@ -59,6 +59,10 @@
 //! `Mingling` provides detailed usage examples for your reference.
 //! See [Examples](_mingling_examples/index.html)
 
+#[cfg(feature = "comp")]
+mod comp;
+mod example_docs;
+
 // Re-export Core lib
 pub use mingling::*;
 pub use mingling_core as mingling;
@@ -106,7 +110,10 @@ pub mod macros {
 /// derive macro Groupped
 pub use mingling_macros::Groupped;
 
-mod example_docs;
+#[cfg(feature = "comp")]
+pub mod comp_tools {
+    pub use crate::comp::*;
+}
 
 /// Example projects for `Mingling`, for learning how to use `Mingling`
 pub mod _mingling_examples {

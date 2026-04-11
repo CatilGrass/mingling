@@ -119,19 +119,20 @@ pub mod example_basic {}
 ///
 /// #[completion(FruitEntry)]
 /// fn comp_fruit_command(ctx: &ShellContext) -> Suggest {
-///     if ctx.current_word.starts_with("-") {
-///         return suggest! {
-///             "--name": "Fruit name",
-///             "--type": "Fruit type"
-///         };
-///     }
-///     if ctx.previous_word == "--name" {
+///     if ctx.filling_argument_first("--name") {
 ///         return suggest!();
 ///     }
-///     if ctx.previous_word == "--type" {
+///     if ctx.filling_argument_first("--type") {
 ///         return suggest! {
 ///             "apple", "banana"
 ///         };
+///     }
+///     if ctx.typing_argument() {
+///         return suggest! {
+///             "--name": "Fruit name",
+///             "--type": "Fruit type"
+///         }
+///         .strip_typed_argument(ctx);
 ///     }
 ///     return suggest!();
 /// }
