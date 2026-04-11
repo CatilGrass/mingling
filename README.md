@@ -33,6 +33,7 @@
 - [Example Projects](#example-projects)
 - [Next Steps](#next-steps)
 - [Roadmap](#roadmap)
+- [Unplanned Features](#unplanned-features)
 - [License](#license)
 
 ## Intro
@@ -129,12 +130,22 @@ You can read the following docs to learn more about the `Mingling` framework:
 
 ## Roadmap
 
-- [ ] core: \[**unplanned**\] Parallel Chains
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
 - [x] core: \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] Completion *( Bash Zsh Fish Pwsl )*
-- [ ] \[**unplanned**\] Helpdoc
+- [ ] core: \[**0.2.0**\] Parallel Chains
+- [ ] \[**0.2.1**\] Helpdoc
 - [ ] \[**unplanned**\] Parser Theme
 - [ ] ...
+
+## Unplanned Features
+
+While Mingling has several common CLI features that are **not planned** to be directly included in the framework.
+This is because the Rust ecosystem already has excellent and mature crates to handle these issues, and Mingling's design is intended to be used in combination with them.
+
+- **Colored Output**: To add color and styles (bold, italic, etc.) to terminal output, consider using crates like [`colored`](https://crates.io/crates/colored) or [`owo-colors`](https://crates.io/crates/owo-colors). You can integrate their types directly into your renderers.
+- **I18n**: To translate your CLI application, the [`rust-i18n`](https://crates.io/crates/rust-i18n) crate provides a powerful internationalization solution that you can use in your command logic and renderers.
+- **Progress Bars**: To display progress indicators, the [`indicatif`](https://crates.io/crates/indicatif) crate is the standard choice.
+- **TUI**: To build full-screen interactive terminal applications, it is recommended to use a framework like [`ratatui`](https://crates.io/crates/ratatui) (formerly `tui-rs`).
 
 ## License
 
