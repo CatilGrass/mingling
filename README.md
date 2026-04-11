@@ -1,8 +1,41 @@
-# Mìng Lìng - 命令
+<p align="center">
+    <a href="https://github.com/CatilGrass/mingling">
+        <img alt="Mingling" src="res/icon.png" width="30%">
+    </a>
+</p>
+<h1 align="center">Mìng Lìng - 命令</h1>
+
+<p align="center">
+    The Rust CLI Framework
+</p>
+<p align="center">
+	<img src="https://img.shields.io/github/stars/CatilGrass/mingling?style=for-the-badge"> 
+	<a href="https://crates.io/crates/mingling">
+		<img src="https://img.shields.io/badge/Crates.io-0.1.4-yellow?style=for-the-badge">
+	</a>
+	<a href="https://docs.rs/mingling/0.1.4/mingling/">
+    <img src="https://img.shields.io/badge/Docs.rs-0.1.4-orange?style=for-the-badge">
+	</a>	
+	<img src="https://img.shields.io/badge/Current-0.1.5-green?style=for-the-badge">
+</p>
 
 > [!WARNING]
 >
 > **Note**: Mingling is still under active development, and its API may change. Feel free to try it out and give us feedback!
+> **Hint**: This note will be removed in version `0.2.0`
+
+## Contents
+
+- [Intro](#intro)
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+- [Project Structure](#project-structure)
+- [Example Projects](#example-projects)
+- [Next Steps](#next-steps)
+- [Roadmap](#roadmap)
+- [License](#license)
+
+## Intro
 
 `Mingling` is a Rust command-line framework. Its name comes from the Chinese Pinyin for "命令", which means "Command".
 
@@ -71,7 +104,7 @@ The Mingling project consists of two main parts:
 - **[mingling/](mingling/)** - The core runtime library, containing type definitions, error handling, and basic functionality.
 - **[mingling_macros/](mingling_macros/)** - The procedural macro library, providing declarative macros to simplify development.
 
-Example Projects
+## Example Projects
 
 - **[`examples/example-basic/`](examples/example-basic/src/main.rs)** - A simple "Hello, World!" example demonstrating the most basic usage of a Dispatcher and Renderer.
 - **[`examples/example-picker/`](examples/example-picker/src/main.rs)** - Demonstrates how to use a Chain to process and transform command arguments.
@@ -89,7 +122,7 @@ You can read the following docs to learn more about the `Mingling` framework:
 
 - [ ] core: \[**unplanned**\] Parallel Chains
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
-- [x] core: \[**0.1.5**\] Completion *( Bash Zsh Fish Pwsl )*
+- [x] core: \[**0.1.5**\] Completion *( Bash Zsh Fish Pwsl )* **\[unreleased\]**
 - [ ] \[**unplanned**\] Helpdoc
 - [ ] \[**unplanned**\] Parser Theme
 - [ ] ...
