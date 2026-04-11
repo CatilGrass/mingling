@@ -51,9 +51,12 @@ pub mod setup {
 
 #[doc(hidden)]
 pub mod builds;
+
+/// Provides build scripts for users
 pub mod build {
     #[cfg(feature = "comp")]
     pub use crate::builds::comp::*;
 }
 
+/// Provided for framework developers
 pub mod debug;
