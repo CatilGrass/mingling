@@ -93,8 +93,8 @@ impl CompletionHelper {
             Suggest::Suggest(suggestions) => {
                 trace!("rendering {} suggestions", suggestions.len());
                 match ctx.shell_flag {
-                    ShellFlag::Zsh => {
-                        trace!("using zsh format");
+                    ShellFlag::Zsh | ShellFlag::Powershell => {
+                        trace!("using zsh/pwsh format");
                         print_suggest_with_description(suggestions)
                     }
                     ShellFlag::Fish => {

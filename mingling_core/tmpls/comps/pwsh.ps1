@@ -36,35 +36,41 @@ Register-ArgumentCompleter -Native -CommandName '<<<bin_name>>>' -ScriptBlock {
             }
 
             $completions | ForEach-Object {
-                $path = $_.Replace('^', '-')
+                $path = $_
                 $isDirectory = $path.EndsWith([System.IO.Path]::DirectorySeparatorChar) -or $path.EndsWith('/')
                 $completionType = if ($isDirectory) { 'ProviderContainer' } else { 'ProviderItem' }
                 [System.Management.Automation.CompletionResult]::new($path, $path, $completionType, $path)
             }
         }
         else {
-            $parsedCompletions = @()
+            $completionItems = @()
+
             foreach ($item in $completions) {
                 if ($item -match '^([^$]+)\$\((.+)\)$') {
-                    $parsedCompletions += "$($matches[1]):$($matches[2])"
+                    $text = $matches[1]
+                    $description = $matches[2]
+                    $completionItems += @{
+                        Text = $text
+                        Description = $description
+                    }
                 }
                 else {
-                    $parsedCompletions += $item
+                    $text = $item
+                    $completionItems += @{
+                        Text = $text
+                        Description = $text
+                    }
                 }
             }
 
-            $simpleCompletions = @()
-            foreach ($item in $parsedCompletions) {
-                if ($item -match '^([^:]+):(.+)$') {
-                    $simpleCompletions += $matches[1]
-                }
-                else {
-                    $simpleCompletions += $item
-                }
-            }
-
-            return $simpleCompletions | ForEach-Object {
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            return $completionItems | ForEach-Object {
+                $resultType = if ($_.Text.StartsWith('-')) { 'ParameterName' } else { 'ParameterValue' }
+                [System.Management.Automation.CompletionResult]::new(
+                    $_.Text,
+                    $_.Text,
+                    $resultType,
+                    $_.Description
+                )
             }
         }
     }
