@@ -118,7 +118,14 @@ fn main() {
         });
     }
 
-    std::fs::write(repo_root.join(OUTPUT_PATH), template.to_string()).unwrap();
+    let template_str = template.to_string();
+    let template_str = template_str
+        .lines()
+        .map(|line| line.trim_end())
+        .collect::<Vec<_>>()
+        .join("\n")
+        + "\n";
+    std::fs::write(repo_root.join(OUTPUT_PATH), template_str).unwrap();
 }
 
 fn find_git_repo() -> Option<std::path::PathBuf> {

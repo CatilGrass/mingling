@@ -17,7 +17,7 @@
 //! ## Step3 - Write Code
 //! Write the following content into `main.rs`
 //!
-//! ## Step3 - Build and Run
+//! ## Step4 - Build and Run
 //! ```bash
 //! cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22
 //! cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22 --json
