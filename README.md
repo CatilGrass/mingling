@@ -13,7 +13,7 @@
 	<a href="https://crates.io/crates/mingling">
 		<img src="https://img.shields.io/badge/Crates.io-0.1.5-yellow?style=for-the-badge">
 	</a>
-	<a href="https://docs.rs/mingling/0.1.4/mingling/">
+	<a href="https://docs.rs/mingling/0.1.5/mingling/">
     <img src="https://img.shields.io/badge/Docs.rs-0.1.5-orange?style=for-the-badge">
 	</a>	
 	<img src="https://img.shields.io/badge/Current-0.1.5-green?style=for-the-badge">
