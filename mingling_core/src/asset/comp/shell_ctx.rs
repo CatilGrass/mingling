@@ -175,8 +175,14 @@ impl ShellContext {
     ///
     /// This method determines whether the current word being typed starts with
     /// a dash (`-`), indicating that the user is likely in the process of
-    /// entering a command-line flag. It returns `true` if the current word
-    /// begins with a dash character.
+    /// entering a command-line flag. On Windows, an empty current word is also
+    /// considered as typing a flag to accommodate shell behavior differences.
+    /// It returns `true` if the current word begins with a dash character.
+    ///
+    /// # Platform-specific behavior
+    ///
+    /// - **Windows**: Returns `true` if `current_word` is empty or starts with `-`
+    /// - **Other platforms**: Returns `true` only if `current_word` starts with `-`
     ///
     /// # Example
     ///
@@ -197,7 +203,14 @@ impl ShellContext {
     /// }
     /// ```
     pub fn typing_argument(&self) -> bool {
-        self.current_word.starts_with("-")
+        #[cfg(target_os = "windows")]
+        {
+            self.current_word.is_empty()
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.current_word.starts_with("-")
+        }
     }
 
     /// Filters out already typed flag arguments from suggestion results.
