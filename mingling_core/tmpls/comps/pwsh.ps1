@@ -2,76 +2,111 @@
 Register-ArgumentCompleter -Native -CommandName '<<<bin_name>>>' -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
 
-    $words = $commandAst.ToString().Split(' ')
-    $currentIndex = $words.IndexOf($wordToComplete)
-    if ($currentIndex -eq -1) { $currentIndex = $words.Count }
+    $line = $commandAst.ToString()
 
-    $buffer = $commandAst.ToString()
+    $elements = @()
+    if ($commandAst.CommandElements.Count -gt 0) {
+        $elements = $commandAst.CommandElements | ForEach-Object { $_.Value }
+    }
+
+    $commandName = if ($elements.Count -gt 0) { $elements[0] } else { "" }
+
     $currentWord = $wordToComplete
-    $previousWord = if ($currentIndex -gt 1) { $words[$currentIndex - 2] } else { "" }
-    $commandName = if ($words.Count -gt 0) { $words[0] } else { "" }
-    $wordIndex = $currentIndex
+    $previousWord = ""
+    $wordIndex = 0
+
+    $found = $false
+    for ($i = 0; $i -lt $elements.Count; $i++) {
+        if ($elements[$i] -eq $currentWord) {
+            $wordIndex = $i
+            if ($i -gt 0) {
+                $previousWord = $elements[$i - 1]
+            }
+            $found = $true
+            break
+        }
+    }
+
+    if (-not $found) {
+        $wordIndex = $elements.Count
+        if ($elements.Count -gt 0) {
+            $previousWord = $elements[-1]
+        }
+    }
 
     $args = @(
-        "-f", $buffer.Replace('-', '^')
-        "-C", $cursorPosition
-        "-w", $currentWord.Replace('-', '^')
-        "-p", $previousWord.Replace('-', '^')
-        "-c", $commandName
-        "-i", $wordIndex
-        "-a", ($words | ForEach-Object { $_.Replace('-', '^') }) -join ' '
-        "-F", "pwsh"
+        "-f", ($line -replace '-', '^')
+        "-C", $cursorPosition.ToString()
+        "-w", ($currentWord -replace '-', '^')
+        "-p", ($previousWord -replace '-', '^')
+        "-c", ($commandName -replace '-', '^')
+        "-i", $wordIndex.ToString()
+        "-F", "Powershell"
     )
 
-    $suggestions = & <<<bin_name>>> __comp $args 2>$null
+    foreach ($element in $elements) {
+        $args += "-a"
+        $args += ($element -replace '-', '^')
+    }
 
-    if ($LASTEXITCODE -eq 0 -and $suggestions) {
-        $completions = $suggestions -split "`n"
+    $output = & <<<bin_name>>> __comp $args 2>&1
+    $output = $output -replace "`r`n", "`n" -replace "`r", "`n"
 
-        if ($completions[0].Trim() -eq "_file_") {
-            $completions = if ($completions.Count -gt 1) {
-                $completions[1..($completions.Count-1)]
-            } else {
-                @()
-            }
+    if (-not $output) {
+        return @()
+    }
 
-            $completions | ForEach-Object {
-                $path = $_
-                $isDirectory = $path.EndsWith([System.IO.Path]::DirectorySeparatorChar) -or $path.EndsWith('/')
-                $completionType = if ($isDirectory) { 'ProviderContainer' } else { 'ProviderItem' }
-                [System.Management.Automation.CompletionResult]::new($path, $path, $completionType, $path)
-            }
+    $lines = $output -split "`n"
+
+    if ($lines.Count -eq 0) {
+        return @()
+    }
+
+    $firstLine = $lines[0].Trim()
+
+    if ($firstLine -eq "_file_") {
+        if ($lines.Count -gt 1) {
+            $fileSuggestions = $lines[1..($lines.Count-1)]
+        } else {
+            $fileSuggestions = @()
         }
-        else {
-            $completionItems = @()
 
-            foreach ($item in $completions) {
-                if ($item -match '^([^$]+)\$\((.+)\)$') {
-                    $text = $matches[1]
-                    $description = $matches[2]
-                    $completionItems += @{
-                        Text = $text
-                        Description = $description
-                    }
-                }
-                else {
-                    $text = $item
-                    $completionItems += @{
-                        Text = $text
-                        Description = $text
-                    }
-                }
-            }
+        $completionResults = @()
+        $fileSuggestions | ForEach-Object {
+            $path = $_
+            $isDirectory = $path.EndsWith([System.IO.Path]::DirectorySeparatorChar) -or $path.EndsWith('/')
+            $completionType = if ($isDirectory) { 'ProviderContainer' } else { 'ProviderItem' }
+            $completionResults += [System.Management.Automation.CompletionResult]::new($path, $path, $completionType, $path)
+        }
 
-            return $completionItems | ForEach-Object {
-                $resultType = if ($_.Text.StartsWith('-')) { 'ParameterName' } else { 'ParameterValue' }
-                [System.Management.Automation.CompletionResult]::new(
-                    $_.Text,
-                    $_.Text,
+        return $completionResults
+    } else {
+        $completionResults = @()
+
+        foreach ($line in $lines) {
+            $trimmedLine = $line.Trim()
+
+            if ($trimmedLine -match '^([^$]+)\$\((.+)\)$') {
+                $text = $matches[1]
+                $description = $matches[2]
+                $completionResults += [System.Management.Automation.CompletionResult]::new(
+                    $text,
+                    $text,
+                    'ParameterValue',
+                    $description
+                )
+            } else {
+                $text = $trimmedLine
+                $resultType = if ($text.StartsWith('-')) { 'ParameterName' } else { 'ParameterValue' }
+                $completionResults += [System.Management.Automation.CompletionResult]::new(
+                    $text,
+                    $text,
                     $resultType,
-                    $_.Description
+                    $text
                 )
             }
         }
+
+        return $completionResults
     }
 }
