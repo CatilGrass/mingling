@@ -10,8 +10,7 @@ use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
 use syn::{
-    Attribute, Data, DeriveInput, Error, Expr, Fields, Ident, Lit, LitStr, Meta, MetaNameValue,
-    Result, Variant, parse_macro_input,
+    Attribute, Data, DeriveInput, Error, Fields, Ident, LitStr, Result, Variant, parse_macro_input,
 };
 
 pub fn derive_enum_tag(input: TokenStream) -> TokenStream {
@@ -146,22 +145,11 @@ fn process_variant(
 fn extract_description(attrs: &[Attribute], variant_name: &Ident) -> Result<LitStr> {
     for attr in attrs {
         if attr.path().is_ident("enum_desc") {
-            return match attr.parse_args::<Meta>() {
-                Ok(Meta::NameValue(MetaNameValue {
-                    value:
-                        Expr::Lit(syn::PatLit {
-                            lit: Lit::Str(lit_str),
-                            ..
-                        }),
-                    ..
-                })) => Ok(lit_str),
-                Ok(_) => Err(Error::new_spanned(
-                    attr,
-                    "#[enum_desc] attribute must be in the form `#[enum_desc(\"description\")]`",
-                )),
+            return match attr.parse_args::<LitStr>() {
+                Ok(lit_str) => Ok(lit_str),
                 Err(_) => Err(Error::new_spanned(
                     attr,
-                    "Failed to parse #[enum_desc] attribute",
+                    "#[enum_desc] attribute must be in the form `#[enum_desc(\"description\")]`",
                 )),
             };
         }
@@ -175,32 +163,11 @@ fn extract_description(attrs: &[Attribute], variant_name: &Ident) -> Result<LitS
 fn extract_rename(attrs: &[Attribute]) -> Result<Option<String>> {
     for attr in attrs {
         if attr.path().is_ident("enum_rename") {
-            return match attr.parse_args::<Meta>() {
-                Ok(Meta::NameValue(MetaNameValue {
-                    path,
-                    value:
-                        Expr::Lit(syn::PatLit {
-                            lit: Lit::Str(lit_str),
-                            ..
-                        }),
-                    ..
-                })) => {
-                    if path.is_ident("name") {
-                        Ok(Some(lit_str.value()))
-                    } else {
-                        Err(Error::new_spanned(
-                            attr,
-                            "#[enum_rename] attribute must be in the form `#[enum_rename(name = \"new_name\")]`",
-                        ))
-                    }
-                }
-                Ok(_) => Err(Error::new_spanned(
-                    attr,
-                    "#[enum_rename] attribute must be in the form `#[enum_rename(name = \"new_name\")]`",
-                )),
+            return match attr.parse_args::<LitStr>() {
+                Ok(lit_str) => Ok(Some(lit_str.value())),
                 Err(_) => Err(Error::new_spanned(
                     attr,
-                    "Failed to parse #[enum_rename] attribute",
+                    "#[enum_rename] attribute must be in the form `#[enum_rename(\"new_name\")]`",
                 )),
             };
         }
