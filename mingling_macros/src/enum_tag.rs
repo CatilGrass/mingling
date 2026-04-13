@@ -3,7 +3,8 @@
 //! This module provides the `#[derive(EnumTag)]` procedural macro for enums.
 //! The macro generates implementations of the `EnumTag` trait for enums with
 //! unit variants only (no fields). Variants can have an optional `#[enum_desc]`
-//! attribute to provide descriptions.
+//! attribute to provide descriptions, and an optional `#[enum_rename]` attribute
+//! to rename the variant for building and listing purposes.
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -118,20 +119,24 @@ fn process_variant(
     // Extract description from #[enum_desc] attribute
     let description = extract_description(&variant.attrs, &variant_name)?;
 
+    // Extract rename from #[enum_rename] attribute
+    let rename = extract_rename(&variant.attrs)?;
+
     // Generate tokens for this variant
     let variant_name_str = variant_name.to_string();
+    let display_name = rename.unwrap_or_else(|| variant_name_str.clone());
     let description_str = description.value();
 
     variant_info.push(quote! {
-        (#variant_name_str, #description_str)
+        (#display_name, #description_str)
     });
 
     match_arms.push(quote! {
-        #enum_name::#variant_name => (#variant_name_str, #description_str),
+        #enum_name::#variant_name => (#display_name, #description_str),
     });
 
     build_match_arms.push(quote! {
-        #variant_name_str => Some(#enum_name::#variant_name),
+        #display_name => Some(#enum_name::#variant_name),
     });
 
     Ok(())
@@ -164,4 +169,43 @@ fn extract_description(attrs: &[Attribute], variant_name: &Ident) -> Result<LitS
 
     // If no #[enum_desc] attribute, use variant name as description
     Ok(LitStr::new(&variant_name.to_string(), Span::call_site()))
+}
+
+/// Extract rename from #[enum_rename] attribute
+fn extract_rename(attrs: &[Attribute]) -> Result<Option<String>> {
+    for attr in attrs {
+        if attr.path().is_ident("enum_rename") {
+            return match attr.parse_args::<Meta>() {
+                Ok(Meta::NameValue(MetaNameValue {
+                    path,
+                    value:
+                        Expr::Lit(syn::PatLit {
+                            lit: Lit::Str(lit_str),
+                            ..
+                        }),
+                    ..
+                })) => {
+                    if path.is_ident("name") {
+                        Ok(Some(lit_str.value()))
+                    } else {
+                        Err(Error::new_spanned(
+                            attr,
+                            "#[enum_rename] attribute must be in the form `#[enum_rename(name = \"new_name\")]`",
+                        ))
+                    }
+                }
+                Ok(_) => Err(Error::new_spanned(
+                    attr,
+                    "#[enum_rename] attribute must be in the form `#[enum_rename(name = \"new_name\")]`",
+                )),
+                Err(_) => Err(Error::new_spanned(
+                    attr,
+                    "Failed to parse #[enum_rename] attribute",
+                )),
+            };
+        }
+    }
+
+    // If no #[enum_rename] attribute, return None
+    Ok(None)
 }

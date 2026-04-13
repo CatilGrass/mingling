@@ -99,7 +99,7 @@ pub fn derive_groupped(input: TokenStream) -> TokenStream {
     groupped::derive_groupped(input)
 }
 
-#[proc_macro_derive(EnumTag, attributes(enum_desc))]
+#[proc_macro_derive(EnumTag, attributes(enum_desc, enum_rename))]
 pub fn derive_enum_tag(input: TokenStream) -> TokenStream {
     enum_tag::derive_enum_tag(input)
 }
