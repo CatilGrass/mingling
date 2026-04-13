@@ -13,11 +13,11 @@
 //! ```ignore
 //! use mingling::build::{build_comp_scripts, build_comp_scripts_with_bin_name};
 //! fn main() {
-//!     // Generate completion scripts for the current program
-//!     build_comp_scripts().unwrap();
+//!     // Generate completion scripts for the current program, using the Cargo package name as the binary filename
+//!     build_comp_scripts(env!("CARGO_PKG_NAME")).unwrap();
 //!
-//!     // Or specify a specific name
-//!     // build_comp_scripts_with_bin_name("your_bin").unwrap();
+//!     // Or, explicitly specify the binary filename
+//!     // build_comp_scripts("your_bin").unwrap();
 //! }
 //! ```
 //!

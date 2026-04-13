@@ -7,23 +7,6 @@ const TMPL_COMP_ZSH: &str = include_str!("../../tmpls/comps/zsh.zsh");
 const TMPL_COMP_FISH: &str = include_str!("../../tmpls/comps/fish.fish");
 const TMPL_COMP_PWSH: &str = include_str!("../../tmpls/comps/pwsh.ps1");
 
-/// Generate shell completion scripts for the current binary.
-/// On Windows, generates PowerShell completion.
-/// On Linux, generates Zsh, Bash, and Fish completions.
-/// Scripts are written to the `OUT_DIR` (or `target/` if `OUT_DIR` is not set).
-///
-/// # Example
-/// ```
-/// // Typically called from a build script (`build.rs`):
-/// build_comp_scripts().unwrap();
-/// // Or, to specify a custom binary name:
-/// build_comp_scripts_with_bin_name("myapp").unwrap();
-/// ```
-pub fn build_comp_scripts() -> Result<(), std::io::Error> {
-    let bin_name = env!("CARGO_PKG_NAME");
-    build_comp_scripts_with_bin_name(bin_name)
-}
-
 /// Generate shell completion scripts for a given binary name.
 /// On Windows, generates PowerShell completion.
 /// On Linux, generates Zsh, Bash, and Fish completions.
@@ -32,9 +15,12 @@ pub fn build_comp_scripts() -> Result<(), std::io::Error> {
 /// # Example
 /// ```
 /// // Generate completion scripts for "myapp"
-/// build_comp_scripts_with_bin_name("myapp").unwrap();
+/// build_comp_scripts("myapp").unwrap();
+///
+/// // Generate completion scripts for current package
+/// build_comp_scripts(env!("CARGO_PKG_NAME")).unwrap();
 /// ```
-pub fn build_comp_scripts_with_bin_name(name: &str) -> Result<(), std::io::Error> {
+pub fn build_comp_scripts(name: &str) -> Result<(), std::io::Error> {
     #[cfg(target_os = "windows")]
     {
         build_comp_script(&ShellFlag::Powershell, name)?;
@@ -58,7 +44,17 @@ pub fn build_comp_scripts_with_bin_name(name: &str) -> Result<(), std::io::Error
     }
 }
 
-fn build_comp_script(shell_flag: &ShellFlag, bin_name: &str) -> Result<(), std::io::Error> {
+/// Generate a shell completion script for a specific shell.
+///
+/// This function takes a shell flag and a binary name, selects the appropriate
+/// template, substitutes the binary name into the template, and writes the
+/// resulting completion script to the target directory (typically `target/`).
+///
+/// # Example
+/// ```
+/// build_comp_script(&ShellFlag::Bash, "myapp").unwrap();
+/// ```
+pub fn build_comp_script(shell_flag: &ShellFlag, bin_name: &str) -> Result<(), std::io::Error> {
     let (tmpl_str, ext) = get_tmpl(shell_flag);
     let mut tmpl = just_template::Template::from(tmpl_str);
     tmpl_param!(tmpl, bin_name = bin_name);
