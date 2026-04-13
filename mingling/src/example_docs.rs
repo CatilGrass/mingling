@@ -108,10 +108,12 @@ pub mod example_basic {}
 /// main.rs
 /// ```ignore
 /// use mingling::{
-///     AnyOutput, Groupped, ShellContext, Suggest,
-///     macros::{chain, completion, dispatcher, gen_program, r_println, renderer, suggest},
+///     AnyOutput, EnumTag, Groupped, ShellContext, Suggest,
+///     macros::{
+///         chain, completion, dispatcher, gen_program, r_println, renderer, suggest, suggest_enum,
+///     },
 ///     marker::NextProcess,
-///     parser::{Pickable, Picker},
+///     parser::{PickableEnum, Picker},
 /// };
 ///
 /// // Define dispatcher `FruitCommand`, directing subcommand "fruit" to `FruitEntry`
@@ -119,34 +121,26 @@ pub mod example_basic {}
 ///
 /// #[completion(FruitEntry)]
 /// fn comp_fruit_command(ctx: &ShellContext) -> Suggest {
-///     // When the user is filling "--name" for the first time
 ///     if ctx.filling_argument_first("--name") {
 ///         return suggest!();
 ///     }
-///     // When the user is filling "--type" for the first time
 ///     if ctx.filling_argument_first("--type") {
-///         return suggest! {
-///             "apple", "banana"
-///         };
+///         return suggest_enum!(FruitType);
 ///     }
-///     // When the user is typing an argument
 ///     if ctx.typing_argument() {
 ///         return suggest! {
 ///             "--name": "Fruit name",
 ///             "--type": "Fruit type"
 ///         }
-///         // Strip already typed arguments
 ///         .strip_typed_argument(ctx);
 ///     }
-///
-///     // Return empty suggestion, indicating Shell should not perform any completion logic
 ///     return suggest!();
 /// }
 ///
 /// #[tokio::main]
 /// async fn main() {
 ///     let mut program = ThisProgram::new();
-///     program.with_dispatcher(CompletionDispatcher); // Add completion dispatcher
+///     program.with_dispatcher(CompletionDispatcher);
 ///     program.with_dispatcher(FruitCommand);
 ///     program.exec().await;
 /// }
@@ -157,29 +151,34 @@ pub mod example_basic {}
 ///     fruit_type: FruitType,
 /// }
 ///
-/// #[derive(Default, Debug)]
+/// #[derive(Default, Debug, EnumTag)]
 /// enum FruitType {
+///     #[enum_desc("It's Apple")]
+///     #[enum_rename("apple")]
+///     FruitApple,
+///
+///     #[enum_desc("It's Banana")]
+///     #[enum_rename("banana")]
+///     FruitBanana,
+///
+///     #[enum_desc("It's Cherry")]
+///     #[enum_rename("cherry")]
+///     FruitCherry,
+///
+///     #[enum_desc("It's Date")]
+///     #[enum_rename("date")]
+///     FruitDate,
+///
+///     #[enum_desc("It's Elderberry")]
+///     #[enum_rename("elderberry")]
+///     FruitElderberry,
+///
 ///     #[default]
-///     Apple,
-///     Banana,
-///     Other(String),
+///     #[enum_rename("unknown")]
+///     Unknown,
 /// }
 ///
-/// impl Pickable for FruitType {
-///     type Output = FruitType;
-///
-///     fn pick(args: &mut mingling::parser::Argument, flag: mingling::Flag) -> Option<Self::Output> {
-///         let name = args.pick_argument(flag);
-///         match name {
-///             Some(name) => match name.as_str() {
-///                 "apple" => Some(FruitType::Apple),
-///                 "banana" => Some(FruitType::Banana),
-///                 other => Some(FruitType::Other(other.to_string())),
-///             },
-///             None => None,
-///         }
-///     }
-/// }
+/// impl PickableEnum for FruitType {}
 ///
 /// #[chain]
 /// async fn parse_fruit_info(prev: FruitEntry) -> NextProcess {
@@ -194,10 +193,19 @@ pub mod example_basic {}
 ///
 /// #[renderer]
 /// fn render_fruit(prev: FruitInfo) {
-///     if let FruitType::Other(other) = prev.fruit_type {
-///         r_println!("Fruit name: {}, Type: {:?} (Unknown)", prev.name, other);
-///     } else {
-///         r_println!("Fruit name: {}, Type: {:?}", prev.name, prev.fruit_type);
+///     match (prev.name.is_empty(), prev.fruit_type) {
+///         (true, FruitType::Unknown) => {
+///             r_println!("Fruit name is empty and type is unknown");
+///         }
+///         (true, fruit_type) => {
+///             r_println!("Fruit name is empty, Type: {:?}", fruit_type);
+///         }
+///         (false, FruitType::Unknown) => {
+///             r_println!("Fruit name: {}, Type is unknown", prev.name);
+///         }
+///         (false, fruit_type) => {
+///             r_println!("Fruit name: {}, Type: {:?}", prev.name, fruit_type);
+///         }
 ///     }
 /// }
 ///
