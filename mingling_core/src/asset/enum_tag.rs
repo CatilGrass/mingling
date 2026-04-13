@@ -7,5 +7,7 @@ pub trait EnumTag {
     fn enums() -> &'static [(&'static str, &'static str)];
 
     /// Build the enum from a name
-    fn build_enum(name: String) -> Self;
+    fn build_enum(name: String) -> Option<Self>
+    where
+        Self: Sized;
 }

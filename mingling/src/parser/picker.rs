@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::parser::Argument;
-use mingling_core::Flag;
+use mingling_core::{EnumTag, Flag};
 
 #[doc(hidden)]
 pub mod builtin;
@@ -316,3 +316,17 @@ impl_pick_structs! { Pick8 Pick9 val_9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T
 impl_pick_structs! { Pick9 Pick10 val_10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9 }
 impl_pick_structs! { Pick10 Pick11 val_11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
 impl_pick_structs! { Pick11 Pick12 val_12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
+
+pub trait PickableEnum: EnumTag + Default {}
+
+impl<T> Pickable for T
+where
+    T: PickableEnum,
+{
+    type Output = T;
+
+    fn pick(args: &mut Argument, flag: Flag) -> Option<Self::Output> {
+        let name = args.pick_argument(flag)?;
+        T::build_enum(name)
+    }
+}

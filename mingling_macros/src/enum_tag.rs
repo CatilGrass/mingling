@@ -70,10 +70,13 @@ fn derive_enum_tag_impl(input: DeriveInput) -> Result<proc_macro2::TokenStream> 
                 }
             }
 
-            fn build_enum(name: String) -> Self {
+            fn build_enum(name: String) -> Option<Self>
+            where
+                Self: Sized
+            {
                 match name.as_str() {
                     #(#build_match_arms)*
-                    _ => panic!("Invalid enum variant name: {}", name),
+                    _ => None,
                 }
             }
 
@@ -128,7 +131,7 @@ fn process_variant(
     });
 
     build_match_arms.push(quote! {
-        #variant_name_str => #enum_name::#variant_name,
+        #variant_name_str => Some(#enum_name::#variant_name),
     });
 
     Ok(())
