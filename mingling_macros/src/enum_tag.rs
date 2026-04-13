@@ -7,7 +7,6 @@
 //! to rename the variant for building and listing purposes.
 
 use proc_macro::TokenStream;
-use proc_macro2::Span;
 use quote::quote;
 use syn::{
     Attribute, Data, DeriveInput, Error, Fields, Ident, LitStr, Result, Variant, parse_macro_input,
@@ -116,7 +115,7 @@ fn process_variant(
     }
 
     // Extract description from #[enum_desc] attribute
-    let description = extract_description(&variant.attrs, &variant_name)?;
+    let description = extract_description(&variant.attrs)?;
 
     // Extract rename from #[enum_rename] attribute
     let rename = extract_rename(&variant.attrs)?;
@@ -124,7 +123,7 @@ fn process_variant(
     // Generate tokens for this variant
     let variant_name_str = variant_name.to_string();
     let display_name = rename.unwrap_or_else(|| variant_name_str.clone());
-    let description_str = description.value();
+    let description_str = description.unwrap_or_default();
 
     variant_info.push(quote! {
         (#display_name, #description_str)
@@ -142,11 +141,11 @@ fn process_variant(
 }
 
 /// Extract description from #[enum_desc] attribute
-fn extract_description(attrs: &[Attribute], variant_name: &Ident) -> Result<LitStr> {
+fn extract_description(attrs: &[Attribute]) -> Result<Option<String>> {
     for attr in attrs {
         if attr.path().is_ident("enum_desc") {
             return match attr.parse_args::<LitStr>() {
-                Ok(lit_str) => Ok(lit_str),
+                Ok(lit_str) => Ok(Some(lit_str.value())),
                 Err(_) => Err(Error::new_spanned(
                     attr,
                     "#[enum_desc] attribute must be in the form `#[enum_desc(\"description\")]`",
@@ -155,8 +154,8 @@ fn extract_description(attrs: &[Attribute], variant_name: &Ident) -> Result<LitS
         }
     }
 
-    // If no #[enum_desc] attribute, use variant name as description
-    Ok(LitStr::new(&variant_name.to_string(), Span::call_site()))
+    // If no #[enum_desc] attribute, return None
+    Ok(None)
 }
 
 /// Extract rename from #[enum_rename] attribute
