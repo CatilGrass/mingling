@@ -1,0 +1,164 @@
+//! EnumTag derive macro implementation
+//!
+//! This module provides the `#[derive(EnumTag)]` procedural macro for enums.
+//! The macro generates implementations of the `EnumTag` trait for enums with
+//! unit variants only (no fields). Variants can have an optional `#[enum_desc]`
+//! attribute to provide descriptions.
+
+use proc_macro::TokenStream;
+use proc_macro2::Span;
+use quote::quote;
+use syn::{
+    Attribute, Data, DeriveInput, Error, Expr, Fields, Ident, Lit, LitStr, Meta, MetaNameValue,
+    Result, Variant, parse_macro_input,
+};
+
+pub fn derive_enum_tag(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    match derive_enum_tag_impl(input) {
+        Ok(tokens) => tokens.into(),
+        Err(err) => err.to_compile_error().into(),
+    }
+}
+
+/// Implementation of the EnumTag derive macro
+fn derive_enum_tag_impl(input: DeriveInput) -> Result<proc_macro2::TokenStream> {
+    let enum_name = &input.ident;
+    let generics = &input.generics;
+
+    // Extract enum data
+    let data = match input.data {
+        Data::Enum(data_enum) => data_enum,
+        Data::Struct(_) => {
+            return Err(Error::new_spanned(
+                enum_name,
+                "EnumTag can only be derived for enums, not structs",
+            ));
+        }
+        Data::Union(_) => {
+            return Err(Error::new_spanned(
+                enum_name,
+                "EnumTag can only be derived for enums, not unions",
+            ));
+        }
+    };
+
+    // Process each variant
+    let mut variant_info = Vec::new();
+    let mut match_arms = Vec::new();
+    let mut build_match_arms = Vec::new();
+
+    for variant in data.variants {
+        process_variant(
+            variant,
+            enum_name,
+            &mut variant_info,
+            &mut match_arms,
+            &mut build_match_arms,
+        )?;
+    }
+
+    // Generate the implementation
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    let expanded = quote! {
+        impl #impl_generics ::mingling::EnumTag for #enum_name #ty_generics #where_clause {
+            fn enum_info(&self) -> (&'static str, &'static str) {
+                match self {
+                    #(#match_arms)*
+                }
+            }
+
+            fn build_enum(name: String) -> Self {
+                match name.as_str() {
+                    #(#build_match_arms)*
+                    _ => panic!("Invalid enum variant name: {}", name),
+                }
+            }
+
+            fn enums() -> &'static [(&'static str, &'static str)] {
+                &[#(#variant_info),*]
+            }
+        }
+    };
+
+    Ok(expanded)
+}
+
+/// Process a single enum variant
+fn process_variant(
+    variant: Variant,
+    enum_name: &Ident,
+    variant_info: &mut Vec<proc_macro2::TokenStream>,
+    match_arms: &mut Vec<proc_macro2::TokenStream>,
+    build_match_arms: &mut Vec<proc_macro2::TokenStream>,
+) -> Result<()> {
+    let variant_name = variant.ident.clone();
+
+    // Check if variant has fields
+    match &variant.fields {
+        Fields::Unit => {
+            // Good, unit variant
+        }
+        Fields::Named(_) | Fields::Unnamed(_) => {
+            return Err(Error::new_spanned(
+                &variant,
+                format!(
+                    "EnumTag cannot be derived for enum variant `{}` with fields. Only unit variants are supported.",
+                    variant_name
+                ),
+            ));
+        }
+    }
+
+    // Extract description from #[enum_desc] attribute
+    let description = extract_description(&variant.attrs, &variant_name)?;
+
+    // Generate tokens for this variant
+    let variant_name_str = variant_name.to_string();
+    let description_str = description.value();
+
+    variant_info.push(quote! {
+        (#variant_name_str, #description_str)
+    });
+
+    match_arms.push(quote! {
+        #enum_name::#variant_name => (#variant_name_str, #description_str),
+    });
+
+    build_match_arms.push(quote! {
+        #variant_name_str => #enum_name::#variant_name,
+    });
+
+    Ok(())
+}
+
+/// Extract description from #[enum_desc] attribute
+fn extract_description(attrs: &[Attribute], variant_name: &Ident) -> Result<LitStr> {
+    for attr in attrs {
+        if attr.path().is_ident("enum_desc") {
+            return match attr.parse_args::<Meta>() {
+                Ok(Meta::NameValue(MetaNameValue {
+                    value:
+                        Expr::Lit(syn::PatLit {
+                            lit: Lit::Str(lit_str),
+                            ..
+                        }),
+                    ..
+                })) => Ok(lit_str),
+                Ok(_) => Err(Error::new_spanned(
+                    attr,
+                    "#[enum_desc] attribute must be in the form `#[enum_desc(\"description\")]`",
+                )),
+                Err(_) => Err(Error::new_spanned(
+                    attr,
+                    "Failed to parse #[enum_desc] attribute",
+                )),
+            };
+        }
+    }
+
+    // If no #[enum_desc] attribute, use variant name as description
+    Ok(LitStr::new(&variant_name.to_string(), Span::call_site()))
+}

@@ -15,6 +15,7 @@ mod chain;
 #[cfg(feature = "comp")]
 mod completion;
 mod dispatcher_chain;
+mod enum_tag;
 mod groupped;
 mod node;
 mod pack;
@@ -96,6 +97,11 @@ pub fn program_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_derive(Groupped, attributes(group))]
 pub fn derive_groupped(input: TokenStream) -> TokenStream {
     groupped::derive_groupped(input)
+}
+
+#[proc_macro_derive(EnumTag, attributes(enum_desc))]
+pub fn derive_enum_tag(input: TokenStream) -> TokenStream {
+    enum_tag::derive_enum_tag(input)
 }
 
 #[cfg(feature = "general_renderer")]
@@ -341,6 +347,12 @@ pub fn __register_renderer(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn suggest(input: TokenStream) -> TokenStream {
     suggest::suggest(input)
+}
+
+#[cfg(feature = "comp")]
+#[proc_macro]
+pub fn suggest_enum(input: TokenStream) -> TokenStream {
+    suggest::suggest_enum(input)
 }
 
 fn read_name(input: &TokenStream) -> Ident {

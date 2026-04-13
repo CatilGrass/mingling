@@ -9,6 +9,9 @@ pub mod comp;
 pub mod dispatcher;
 
 #[doc(hidden)]
+pub mod enum_tag;
+
+#[doc(hidden)]
 pub mod node;
 
 #[doc(hidden)]

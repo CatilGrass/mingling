@@ -59,8 +59,6 @@
 //! `Mingling` provides detailed usage examples for your reference.
 //! See [Examples](_mingling_examples/index.html)
 
-#[cfg(feature = "comp")]
-mod comp;
 mod example_docs;
 
 // Re-export Core lib
@@ -105,15 +103,16 @@ pub mod macros {
     #[cfg(feature = "comp")]
     /// Used to generate suggestions
     pub use mingling_macros::suggest;
+    #[cfg(feature = "comp")]
+    /// Used to generate enum suggestions
+    pub use mingling_macros::suggest_enum;
 }
+
+/// derive macro EnumTag
+pub use mingling_macros::EnumTag;
 
 /// derive macro Groupped
 pub use mingling_macros::Groupped;
-
-#[cfg(feature = "comp")]
-pub mod comp_tools {
-    pub use crate::comp::*;
-}
 
 /// Example projects for `Mingling`, for learning how to use `Mingling`
 pub mod _mingling_examples {
