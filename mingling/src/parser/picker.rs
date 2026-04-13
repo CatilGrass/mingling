@@ -108,6 +108,16 @@ impl<R> Picker<R> {
             None => None,
         }
     }
+
+    /// Applies an operation to the parsed arguments and returns the modified `Picker`.
+    ///
+    /// Takes a closure that receives the current `Argument` and returns a new `Argument`.
+    /// The returned `Argument` replaces the original arguments in the builder.
+    /// This method can be used to modify or transform the parsed arguments before extracting values.
+    pub fn operate_args<F: FnOnce(Argument) -> Argument>(mut self, operation: F) -> Self {
+        self.args = operation(self.args);
+        self
+    }
 }
 
 impl<T: Into<Argument>, G> From<T> for Picker<G> {
@@ -187,6 +197,16 @@ macro_rules! define_pick_structs {
                 F: Fn($final) -> $final,
             {
                 self.$final_val = edit(self.$final_val);
+                self
+            }
+
+            /// Applies an operation to the parsed arguments and returns the modified `Picker`.
+            ///
+            /// Takes a closure that receives the current `Argument` and returns a new `Argument`.
+            /// The returned `Argument` replaces the original arguments in the builder.
+            /// This method can be used to modify or transform the parsed arguments before extracting values.
+            pub fn operate_args<F: FnOnce(Argument) -> Argument>(mut self, operation: F) -> Self {
+                self.args = operation(self.args);
                 self
             }
         }
