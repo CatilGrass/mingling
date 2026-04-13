@@ -1,16 +1,16 @@
 use mingling::{macros::gen_program, setup::BasicProgramSetup};
 
-mod add_dispatcher;
-pub use crate::add_dispatcher::*;
+mod dispatcher_mgr;
+pub use crate::dispatcher_mgr::*;
 
 #[tokio::main]
 async fn main() {
-    let mut program = MinglingCLI::new();
+    let mut program = ThisProgram::new();
     program.with_setup(BasicProgramSetup);
-    program.with_dispatcher(AddDispatcherCommand);
+    program.with_dispatcher(CompletionDispatcher);
+    program.with_dispatchers((AddDispatcherCommand, RemoveDispatcherCommand));
 
-    let render_result = program.exec_without_render().await.unwrap();
-    println!("{}", render_result);
+    program.exec().await;
 }
 
-gen_program!(MinglingCLI);
+gen_program!();
