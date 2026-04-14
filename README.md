@@ -38,7 +38,10 @@
 
 ## Intro
 
-`Mingling` is a Rust command-line framework. Its name comes from the Chinese Pinyin for "命令", which means "Command".
+[`Mingling`](https://github.com/CatilGrass/mingling) is a **proc-macro and type system-based** Rust CLI framework, suitable for developing complex command-line programs with numerous subcommands.
+
+> BTW: Its name comes from the Chinese Pinyin "mìng lìng", meaning "Command". 😄
+
 
 ## Quick Start
 

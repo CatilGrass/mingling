@@ -6,7 +6,63 @@ use just_template::{Template, tmpl};
 const EXAMPLE_ROOT: &str = "./examples/";
 const OUTPUT_PATH: &str = "./mingling/src/example_docs.rs";
 
+const DOCS_README_FILE: &str = "./docs/README.md";
+
+const README_CONTENT: &str = include_str!("../../../README.md");
 const TEMPLATE_CONTENT: &str = include_str!("../../../mingling/src/example_docs.rs.tmpl");
+
+fn main() {
+    gen_example_doc_module();
+    gen_docs_readme();
+}
+
+fn gen_example_doc_module() {
+    let mut template = Template::from(TEMPLATE_CONTENT);
+    let repo_root = find_git_repo().unwrap();
+    let example_root = repo_root.join(EXAMPLE_ROOT);
+    let mut examples = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(&example_root) {
+        for entry in entries.flatten() {
+            if let Ok(file_type) = entry.file_type() {
+                if file_type.is_dir() {
+                    let example_name = entry.file_name().to_string_lossy().to_string();
+                    let example_content = ExampleContent::read(&example_name);
+                    examples.push(example_content);
+                }
+            }
+        }
+    }
+
+    for example in examples {
+        tmpl!(template += {
+            examples {
+                (
+                    example_header = example.header,
+                    example_import = example.cargo_toml,
+                    example_code = example.code,
+                    example_name = snake_case!(example.name)
+                )
+            }
+        });
+    }
+
+    let template_str = template.to_string();
+    let template_str = template_str
+        .lines()
+        .map(|line| line.trim_end())
+        .collect::<Vec<_>>()
+        .join("\n")
+        + "\n";
+    std::fs::write(repo_root.join(OUTPUT_PATH), template_str).unwrap();
+}
+
+fn gen_docs_readme() {
+    let repo_root = find_git_repo().unwrap();
+
+    // Convert relative addresses in the documentation
+    let content = README_CONTENT.replace("docs/res/", "res/");
+    std::fs::write(repo_root.join(DOCS_README_FILE), content).unwrap();
+}
 
 struct ExampleContent {
     name: String,
@@ -86,46 +142,6 @@ impl ExampleContent {
         let content = std::fs::read_to_string(&file_path).unwrap_or_default();
         content
     }
-}
-
-fn main() {
-    let mut template = Template::from(TEMPLATE_CONTENT);
-    let repo_root = find_git_repo().unwrap();
-    let example_root = repo_root.join(EXAMPLE_ROOT);
-    let mut examples = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(&example_root) {
-        for entry in entries.flatten() {
-            if let Ok(file_type) = entry.file_type() {
-                if file_type.is_dir() {
-                    let example_name = entry.file_name().to_string_lossy().to_string();
-                    let example_content = ExampleContent::read(&example_name);
-                    examples.push(example_content);
-                }
-            }
-        }
-    }
-
-    for example in examples {
-        tmpl!(template += {
-            examples {
-                (
-                    example_header = example.header,
-                    example_import = example.cargo_toml,
-                    example_code = example.code,
-                    example_name = snake_case!(example.name)
-                )
-            }
-        });
-    }
-
-    let template_str = template.to_string();
-    let template_str = template_str
-        .lines()
-        .map(|line| line.trim_end())
-        .collect::<Vec<_>>()
-        .join("\n")
-        + "\n";
-    std::fs::write(repo_root.join(OUTPUT_PATH), template_str).unwrap();
 }
 
 fn find_git_repo() -> Option<std::path::PathBuf> {
