@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://github.com/CatilGrass/mingling">
-        <img alt="Mingling" src="res/icon_shadow.png" width="30%">
+        <img alt="Mingling" src="docs/res/icon_shadow.png" width="30%">
     </a>
 </p>
 <h1 align="center">Mìng Lìng - 命令</h1>
@@ -102,7 +102,7 @@ Mingling abstracts command execution into the following parts:
   <summary>Architecture Diagram (click to expand)</summary>
 	<p align="center">
    		<a href="https://github.com/CatilGrass/mingling">
-        	<img alt="Mingling" src="res/graph.png" width="75%">
+        	<img alt="Mingling" src="docs/res/graph.png" width="75%">
     	</a>
 	</p>
 </details>
