@@ -480,9 +480,9 @@ where
     G: Display,
 {
     /// Registers a global argument (with value) and its handler.
-    pub fn global_argument<F, A>(&mut self, arguments: A, do_fn: F)
+    pub fn global_argument<F, A>(&mut self, arguments: A, mut do_fn: F)
     where
-        F: Fn(&mut Program<C, G>, String),
+        F: FnMut(&mut Program<C, G>, String),
         A: Into<Flag>,
     {
         let flag = arguments.into();
@@ -496,9 +496,9 @@ where
     }
 
     /// Registers a global flag (boolean) and its handler.
-    pub fn global_flag<F, A>(&mut self, flag: A, do_fn: F)
+    pub fn global_flag<F, A>(&mut self, flag: A, mut do_fn: F)
     where
-        F: Fn(&mut Program<C, G>),
+        F: FnMut(&mut Program<C, G>),
         A: Into<Flag>,
     {
         let flag = flag.into();
