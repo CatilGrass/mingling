@@ -257,7 +257,7 @@ macro_rules! __dispatch_program_chains {
     };
 }
 
-// Get all registered dispatcher names from the program
+/// Get all registered dispatcher names from the program
 pub fn get_nodes<C: ProgramCollect<Enum = G>, G: Display>(
     program: &Program<C, G>,
 ) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
