@@ -6,12 +6,10 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::spanned::Spanned;
-use syn::{
-    FnArg, Ident, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input,
-};
+use syn::{FnArg, Ident, ItemFn, Pat, PatType, ReturnType, Signature, Type, parse_macro_input};
 
 /// Extracts the program parameter from function arguments
-fn extract_program_param(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
+fn extract_program_param(sig: &Signature) -> syn::Result<(Pat, Type)> {
     // The function should have exactly one parameter
     if sig.inputs.len() != 1 {
         return Err(syn::Error::new(
@@ -25,57 +23,14 @@ fn extract_program_param(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
         FnArg::Typed(PatType { pat, ty, .. }) => {
             // Extract the pattern (parameter name)
             let param_pat = (**pat).clone();
-
-            // Extract the type, handling references like &mut ThisProgram
-            match &**ty {
-                Type::Path(type_path) => Ok((param_pat, type_path.clone())),
-                Type::Reference(type_ref) => {
-                    // Handle reference types like &mut ThisProgram
-                    match &*type_ref.elem {
-                        Type::Path(type_path) => Ok((param_pat, type_path.clone())),
-                        _ => Err(syn::Error::new(
-                            ty.span(),
-                            "Reference parameter must point to a type path",
-                        )),
-                    }
-                }
-                _ => Err(syn::Error::new(
-                    ty.span(),
-                    "Parameter type must be a type path or reference to a type path",
-                )),
-            }
+            // Extract the type as-is
+            let param_type = (**ty).clone();
+            Ok((param_pat, param_type))
         }
         FnArg::Receiver(_) => Err(syn::Error::new(
             arg.span(),
             "Setup function cannot have self parameter",
         )),
-    }
-}
-
-/// Validates that the parameter type is `ThisProgram`
-fn validate_any_program_param(type_path: &TypePath) -> syn::Result<()> {
-    // Check if the type is `ThisProgram`
-    let segments = &type_path.path.segments;
-    if segments.len() == 1 && segments[0].ident == "ThisProgram" {
-        Ok(())
-    } else {
-        // Check if it's a qualified path like mingling::marker::ThisProgram
-        let mut is_any_program = false;
-        if segments.len() > 1 {
-            // Check if the last segment is "ThisProgram"
-            if segments.last().unwrap().ident == "ThisProgram" {
-                is_any_program = true;
-            }
-        }
-
-        if is_any_program {
-            Ok(())
-        } else {
-            Err(syn::Error::new(
-                type_path.span(),
-                "Setup function parameter must be `mingling::marker::ThisProgram`",
-            ))
-        }
     }
 }
 
@@ -125,11 +80,6 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         Err(e) => return e.to_compile_error().into(),
     };
 
-    // Validate that the parameter is ThisProgram
-    if let Err(e) = validate_any_program_param(&program_type) {
-        return e.to_compile_error().into();
-    }
-
     // Validate return type
     if let Err(e) = extract_return_type(&input_fn.sig) {
         return e.to_compile_error().into();
@@ -162,7 +112,6 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             impl ::mingling::setup::ProgramSetup<ThisProgram, ThisProgram> for #struct_name {
                 fn setup(&mut self, program: &mut ::mingling::Program<ThisProgram, ThisProgram>) {
-                    let _ = ThisProgram;
                     // Call the original function with the actual Program type
                     #fn_name(program);
                 }
@@ -170,7 +119,7 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             // Keep the original function for internal use
             #(#fn_attrs)*
-            #vis fn #fn_name(#program_param: &mut ::mingling::Program<ThisProgram, ThisProgram>) {
+            #vis fn #fn_name(#program_param: #program_type) {
                 #fn_body
             }
         }
@@ -181,7 +130,6 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             impl ::mingling::setup::ProgramSetup<#program_name, #program_name> for #struct_name {
                 fn setup(&mut self, program: &mut ::mingling::Program<#program_name, #program_name>) {
-                    let _ = ThisProgram;
                     // Call the original function with the actual Program type
                     #fn_name(program);
                 }
@@ -189,7 +137,7 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             // Keep the original function for internal use
             #(#fn_attrs)*
-            #vis fn #fn_name(#program_param: &mut ::mingling::Program<#program_name, #program_name>) {
+            #vis fn #fn_name(#program_param: #program_type) {
                 #fn_body
             }
         }
