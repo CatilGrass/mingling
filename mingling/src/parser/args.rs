@@ -154,4 +154,17 @@ impl Argument {
         let new = Vec::new();
         replace(&mut self.vec, new)
     }
+
+    /// Removes all arguments that start with a dash ('-')
+    ///
+    /// This method filters out all command-line style flags from the arguments,
+    /// returning a new `Argument` instance containing only non-flag arguments.
+    pub fn strip_all_flags(mut self) -> Self {
+        self.vec = self
+            .vec
+            .into_iter()
+            .filter(|f| !f.starts_with('-'))
+            .collect();
+        self
+    }
 }

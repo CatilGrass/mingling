@@ -5,34 +5,43 @@ use mingling::{
     parser::Picker,
 };
 
-use crate::MinglingCLI;
+use crate::ThisProgram;
 
-dispatcher!(MinglingCLI, "add.dispatcher", AddDispatcherCommand => AddDispatcherEntry);
+dispatcher!("add.dispatcher", AddDispatcherCommand => AddDispatcherEntry);
+dispatcher!("remove.dispatcher", RemoveDispatcherCommand => RemoveDispatcherEntry);
 
-#[chain(MinglingCLI)]
+#[chain]
 pub async fn parse_add_dispatcher(args: AddDispatcherEntry) -> NextProcess {
-    let picker: Picker<MinglingCLI> = Picker::new(args.inner);
+    let picker: Picker<ThisProgram> = Picker::new(args.inner);
     let dispatcher_name = picker.pick::<String>(()).unpack_directly().0;
     let input = AddDispatcherInput::new(dispatcher_name);
     input.into()
 }
 
-pack!(MinglingCLI, AddDispatcherInput = String);
+#[chain]
+pub async fn parse_remove_dispatcher(args: RemoveDispatcherEntry) -> NextProcess {
+    let picker: Picker<ThisProgram> = Picker::new(args.inner);
+    let dispatcher_name = picker.pick::<String>(()).unpack_directly().0;
+    let input = AddDispatcherInput::new(dispatcher_name);
+    input.into()
+}
 
-#[chain(MinglingCLI)]
+pack!(AddDispatcherInput = String);
+
+#[chain]
 pub async fn exec_add_dispatcher(_input: AddDispatcherInput) -> NextProcess {
     AnyOutput::new(AddDispatcherSuccess::new(())).route_chain()
 }
 
-pack!(MinglingCLI, AddDispatcherSuccess = ());
-pack!(MinglingCLI, AddDispatcherFailed = String);
+pack!(AddDispatcherSuccess = ());
+pack!(AddDispatcherFailed = String);
 
-#[renderer(MinglingCLI)]
+#[renderer]
 pub fn render_add_dispatcher_success(_prev: AddDispatcherSuccess) {
     r_println!("Dispatcher added successfully");
 }
 
-#[renderer(MinglingCLI)]
+#[renderer]
 pub fn render_add_dispatcher_failed(prev: AddDispatcherFailed) {
     r_println!("Error: {}", prev.inner);
 }

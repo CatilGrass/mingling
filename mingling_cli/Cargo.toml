@@ -8,6 +8,9 @@ name = "mling"
 path = "src/main.rs"
 
 [dependencies]
-mingling = { path = "../mingling", features = ["parser"] }
+mingling = { path = "../mingling", features = ["parser", "comp"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
+
+[build-dependencies]
+mingling = { path = "../mingling", features = ["comp"] }
