@@ -16,7 +16,10 @@
 	<a href="https://docs.rs/mingling/0.1.5/mingling/">
 	  <img src="https://img.shields.io/docsrs/mingling?style=for-the-badge">
 	</a>	
-	<img src="https://img.shields.io/badge/Current-0.1.5-green?style=for-the-badge">
+	<a href="https://catilgrass.github.io/mingling/">
+	    <img src="https://img.shields.io/badge/helpdoc-0.1.5-yellow?style=for-the-badge">
+	</a>	
+	<img src="https://img.shields.io/badge/current-0.1.5-green?style=for-the-badge">
 </p>
 
 > [!WARNING]
