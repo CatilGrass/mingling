@@ -156,6 +156,8 @@ pub fn program_gen_completion(input: TokenStream) -> TokenStream {
                 }
             }
 
+            ::mingling::macros::register_type!(CompletionContext);
+
             #[::mingling::macros::renderer(#name)]
             pub fn __render_completion(prev: CompletionSuggest) {
                 let (ctx, suggest) = prev.inner;
