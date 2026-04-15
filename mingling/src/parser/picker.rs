@@ -192,11 +192,37 @@ macro_rules! define_pick_structs {
             /// Takes a closure that receives the last extracted value and returns a new value of the same type.
             /// The transformed value replaces the original value in the builder.
             /// This method can be used to modify or validate the extracted value before final unpacking.
-            pub fn after<F>(mut self, edit: F) -> Self
+            pub fn after<F>(mut self, mut edit: F) -> Self
             where
-                F: Fn($final) -> $final,
+                F: FnMut($final) -> $final,
             {
                 self.$final_val = edit(self.$final_val);
+                self
+            }
+
+            /// Applies a transformation to the last extracted value, storing a route if the transformation fails.
+            ///
+            /// Takes a closure that receives a reference to the last extracted value and returns a `Result`.
+            /// If the closure returns `Ok(new_value)`, the new value replaces the original value in the builder.
+            /// If the closure returns `Err(route)`, the provided `route` is stored in the builder for later error handling.
+            /// If a route was already stored from a previous `pick_or_route` call, the existing route is preserved.
+            pub fn after_or_route<F>(mut self, mut edit: F) -> Self
+            where
+                F: FnMut(&$final) -> Result<$final, R>,
+            {
+                let value = &self.$final_val;
+                match edit(value) {
+                    Ok(new_value) => {
+                        self.$final_val = new_value;
+                    }
+                    Err(err_route) => {
+                        let new_route = match self.route {
+                            Some(existing_route) => Some(existing_route),
+                            None => Some(err_route),
+                        };
+                        self.route = new_route;
+                    }
+                }
                 self
             }
 
