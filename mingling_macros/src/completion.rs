@@ -70,6 +70,7 @@ pub fn completion_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Generate the struct and implementation
     let expanded = quote! {
         #(#fn_attrs)*
+        #[doc(hidden)]
         #vis struct #struct_name;
 
         impl ::mingling::Completion for #struct_name {

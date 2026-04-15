@@ -131,6 +131,7 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     // We need to create a wrapper function that adds the r parameter
     let expanded = quote! {
         #(#fn_attrs)*
+        #[doc(hidden)]
         #vis struct #struct_name;
 
         impl ::mingling::Renderer for #struct_name {

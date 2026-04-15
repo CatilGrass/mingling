@@ -126,6 +126,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let expanded = if use_crate_prefix {
         quote! {
             #(#fn_attrs)*
+            #[doc(hidden)]
             #vis struct #struct_name;
 
             impl ::mingling::Chain<ThisProgram> for #struct_name {
