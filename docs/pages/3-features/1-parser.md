@@ -363,18 +363,18 @@ cargo install --path ./
 Running results:
 
 ```bash
-~> mycmd eat Apple --min-weight 20
+~> fruit eat Apple --min-weight 20
 I ate 1 Apple, each weighing exactly 20.
 
-~> mycmd eat Apple --min-weight 20 --count 10
+~> fruit eat Apple --min-weight 20 --count 10
 I ate 10 Apples, each weighing exactly 20.
 
-~> mycmd eat Apple --min-weight 10 --max-weight 20
+~> fruit eat Apple --min-weight 10 --max-weight 20
 I ate 1 Apple, each weighing between 10 and 20.
 
-~> mycmd eat Apple --min-weight 20 --max-weight 10
+~> fruit eat Apple --min-weight 20 --max-weight 10
 Error: min weight cannot be greater than max weight.
 
-~> mycmd eat --count 5
+~> fruit eat --count 5
 I ate 5 Bananas, each weighing unknown.
 ```
