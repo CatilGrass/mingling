@@ -122,12 +122,16 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
     let struct_name = Ident::new(&pascal_case_name, fn_name.span());
 
+    let previous_type_str = previous_type.to_token_stream().to_string();
+
     // Generate the struct and implementation
     let expanded = if use_crate_prefix {
         quote! {
             #(#fn_attrs)*
             #[doc(hidden)]
             #vis struct #struct_name;
+
+            ::mingling::macros::register_type!(#previous_type_str);
 
             impl ::mingling::Chain<ThisProgram> for #struct_name {
                 type Previous = #previous_type;
@@ -182,15 +186,12 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let mut chains = crate::CHAINS.lock().unwrap();
     let mut chain_exist = crate::CHAINS_EXIST.lock().unwrap();
-    let mut packed_types = crate::PACKED_TYPES.lock().unwrap();
 
     let chain_entry = chain_entry.to_string();
     let chain_exist_entry = chain_exist_entry.to_string();
-    let previous_type_str = previous_type.to_token_stream().to_string();
 
     chains.insert(chain_entry);
     chain_exist.insert(chain_exist_entry);
-    packed_types.insert(previous_type_str);
 
     expanded.into()
 }

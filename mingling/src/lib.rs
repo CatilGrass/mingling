@@ -98,6 +98,8 @@ pub mod macros {
     pub use mingling_macros::r_print;
     /// Used to print content with a newline within a `Renderer` context
     pub use mingling_macros::r_println;
+    /// Used to register a type into the context
+    pub use mingling_macros::register_type;
     /// Used to generate a struct implementing the `Renderer` trait via a method
     pub use mingling_macros::renderer;
     #[cfg(feature = "comp")]

@@ -108,7 +108,6 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
 
     let mut renderers = crate::RENDERERS.lock().unwrap();
     let mut renderer_exist = crate::RENDERERS_EXIST.lock().unwrap();
-    let mut packed_types = crate::PACKED_TYPES.lock().unwrap();
 
     #[cfg(feature = "general_renderer")]
     let mut general_renderers = crate::GENERAL_RENDERERS.lock().unwrap();
@@ -122,7 +121,6 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
 
     renderers.insert(renderer_entry_str);
     renderer_exist.insert(renderer_exist_entry_str);
-    packed_types.insert(previous_type_str);
 
     #[cfg(feature = "general_renderer")]
     general_renderers.insert(general_renderer_entry_str);
@@ -133,6 +131,8 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         #(#fn_attrs)*
         #[doc(hidden)]
         #vis struct #struct_name;
+
+        ::mingling::macros::register_type!(#previous_type_str);
 
         impl ::mingling::Renderer for #struct_name {
             type Previous = #previous_type;
