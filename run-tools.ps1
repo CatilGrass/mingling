@@ -32,7 +32,7 @@ $rust_file = "dev_tools/src/bin/${target_name}.rs"
 if (Test-Path $script_file) {
     & $script_file
 } elseif (Test-Path $rust_file) {
-    cargo run --manifest-path dev_tools/Cargo.toml --bin $target_name
+    cargo run --manifest-path dev_tools/Cargo.toml --bin $target_name --quiet
 } else {
     Write-Host "Error: target '$target_name' does not exist as a script or Rust program"
     exit 1

@@ -12,8 +12,14 @@ const README_CONTENT: &str = include_str!("../../../README.md");
 const TEMPLATE_CONTENT: &str = include_str!("../../../mingling/src/example_docs.rs.tmpl");
 
 fn main() {
-    gen_example_doc_module();
-    gen_docs_readme();
+    {
+        println!("Refreshing Examples");
+        gen_example_doc_module();
+    }
+    {
+        println!("Refreshing README.md");
+        gen_docs_readme();
+    }
 }
 
 fn gen_example_doc_module() {
@@ -40,10 +46,11 @@ fn gen_example_doc_module() {
                     example_header = example.header,
                     example_import = example.cargo_toml,
                     example_code = example.code,
-                    example_name = snake_case!(example.name)
+                    example_name = snake_case!(&example.name)
                 )
             }
         });
+        println!("  Refresh: {}", example.name.to_string());
     }
 
     let template_str = template.to_string();

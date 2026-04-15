@@ -29,7 +29,7 @@ if [ -f "$target_script" ]; then
     chmod +x "$target_script"
     "$target_script"
 elif [ -f "$target_file" ]; then
-    cargo run --manifest-path dev_tools/Cargo.toml --bin "$1"
+    cargo run --manifest-path dev_tools/Cargo.toml --bin "$1" --quiet
 else
     echo "Error: target '$target_bin' does not exist"
     exit 1
