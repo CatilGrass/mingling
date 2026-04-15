@@ -4,7 +4,7 @@
 //! generating structs that implement the `Chain` trait from async functions.
 
 use proc_macro::TokenStream;
-use quote::{ToTokens, quote};
+use quote::quote;
 use syn::spanned::Spanned;
 use syn::{
     FnArg, Ident, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input,
@@ -122,8 +122,6 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
     let struct_name = Ident::new(&pascal_case_name, fn_name.span());
 
-    let previous_type_str = previous_type.to_token_stream().to_string();
-
     // Generate the struct and implementation
     let expanded = if use_crate_prefix {
         quote! {
@@ -131,7 +129,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             #[doc(hidden)]
             #vis struct #struct_name;
 
-            ::mingling::macros::register_type!(#previous_type_str);
+            ::mingling::macros::register_type!(#previous_type);
 
             impl ::mingling::Chain<ThisProgram> for #struct_name {
                 type Previous = #previous_type;

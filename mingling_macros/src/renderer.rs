@@ -4,7 +4,7 @@
 //! generating structs that implement the `Renderer` trait from functions.
 
 use proc_macro::TokenStream;
-use quote::{ToTokens, quote};
+use quote::quote;
 use syn::spanned::Spanned;
 use syn::{FnArg, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input};
 
@@ -114,7 +114,6 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
 
     let renderer_entry_str = renderer_entry.to_string();
     let renderer_exist_entry_str = renderer_exist_entry.to_string();
-    let previous_type_str = previous_type.to_token_stream().to_string();
 
     #[cfg(feature = "general_renderer")]
     let general_renderer_entry_str = general_renderer_entry.to_string();
@@ -132,7 +131,7 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         #[doc(hidden)]
         #vis struct #struct_name;
 
-        ::mingling::macros::register_type!(#previous_type_str);
+        ::mingling::macros::register_type!(#previous_type);
 
         impl ::mingling::Renderer for #struct_name {
             type Previous = #previous_type;

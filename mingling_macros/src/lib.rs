@@ -172,8 +172,8 @@ pub fn program_gen_completion(input: TokenStream) -> TokenStream {
 /// This macro is used internally by the `#[chain]` and `#[renderer]` attribute macros
 #[proc_macro]
 pub fn register_type(input: TokenStream) -> TokenStream {
-    let type_entry = parse_macro_input!(input as syn::LitStr);
-    let entry_str = type_entry.value();
+    let type_ident = parse_macro_input!(input as syn::Ident);
+    let entry_str = type_ident.to_string();
 
     PACKED_TYPES.lock().unwrap().insert(entry_str);
 
