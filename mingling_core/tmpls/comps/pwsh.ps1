@@ -49,7 +49,16 @@ Register-ArgumentCompleter -Native -CommandName '<<<bin_name>>>' -ScriptBlock {
         $args += ($element -replace '-', '^')
     }
 
+    $originalEncoding = [Console]::OutputEncoding
+    $originalPSEncoding = $OutputEncoding
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+
     $output = & <<<bin_name>>> __comp $args 2>&1
+
+    [Console]::OutputEncoding = $originalEncoding
+    $OutputEncoding = $originalPSEncoding
+
     $output = $output -replace "`r`n", "`n" -replace "`r", "`n"
 
     if (-not $output) {

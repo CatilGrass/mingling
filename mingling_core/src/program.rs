@@ -8,7 +8,7 @@ use crate::{
     AnyOutput, ChainProcess, RenderResult, asset::dispatcher::Dispatcher,
     error::ProgramExecuteError,
 };
-use std::{env, fmt::Display, pin::Pin, sync::OnceLock};
+use std::{fmt::Display, pin::Pin, sync::OnceLock};
 
 #[doc(hidden)]
 pub mod exec;
@@ -74,7 +74,19 @@ where
         Program {
             collect: std::marker::PhantomData,
             group: std::marker::PhantomData,
+            #[cfg(not(windows))]
             args: env::args().collect(),
+            #[cfg(windows)]
+            args: {
+                std::env::args_os()
+                    .map(|arg| {
+                        use std::os::windows::ffi::OsStrExt;
+
+                        let wide: Vec<u16> = arg.encode_wide().collect();
+                        String::from_utf16_lossy(&wide)
+                    })
+                    .collect()
+            },
             dispatcher: Vec::new(),
             stdout_setting: Default::default(),
             user_context: Default::default(),
