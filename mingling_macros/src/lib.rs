@@ -169,9 +169,6 @@ pub fn program_gen_completion(input: TokenStream) -> TokenStream {
     TokenStream::from(comp_dispatcher)
 }
 
-/// Internal macro for registering types.
-///
-/// This macro is used internally by the `#[chain]` and `#[renderer]` attribute macros
 #[proc_macro]
 pub fn register_type(input: TokenStream) -> TokenStream {
     let type_ident = parse_macro_input!(input as syn::Ident);
@@ -180,6 +177,16 @@ pub fn register_type(input: TokenStream) -> TokenStream {
     PACKED_TYPES.lock().unwrap().insert(entry_str);
 
     TokenStream::new()
+}
+
+#[proc_macro]
+pub fn register_chain(input: TokenStream) -> TokenStream {
+    chain::register_chain(input)
+}
+
+#[proc_macro]
+pub fn register_renderer(input: TokenStream) -> TokenStream {
+    renderer::register_renderer(input)
 }
 
 #[proc_macro]

@@ -4,7 +4,7 @@
 //! generating structs that implement the `Renderer` trait from functions.
 
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{ToTokens, quote};
 use syn::spanned::Spanned;
 use syn::{FnArg, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input};
 
@@ -100,30 +100,6 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
     let struct_name = syn::Ident::new(&pascal_case_name, fn_name.span());
 
-    // Register the renderer in the global list
-    let renderer_entry = build_renderer_entry(&struct_name, &previous_type);
-    let renderer_exist_entry = build_renderer_exist_entry(&previous_type);
-    #[cfg(feature = "general_renderer")]
-    let general_renderer_entry = build_general_renderer_entry(&previous_type);
-
-    let mut renderers = crate::RENDERERS.lock().unwrap();
-    let mut renderer_exist = crate::RENDERERS_EXIST.lock().unwrap();
-
-    #[cfg(feature = "general_renderer")]
-    let mut general_renderers = crate::GENERAL_RENDERERS.lock().unwrap();
-
-    let renderer_entry_str = renderer_entry.to_string();
-    let renderer_exist_entry_str = renderer_exist_entry.to_string();
-
-    #[cfg(feature = "general_renderer")]
-    let general_renderer_entry_str = general_renderer_entry.to_string();
-
-    renderers.insert(renderer_entry_str);
-    renderer_exist.insert(renderer_exist_entry_str);
-
-    #[cfg(feature = "general_renderer")]
-    general_renderers.insert(general_renderer_entry_str);
-
     // Generate the struct and implementation
     // We need to create a wrapper function that adds the r parameter
     let expanded = quote! {
@@ -131,7 +107,7 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         #[doc(hidden)]
         #vis struct #struct_name;
 
-        ::mingling::macros::register_type!(#previous_type);
+        ::mingling::macros::register_renderer!(#previous_type, #struct_name);
 
         impl ::mingling::Renderer for #struct_name {
             type Previous = #previous_type;
@@ -191,4 +167,63 @@ pub fn build_general_renderer_entry(previous_type: &TypePath) -> proc_macro2::To
             Ok(r)
         }
     }
+}
+
+pub fn register_renderer(input: TokenStream) -> TokenStream {
+    // Parse the input as a comma-separated list of arguments
+    let input_parsed = syn::parse_macro_input!(input with syn::punctuated::Punctuated<syn::Expr, syn::Token![,]>::parse_terminated);
+
+    // Check that we have exactly two elements
+    if input_parsed.len() != 2 {
+        return syn::Error::new(
+            input_parsed.span(),
+            "Expected exactly two comma-separated arguments: `PreviousType, StructName`",
+        )
+        .to_compile_error()
+        .into();
+    }
+
+    // Extract the two elements
+    let previous_type_expr = &input_parsed[0];
+    let struct_name_expr = &input_parsed[1];
+
+    // Convert expressions to TypePath and Ident
+    let previous_type = match syn::parse2::<TypePath>(previous_type_expr.to_token_stream()) {
+        Ok(ty) => ty,
+        Err(e) => return e.to_compile_error().into(),
+    };
+
+    let struct_name = match syn::parse2::<syn::Ident>(struct_name_expr.to_token_stream()) {
+        Ok(ident) => ident,
+        Err(e) => return e.to_compile_error().into(),
+    };
+
+    // Register the renderer in the global list
+    let renderer_entry = build_renderer_entry(&struct_name, &previous_type);
+    let renderer_exist_entry = build_renderer_exist_entry(&previous_type);
+    #[cfg(feature = "general_renderer")]
+    let general_renderer_entry = build_general_renderer_entry(&previous_type);
+
+    let mut renderers = crate::RENDERERS.lock().unwrap();
+    let mut renderer_exist = crate::RENDERERS_EXIST.lock().unwrap();
+
+    #[cfg(feature = "general_renderer")]
+    let mut general_renderers = crate::GENERAL_RENDERERS.lock().unwrap();
+
+    let renderer_entry_str = renderer_entry.to_string();
+    let renderer_exist_entry_str = renderer_exist_entry.to_string();
+
+    #[cfg(feature = "general_renderer")]
+    let general_renderer_entry_str = general_renderer_entry.to_string();
+
+    renderers.insert(renderer_entry_str);
+    renderer_exist.insert(renderer_exist_entry_str);
+
+    #[cfg(feature = "general_renderer")]
+    general_renderers.insert(general_renderer_entry_str);
+
+    quote! {
+        ::mingling::macros::register_type!(#previous_type);
+    }
+    .into()
 }
