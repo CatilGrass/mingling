@@ -13,7 +13,7 @@
 	<a href="https://crates.io/crates/mingling">
 	  <img src="https://img.shields.io/crates/v/mingling?style=for-the-badge">
 	</a>
-	<a href="https://docs.rs/mingling/0.1.5/mingling/">
+	<a href="https://docs.rs/mingling/latest/mingling/">
 	  <img src="https://img.shields.io/docsrs/mingling?style=for-the-badge">
 	</a>	
 	<a href="https://catilgrass.github.io/mingling/">
@@ -25,7 +25,7 @@
 > [!WARNING]
 >
 > **Note**: Mingling is still under active development, and its API may change. Feel free to try it out and give us feedback!
-> **Hint**: This note will be removed in version `0.2.0`
+> **Hint**: This note will be removed in version `0.5.0`
 
 ## Contents
 
@@ -131,16 +131,22 @@ The Mingling project consists of two main parts:
 
 You can read the following docs to learn more about the `Mingling` framework:
 
+- Check out **[Mingling Helpdoc](https://catilgrass.github.io/mingling/)** to learn the basics.
 - Check out **[Mingling Examples](examples/)** to learn about the core library.
-- Check out **[mingling_macros/README.md](mingling_macros/README.md)** to learn how to use the macro system.
+- Check out **[Mingling Docs](https://docs.rs/mingling/latest/mingling/)** to learn how to use the macro system and explore the full API.
 
 ## Roadmap
 
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
 - [x] core: \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] Completion *( Bash Zsh Fish Pwsh )*
-- [ ] core: \[**0.2.0**\] Parallel Chains
-- [ ] \[**0.2.1**\] Helpdoc
+- [ ] \[**0.1.6**\] Smarter Completion Suggest Generation
+- [ ] \[**0.1.7**\] Clap Parser Support
+- [ ] \[**0.1.8**\] Faster Dispatcher
+- [ ] \[**0.1.9**\] Helpdoc Generation
+- [ ] \[**0.1.9**\] Debug Toolkits (InvokeStackDisplay ...)
+- [ ] ...
 - [ ] \[**unplanned**\] Parser Theme
+- [ ] core: \[**unplanned**\] Parallel Chains
 - [ ] ...
 
 ## Unplanned Features
