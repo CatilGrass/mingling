@@ -31,6 +31,11 @@ pub fn derive_groupped(input: TokenStream) -> TokenStream {
     let group_ident = parse_group_attribute(&input.attrs)
         .unwrap_or_else(|| Ident::new("ThisProgram", Span::call_site()));
 
+    let any_output_convert_impls = proc_macro2::TokenStream::from(build_any_output_convert_impls(
+        struct_name.clone(),
+        group_ident.clone(),
+    ));
+
     // Generate the Groupped trait implementation
     let expanded = quote! {
         impl ::mingling::Groupped<#group_ident> for #struct_name {
@@ -38,6 +43,8 @@ pub fn derive_groupped(input: TokenStream) -> TokenStream {
                 #group_ident::#struct_name
             }
         }
+
+        #any_output_convert_impls
     };
 
     expanded.into()
@@ -53,6 +60,11 @@ pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
     let group_ident = parse_group_attribute(&input_parsed.attrs)
         .unwrap_or_else(|| Ident::new("ThisProgram", Span::call_site()));
 
+    let any_output_convert_impls = proc_macro2::TokenStream::from(build_any_output_convert_impls(
+        struct_name.clone(),
+        group_ident.clone(),
+    ));
+
     // Generate both Serialize and Groupped implementations
     let expanded = quote! {
         #[derive(serde::Serialize)]
@@ -63,7 +75,38 @@ pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
                 #group_ident::#struct_name
             }
         }
+
+        #any_output_convert_impls
     };
 
     expanded.into()
+}
+
+fn build_any_output_convert_impls(struct_name: Ident, group_ident: Ident) -> TokenStream {
+    quote! {
+        impl ::std::convert::Into<::mingling::AnyOutput<#group_ident>> for #struct_name {
+            fn into(self) -> ::mingling::AnyOutput<#group_ident> {
+                ::mingling::AnyOutput::new(self)
+            }
+        }
+
+        impl ::std::convert::Into<::mingling::ChainProcess<#group_ident>> for #struct_name {
+            fn into(self) -> ::mingling::ChainProcess<#group_ident> {
+                ::mingling::AnyOutput::new(self).route_chain()
+            }
+        }
+
+        impl #struct_name {
+            /// Converts the wrapper type into a `ChainProcess` for chaining operations.
+            pub fn to_chain(self) -> ::mingling::ChainProcess<#group_ident> {
+                ::mingling::AnyOutput::new(self).route_chain()
+            }
+
+            /// Converts the wrapper type into a `ChainProcess` for rendering operations.
+            pub fn to_render(self) -> ::mingling::ChainProcess<#group_ident> {
+                ::mingling::AnyOutput::new(self).route_renderer()
+            }
+        }
+    }
+    .into()
 }
