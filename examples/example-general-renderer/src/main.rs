@@ -33,7 +33,7 @@
 //! ```
 
 use mingling::{
-    AnyOutput, Groupped,
+    Groupped,
     macros::{chain, dispatcher, gen_program, r_println, renderer},
     marker::NextProcess,
     parser::Picker,
@@ -63,11 +63,11 @@ struct Info {
 
 #[chain]
 async fn parse_render(prev: RenderCommandEntry) -> NextProcess {
-    let (name, age) = Picker::<AnyOutput<ThisProgram>>::new(prev.inner)
+    let (name, age) = Picker::<()>::new(prev.inner)
         .pick::<String>(())
         .pick::<i32>(())
         .unpack_directly();
-    AnyOutput::new(Info { name, age }).route_renderer()
+    Info { name, age }.to_render()
 }
 
 // Implement default renderer for when general_renderer is not specified

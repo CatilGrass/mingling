@@ -18,7 +18,6 @@
 //! ```
 
 use mingling::{
-    AnyOutput,
     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
     marker::NextProcess,
     parser::Picker,
@@ -45,12 +44,12 @@ async fn parse(prev: PickEntry) -> NextProcess {
         .pick_or("--age", 20)
         .after(|n: i32| n.clamp(0, 100))
         // Then sequentially extract the remaining arguments
-        .pick_or_route((), AnyOutput::new(NoNameProvided::default()))
+        .pick_or_route((), NoNameProvided::default().to_render())
         .unpack();
 
     match picked {
         Ok(value) => ParsedPickInput::new(value).to_render(),
-        Err(e) => e.route_renderer(),
+        Err(e) => e,
     }
 }
 

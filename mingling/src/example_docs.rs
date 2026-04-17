@@ -108,7 +108,7 @@ pub mod example_basic {}
 /// main.rs
 /// ```ignore
 /// use mingling::{
-///     AnyOutput, EnumTag, Groupped, ShellContext, Suggest,
+///     EnumTag, Groupped, ShellContext, Suggest,
 ///     macros::{
 ///         chain, completion, dispatcher, gen_program, r_println, renderer, suggest, suggest_enum,
 ///     },
@@ -182,13 +182,13 @@ pub mod example_basic {}
 ///
 /// #[chain]
 /// async fn parse_fruit_info(prev: FruitEntry) -> NextProcess {
-///     let picker = Picker::<ThisProgram>::from(prev.inner);
+///     let picker = Picker::<()>::from(prev.inner);
 ///     let (fruit_name, fruit_type) = picker.pick("--name").pick("--type").unpack_directly();
 ///     let info = FruitInfo {
 ///         name: fruit_name,
 ///         fruit_type,
 ///     };
-///     AnyOutput::new(info).route_renderer()
+///     info.to_render()
 /// }
 ///
 /// #[renderer]
@@ -265,7 +265,7 @@ pub mod example_completion {}
 /// main.rs
 /// ```ignore
 /// use mingling::{
-///     AnyOutput, Groupped,
+///     Groupped,
 ///     macros::{chain, dispatcher, gen_program, r_println, renderer},
 ///     marker::NextProcess,
 ///     parser::Picker,
@@ -295,11 +295,11 @@ pub mod example_completion {}
 ///
 /// #[chain]
 /// async fn parse_render(prev: RenderCommandEntry) -> NextProcess {
-///     let (name, age) = Picker::<AnyOutput<ThisProgram>>::new(prev.inner)
+///     let (name, age) = Picker::<()>::new(prev.inner)
 ///         .pick::<String>(())
 ///         .pick::<i32>(())
 ///         .unpack_directly();
-///     AnyOutput::new(Info { name, age }).route_renderer()
+///     Info { name, age }.to_render()
 /// }
 ///
 /// // Implement default renderer for when general_renderer is not specified
@@ -345,7 +345,6 @@ pub mod example_general_renderer {}
 /// main.rs
 /// ```ignore
 /// use mingling::{
-///     AnyOutput,
 ///     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
 ///     marker::NextProcess,
 ///     parser::Picker,
@@ -372,12 +371,12 @@ pub mod example_general_renderer {}
 ///         .pick_or("--age", 20)
 ///         .after(|n: i32| n.clamp(0, 100))
 ///         // Then sequentially extract the remaining arguments
-///         .pick_or_route((), AnyOutput::new(NoNameProvided::default()))
+///         .pick_or_route((), NoNameProvided::default().to_render())
 ///         .unpack();
 ///
 ///     match picked {
 ///         Ok(value) => ParsedPickInput::new(value).to_render(),
-///         Err(e) => e.route_renderer(),
+///         Err(e) => e,
 ///     }
 /// }
 ///
