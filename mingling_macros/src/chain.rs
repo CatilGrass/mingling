@@ -1,7 +1,10 @@
 //! Chain Attribute Macro Implementation
 //!
 //! This module provides the `#[chain(Group)]` attribute macro for automatically
-//! generating structs that implement the `Chain` trait from async functions.
+//! generating structs that implement the `Chain` trait from functions.
+//!
+//! When the `async` feature is enabled, chain functions must be async functions.
+//! When the `async` feature is disabled, chain functions can be regular functions.
 
 use proc_macro::TokenStream;
 use quote::{ToTokens, quote};
@@ -74,11 +77,30 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the function item
     let input_fn = parse_macro_input!(item as ItemFn);
 
-    // Validate the function
-    if input_fn.sig.asyncness.is_none() {
-        return syn::Error::new(input_fn.sig.span(), "Chain function must be async")
+    // Validate the chain functions is a async function
+    #[cfg(feature = "async")]
+    {
+        if input_fn.sig.asyncness.is_none() {
+            return syn::Error::new(
+                input_fn.sig.span(),
+                "Chain function must be async when async feature is enabled",
+            )
             .to_compile_error()
             .into();
+        }
+    }
+
+    // Validate the chain functions is a regular function
+    #[cfg(not(feature = "async"))]
+    {
+        if input_fn.sig.asyncness.is_some() {
+            return syn::Error::new(
+                input_fn.sig.span(),
+                "Chain function cannot be async when async feature is disabled",
+            )
+            .to_compile_error()
+            .into();
+        }
     }
 
     // Extract the previous type and parameter name from function arguments
@@ -122,6 +144,48 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
     let struct_name = Ident::new(&pascal_case_name, fn_name.span());
 
+    #[cfg(feature = "async")]
+    let proc_fn = quote! {
+        async fn proc(#prev_param: Self::Previous) ->
+            ::mingling::ChainProcess<ThisProgram>
+        {
+            let _ = NextProcess;
+            // Call the original function
+            #fn_name(#prev_param).await
+        }
+    };
+
+    #[cfg(feature = "async")]
+    let origin_proc_fn = quote! {
+        #(#fn_attrs)*
+        #vis async fn #fn_name(#prev_param: #previous_type)
+            -> ::mingling::ChainProcess<#group_name>
+        {
+            #fn_body
+        }
+    };
+
+    #[cfg(not(feature = "async"))]
+    let proc_fn = quote! {
+        fn proc(#prev_param: Self::Previous) ->
+            ::mingling::ChainProcess<ThisProgram>
+        {
+            let _ = NextProcess;
+            // Call the original function
+            #fn_name(#prev_param)
+        }
+    };
+
+    #[cfg(not(feature = "async"))]
+    let origin_proc_fn = quote! {
+        #(#fn_attrs)*
+        #vis fn #fn_name(#prev_param: #previous_type)
+            -> ::mingling::ChainProcess<#group_name>
+        {
+            #fn_body
+        }
+    };
+
     // Generate the struct and implementation
     let expanded = if use_crate_prefix {
         quote! {
@@ -134,22 +198,11 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             impl ::mingling::Chain<ThisProgram> for #struct_name {
                 type Previous = #previous_type;
 
-                async fn proc(#prev_param: Self::Previous) ->
-                    ::mingling::ChainProcess<ThisProgram>
-                {
-                    let _ = NextProcess;
-                    // Call the original function
-                    #fn_name(#prev_param).await
-                }
+                #proc_fn
             }
 
             // Keep the original function for internal use
-            #(#fn_attrs)*
-            #vis async fn #fn_name(#prev_param: #previous_type)
-                -> ::mingling::ChainProcess<ThisProgram>
-            {
-                #fn_body
-            }
+            #origin_proc_fn
         }
     } else {
         quote! {
@@ -161,22 +214,11 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             impl ::mingling::Chain<#group_name> for #struct_name {
                 type Previous = #previous_type;
 
-                async fn proc(#prev_param: Self::Previous) ->
-                    ::mingling::ChainProcess<#group_name>
-                {
-                    let _ = NextProcess;
-                    // Call the original function
-                    #fn_name(#prev_param).await
-                }
+                #proc_fn
             }
 
             // Keep the original function for internal use
-            #(#fn_attrs)*
-            #vis async fn #fn_name(#prev_param: #previous_type)
-                -> ::mingling::ChainProcess<#group_name>
-            {
-                #fn_body
-            }
+            #origin_proc_fn
         }
     };
 

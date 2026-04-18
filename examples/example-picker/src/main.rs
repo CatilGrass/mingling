@@ -25,18 +25,17 @@ use mingling::{
 
 dispatcher!("pick", PickCommand => PickEntry);
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     program.with_dispatcher(PickCommand);
-    program.exec().await;
+    program.exec();
 }
 
 pack!(NoNameProvided = ());
 pack!(ParsedPickInput = (i32, String));
 
 #[chain]
-async fn parse(prev: PickEntry) -> NextProcess {
+fn parse(prev: PickEntry) -> NextProcess {
     // Extract arguments from `PickEntry`'s inner and create a `Picker`
     let picker = Picker::new(prev.inner);
     let picked = picker

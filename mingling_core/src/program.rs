@@ -8,7 +8,10 @@ use crate::{
     AnyOutput, ChainProcess, RenderResult, asset::dispatcher::Dispatcher,
     error::ProgramExecuteError,
 };
-use std::{fmt::Display, pin::Pin, sync::OnceLock};
+use std::{fmt::Display, sync::OnceLock};
+
+#[cfg(feature = "async")]
+use std::pin::Pin;
 
 #[doc(hidden)]
 pub mod exec;
@@ -20,7 +23,6 @@ pub use config::*;
 
 mod flag;
 pub use flag::*;
-use tokio::io::AsyncWriteExt;
 
 /// Global static reference to the current program instance
 static THIS_PROGRAM: OnceLock<Option<Box<dyn std::any::Any + Send + Sync>>> = OnceLock::new();
@@ -97,7 +99,7 @@ where
     }
 
     /// Returns a reference to the current program instance, if set.
-    pub async fn this_program() -> &'static Program<C, G>
+    pub fn this_program() -> &'static Program<C, G>
     where
         C: 'static,
         G: 'static,
@@ -111,6 +113,19 @@ where
             .unwrap()
     }
 
+    // Get all registered dispatcher names from the program
+    pub fn get_nodes(&self) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
+        get_nodes(self)
+    }
+}
+
+// Async program
+#[cfg(feature = "async")]
+impl<C, G> Program<C, G>
+where
+    C: ProgramCollect<Enum = G>,
+    G: Display,
+{
     /// Sets the current program instance and runs the provided async function.
     async fn set_instance_and_run<F, Fut>(self, f: F) -> Fut::Output
     where
@@ -169,17 +184,84 @@ where
         // Render result
         if stdout_setting.render_output && !result.is_empty() {
             print!("{}", result);
-            if let Err(e) = tokio::io::stdout().flush().await
+            if let Err(e) = std::io::Write::flush(&mut std::io::stdout())
                 && stdout_setting.error_output
             {
                 eprintln!("{}", e);
             }
         }
     }
+}
 
-    // Get all registered dispatcher names from the program
-    pub fn get_nodes(&self) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
-        get_nodes(self)
+// Sync program
+#[cfg(not(feature = "async"))]
+impl<C, G> Program<C, G>
+where
+    C: ProgramCollect<Enum = G>,
+    G: Display,
+{
+    /// Sets the current program instance and runs the provided function.
+    fn set_instance_and_run<F, R>(self, f: F) -> R
+    where
+        C: 'static + Send + Sync,
+        G: 'static + Send + Sync,
+        F: FnOnce(&'static Program<C, G>) -> R + Send + Sync,
+    {
+        THIS_PROGRAM.get_or_init(|| Some(Box::new(self)));
+        let program = THIS_PROGRAM
+            .get()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .downcast_ref::<Program<C, G>>()
+            .unwrap();
+        f(program)
+    }
+
+    /// Run the command line program
+    pub fn exec_without_render(mut self) -> Result<RenderResult, ProgramExecuteError>
+    where
+        C: 'static + Send + Sync,
+        G: 'static + Send + Sync,
+    {
+        self.args = self.args.iter().skip(1).cloned().collect();
+        self.set_instance_and_run(|p| crate::exec::exec(p).map_err(|e| e.into()))
+    }
+
+    /// Run the command line program
+    pub fn exec(self)
+    where
+        C: 'static + Send + Sync,
+        G: 'static + Send + Sync,
+    {
+        let stdout_setting = self.stdout_setting.clone();
+        let result = match self.exec_without_render() {
+            Ok(r) => r,
+            Err(e) => match e {
+                ProgramExecuteError::DispatcherNotFound => {
+                    eprintln!("Dispatcher not found");
+                    return;
+                }
+                ProgramExecuteError::RendererNotFound(renderer_name) => {
+                    eprintln!("Renderer `{}` not found", renderer_name);
+                    return;
+                }
+                ProgramExecuteError::Other(e) => {
+                    eprintln!("{}", e);
+                    return;
+                }
+            },
+        };
+
+        // Render result
+        if stdout_setting.render_output && !result.is_empty() {
+            print!("{}", result);
+            if let Err(e) = std::io::Write::flush(&mut std::io::stdout())
+                && stdout_setting.error_output
+            {
+                eprintln!("{}", e);
+            }
+        }
     }
 }
 
@@ -200,9 +282,14 @@ pub trait ProgramCollect {
     fn render(any: AnyOutput<Self::Enum>, r: &mut RenderResult);
 
     /// Find a matching chain to continue execution based on the input [AnyOutput](./struct.AnyOutput.html), returning a new [AnyOutput](./struct.AnyOutput.html)
+    #[cfg(feature = "async")]
     fn do_chain(
         any: AnyOutput<Self::Enum>,
     ) -> Pin<Box<dyn Future<Output = ChainProcess<Self::Enum>> + Send>>;
+
+    /// Find a matching chain to continue execution based on the input [AnyOutput](./struct.AnyOutput.html), returning a new [AnyOutput](./struct.AnyOutput.html)
+    #[cfg(not(feature = "async"))]
+    fn do_chain(any: AnyOutput<Self::Enum>) -> ChainProcess<Self::Enum>;
 
     /// Match and execute specific completion logic based on any Entry
     #[cfg(feature = "comp")]
@@ -246,6 +333,7 @@ macro_rules! __dispatch_program_renderers {
 
 #[macro_export]
 #[doc(hidden)]
+#[cfg(feature = "async")]
 macro_rules! __dispatch_program_chains {
     (
         $( $chain_ty:ty => $chain_prev:ident, )*
@@ -261,6 +349,31 @@ macro_rules! __dispatch_program_chains {
                         let value = unsafe { any.downcast::<$chain_prev>().unwrap_unchecked() };
                         let fut = async { <$chain_ty as mingling::Chain<Self::Enum>>::proc(value).await };
                         Box::pin(fut)
+                    }
+                )*
+                _ => panic!("No chain found for type id: {:?}", any.type_id),
+            }
+        }
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+#[cfg(not(feature = "async"))]
+macro_rules! __dispatch_program_chains {
+    (
+        $( $chain_ty:ty => $chain_prev:ident, )*
+    ) => {
+        fn do_chain(
+            any: mingling::AnyOutput<Self::Enum>,
+        ) -> mingling::ChainProcess<Self::Enum> {
+            match any.member_id {
+                $(
+                    Self::$chain_prev => {
+                        // SAFETY: The `type_id` check ensures that `any` contains a value of type `$chain_prev`,
+                        // so downcasting to `$chain_prev` is safe.
+                        let value = unsafe { any.downcast::<$chain_prev>().unwrap_unchecked() };
+                        <$chain_ty as mingling::Chain<Self::Enum>>::proc(value)
                     }
                 )*
                 _ => panic!("No chain found for type id: {:?}", any.type_id),

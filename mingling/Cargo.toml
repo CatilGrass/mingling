@@ -17,6 +17,7 @@ mingling = { path = ".", features = ["full"] }
 
 [features]
 debug = ["mingling_core/debug"]
+async = ["mingling_core/async", "mingling_macros/async"]
 default = ["mingling_core/default"]
 full = ["mingling_core/full", "mingling_macros/full", "comp", "parser"]
 general_renderer = [

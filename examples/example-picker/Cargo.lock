@@ -3,12 +3,6 @@
 version = 4
 
 [[package]]
-name = "bytes"
-version = "1.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
-
-[[package]]
 name = "example-picker"
 version = "0.0.1"
 dependencies = [
@@ -38,7 +32,6 @@ dependencies = [
  "just_fmt",
  "once_cell",
  "thiserror",
- "tokio",
 ]
 
 [[package]]
@@ -125,7 +118,6 @@ version = "1.51.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f66bf9585cda4b724d3e78ab34b73fb2bbaba9011b9bfdf69dc836382ea13b8c"
 dependencies = [
- "bytes",
  "pin-project-lite",
  "tokio-macros",
 ]

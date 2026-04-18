@@ -132,6 +132,36 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
 pub fn program_gen_completion(input: TokenStream) -> TokenStream {
     let name = read_name(&input);
 
+    #[cfg(feature = "async")]
+    let fn_exec_comp = quote! {
+        #[::mingling::macros::chain(#name)]
+        pub async fn __exec_completion(prev: CompletionContext) -> NextProcess {
+            let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
+            match read_ctx {
+                Ok(ctx) => {
+                    let suggest = ::mingling::CompletionHelper::exec_completion::<#name>(&ctx);
+                    CompletionSuggest::new((ctx, suggest)).to_render()
+                }
+                Err(_) => std::process::exit(1),
+            }
+        }
+    };
+
+    #[cfg(not(feature = "async"))]
+    let fn_exec_comp = quote! {
+        #[::mingling::macros::chain(#name)]
+        pub fn __exec_completion(prev: CompletionContext) -> NextProcess {
+            let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
+            match read_ctx {
+                Ok(ctx) => {
+                    let suggest = ::mingling::CompletionHelper::exec_completion::<#name>(&ctx);
+                    CompletionSuggest::new((ctx, suggest)).to_render()
+                }
+                Err(_) => std::process::exit(1),
+            }
+        }
+    };
+
     let comp_dispatcher = quote! {
         #[allow(unused)]
         use __completion_gen::*;
@@ -144,17 +174,7 @@ pub fn program_gen_completion(input: TokenStream) -> TokenStream {
                 CompletionSuggest = (::mingling::ShellContext, ::mingling::Suggest)
             );
 
-            #[::mingling::macros::chain(#name)]
-            pub async fn __exec_completion(prev: CompletionContext) -> NextProcess {
-                let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
-                match read_ctx {
-                    Ok(ctx) => {
-                        let suggest = ::mingling::CompletionHelper::exec_completion::<#name>(&ctx);
-                        CompletionSuggest::new((ctx, suggest)).to_render()
-                    }
-                    Err(_) => std::process::exit(1),
-                }
-            }
+            #fn_exec_comp
 
             ::mingling::macros::register_type!(CompletionContext);
 

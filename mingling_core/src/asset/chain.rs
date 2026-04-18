@@ -14,5 +14,9 @@ where
     type Previous;
 
     /// Process the previous value and return a future that resolves to a [`ChainProcess<G>`](./enum.ChainProcess.html)
+    #[cfg(feature = "async")]
     fn proc(p: Self::Previous) -> impl Future<Output = ChainProcess<G>> + Send;
+
+    #[cfg(not(feature = "async"))]
+    fn proc(p: Self::Previous) -> ChainProcess<G>;
 }

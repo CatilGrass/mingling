@@ -11,6 +11,7 @@ proc-macro = true
 
 [features]
 default = []
+async = []
 full = ["comp", "general_renderer"]
 comp = []
 general_renderer = []

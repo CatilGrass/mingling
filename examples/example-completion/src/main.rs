@@ -54,12 +54,11 @@ fn comp_fruit_command(ctx: &ShellContext) -> Suggest {
     return suggest!();
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     program.with_dispatcher(CompletionDispatcher);
     program.with_dispatcher(FruitCommand);
-    program.exec().await;
+    program.exec();
 }
 
 #[derive(Groupped)]
@@ -98,7 +97,7 @@ enum FruitType {
 impl PickableEnum for FruitType {}
 
 #[chain]
-async fn parse_fruit_info(prev: FruitEntry) -> NextProcess {
+fn parse_fruit_info(prev: FruitEntry) -> NextProcess {
     let picker = Picker::<()>::from(prev.inner);
     let (fruit_name, fruit_type) = picker.pick("--name").pick("--type").unpack_directly();
     let info = FruitInfo {

@@ -9,4 +9,3 @@ mingling = { path = "../../mingling", features = [
     "general_renderer",
 ] }
 serde = { version = "1", features = ["derive"] }
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }

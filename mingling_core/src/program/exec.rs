@@ -10,6 +10,7 @@ use crate::{
 #[doc(hidden)]
 pub mod error;
 
+#[cfg(feature = "async")]
 pub async fn exec<C, G>(
     program: &Program<C, G>,
 ) -> Result<RenderResult, ProgramInternalExecuteError>
@@ -46,6 +47,66 @@ where
             // If a chain exists, execute as a chain
             if C::has_chain(&current) {
                 match C::do_chain(current).await {
+                    ChainProcess::Ok((any, Next::Renderer)) => {
+                        return Ok(render::<C, G>(program, any));
+                    }
+                    ChainProcess::Ok((any, Next::Chain)) => any,
+                    ChainProcess::Err(e) => return Err(e.into()),
+                }
+            }
+            // If no chain exists, attempt to render
+            else if C::has_renderer(&current) {
+                return Ok(render::<C, G>(program, current));
+            }
+            // No renderer exists
+            else {
+                stop_next = true;
+                C::build_renderer_not_found(current.member_id)
+            }
+        };
+
+        if final_exec && stop_next {
+            break;
+        }
+    }
+    Ok(RenderResult::default())
+}
+
+#[cfg(not(feature = "async"))]
+pub fn exec<C, G>(program: &Program<C, G>) -> Result<RenderResult, ProgramInternalExecuteError>
+where
+    C: ProgramCollect<Enum = G>,
+    G: Display,
+{
+    let mut current;
+    let mut stop_next = false;
+
+    // Match user input
+    match match_user_input(program, program.args.clone()) {
+        Ok((dispatcher, args)) => {
+            // Entry point
+            current = match dispatcher.begin(args) {
+                ChainProcess::Ok((any, Next::Renderer)) => {
+                    return Ok(render::<C, G>(program, any));
+                }
+                ChainProcess::Ok((any, Next::Chain)) => any,
+                ChainProcess::Err(e) => return Err(e.into()),
+            };
+        }
+        Err(ProgramInternalExecuteError::DispatcherNotFound) => {
+            // No matching Dispatcher is found
+            current = C::build_dispatcher_not_found(program.args.clone());
+        }
+        Err(e) => return Err(e),
+    };
+
+    loop {
+        let final_exec = stop_next;
+
+        current = {
+            // If a chain exists, execute as a chain
+            if C::has_chain(&current) {
+                match C::do_chain(current) {
                     ChainProcess::Ok((any, Next::Renderer)) => {
                         return Ok(render::<C, G>(program, any));
                     }

@@ -13,8 +13,7 @@ use mingling::{
 // Define dispatcher `HelloCommand`, directing subcommand "hello" to `HelloEntry`
 dispatcher!("hello", HelloCommand => HelloEntry);
 
-#[tokio::main]
-async fn main() {
+fn main() {
     // Create program
     let mut program = ThisProgram::new();
 
@@ -22,7 +21,7 @@ async fn main() {
     program.with_dispatcher(HelloCommand);
 
     // Run program
-    program.exec().await;
+    program.exec();
 }
 
 // Register wrapper type `Hello`, setting inner to `String`
@@ -30,7 +29,7 @@ pack!(Hello = String);
 
 // Register chain to `ThisProgram`, handling logic from `HelloEntry`
 #[chain]
-async fn parse_name(prev: HelloEntry) -> NextProcess {
+fn parse_name(prev: HelloEntry) -> NextProcess {
     // Extract string from `HelloEntry` as argument
     let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
 

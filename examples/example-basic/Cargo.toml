@@ -5,4 +5,3 @@ edition = "2024"
 
 [dependencies]
 mingling = { path = "../../mingling" }
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }

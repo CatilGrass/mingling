@@ -43,13 +43,12 @@ use serde::Serialize;
 
 dispatcher!("render", RenderCommand => RenderCommandEntry);
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     // Add `GeneralRendererSetup` to receive user input `--json` `--yaml` parameters
     program.with_setup(GeneralRendererSetup);
     program.with_dispatcher(RenderCommand);
-    program.exec().await;
+    program.exec();
 }
 
 // Manually implement Info struct
@@ -62,7 +61,7 @@ struct Info {
 }
 
 #[chain]
-async fn parse_render(prev: RenderCommandEntry) -> NextProcess {
+fn parse_render(prev: RenderCommandEntry) -> NextProcess {
     let (name, age) = Picker::<()>::new(prev.inner)
         .pick::<String>(())
         .pick::<i32>(())
