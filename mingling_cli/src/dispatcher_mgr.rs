@@ -11,7 +11,7 @@ dispatcher!("add.dispatcher", AddDispatcherCommand => AddDispatcherEntry);
 dispatcher!("remove.dispatcher", RemoveDispatcherCommand => RemoveDispatcherEntry);
 
 #[chain]
-pub async fn parse_add_dispatcher(args: AddDispatcherEntry) -> NextProcess {
+pub fn parse_add_dispatcher(args: AddDispatcherEntry) -> NextProcess {
     let picker: Picker<ThisProgram> = Picker::new(args.inner);
     let dispatcher_name = picker.pick::<String>(()).unpack_directly().0;
     let input = AddDispatcherInput::new(dispatcher_name);
@@ -19,7 +19,7 @@ pub async fn parse_add_dispatcher(args: AddDispatcherEntry) -> NextProcess {
 }
 
 #[chain]
-pub async fn parse_remove_dispatcher(args: RemoveDispatcherEntry) -> NextProcess {
+pub fn parse_remove_dispatcher(args: RemoveDispatcherEntry) -> NextProcess {
     let picker: Picker<ThisProgram> = Picker::new(args.inner);
     let dispatcher_name = picker.pick::<String>(()).unpack_directly().0;
     let input = AddDispatcherInput::new(dispatcher_name);
@@ -29,7 +29,7 @@ pub async fn parse_remove_dispatcher(args: RemoveDispatcherEntry) -> NextProcess
 pack!(AddDispatcherInput = String);
 
 #[chain]
-pub async fn exec_add_dispatcher(_input: AddDispatcherInput) -> NextProcess {
+pub fn exec_add_dispatcher(_input: AddDispatcherInput) -> NextProcess {
     AnyOutput::new(AddDispatcherSuccess::new(())).route_chain()
 }
 
