@@ -45,12 +45,11 @@ use mingling::{
     setup::BasicProgramSetup
 };
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     // Add `BasicProgramSetup`
     program.with_setup(BasicProgramSetup);
-    program.exec().await;
+    program.exec();
 }
 
 // Generate `ThisProgram`
@@ -68,8 +67,7 @@ dispatcher!("member.add",
 dispatcher!("member.rm", 
     RemoveMemberCommand => RemoveMemberEntry);
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
 
     // Register Dispatchers
@@ -82,7 +80,7 @@ async fn main() {
         RemoveMemberCommand
     ));
 
-    program.exec().await;
+    program.exec();
 }
 ```
 
@@ -91,8 +89,7 @@ async fn main() {
 You can extract global arguments before the program runs to control the global state of the `Program`:
 
 ```rust
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
 
     let mut output = current_dir().unwrap();
@@ -109,7 +106,7 @@ async fn main() {
         |_, v| output = PathBuf::from(v)
     );
 
-    program.exec().await;
+    program.exec();
 }
 ```
 

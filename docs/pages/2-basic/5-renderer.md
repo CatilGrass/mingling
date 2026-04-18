@@ -21,7 +21,7 @@ pack!(ParsedHello = String);
 
 // It's the Chain defined in the Dispatcher chapter
 #[chain]
-async fn parse_hello(prev: HelloEntry) -> NextProcess {
+fn parse_hello(prev: HelloEntry) -> NextProcess {
     let args = &*prev;
     let first = args
         .first()
@@ -53,10 +53,6 @@ fn render_hello(prev: ParsedHello) {
 
 ## Manual Impl
 
-> ⚠️ WARNING
->
-> The following content is not yet fully implemented; currently, only the `renderer!` macro is allowed for implementation.
-
 Similarly, you can also manually implement `Renderer`,
 
 but note that inside the `renderer!` macro, a `register_type!` macro is executed. This macro itself does not expand into any content; it is only used to inform the `gen_program` context that the type exists:
@@ -73,5 +69,6 @@ impl Renderer for RenderHello {
     }
 }
  
-register_type!(ParsedHello);
+// Register renderer to the context
+register_renderer!(ParsedHello);
 ```

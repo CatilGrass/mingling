@@ -25,7 +25,7 @@ The following demonstrates the parsing approach without using a `Picker`:
 
 ```rust
 #[chain]
-async fn parse_hello(prev: HelloEntry) -> NextProcess {
+fn parse_hello(prev: HelloEntry) -> NextProcess {
     let args = &*prev;
     let first = args.first().cloned().unwrap_or_else(|| "World".to_string());
     ParsedHello::new(first).to_render()
@@ -36,7 +36,7 @@ This is how it looks when using `Picker`:
 
 ```rust
 #[chain]
-async fn parse_hello(prev: HelloEntry) -> NextProcess {
+fn parse_hello(prev: HelloEntry) -> NextProcess {
     // Create Picker
     let picker = Picker::<ThisProgram>::new(prev.inner);
 
@@ -102,11 +102,10 @@ use mingling::{
     parser::PickableEnum,
 };
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     program.with_dispatcher(FruitEatCommand);
-    program.exec().await;
+    program.exec();
 }
 
 dispatcher!("eat",
@@ -131,7 +130,7 @@ enum Fruit {
 impl PickableEnum for Fruit {}
 
 #[chain]
-async fn parse_fruit_eat(prev: FruitEatEntry) -> NextProcess {
+fn parse_fruit_eat(prev: FruitEatEntry) -> NextProcess {
     // ...
 }
 
@@ -197,7 +196,7 @@ Now start writing the logic:
 
 ```rust
 #[chain]
-async fn parse_fruit_eat(prev: FruitEatEntry) -> NextProcess {
+fn parse_fruit_eat(prev: FruitEatEntry) -> NextProcess {
     let picker = Picker::new(prev.inner);
     let mut min_weight: i16 = 0;
     let parsed = picker
@@ -247,11 +246,10 @@ use mingling::{
     parser::{PickableEnum, Picker},
 };
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     program.with_dispatcher(FruitEatCommand);
-    program.exec().await;
+    program.exec();
 }
 
 dispatcher!("eat",
@@ -277,7 +275,7 @@ impl PickableEnum for Fruit {}
 pack!(MinGreaterThanMax = ());
 
 #[chain]
-async fn parse_fruit_eat(prev: FruitEatEntry) -> NextProcess {
+fn parse_fruit_eat(prev: FruitEatEntry) -> NextProcess {
     let picker = Picker::new(prev.inner);
     let mut min_weight: i16 = 0;
     let parsed = picker

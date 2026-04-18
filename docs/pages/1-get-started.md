@@ -9,24 +9,10 @@ cargo add mingling
 Or add the following to your `Cargo.toml`:
 ```toml
 [dependencies]
-mingling = "0.1.5"
+mingling = "0.1.6"
 ```
 
-> **Mingling** is an **async program**, so please use `async-std`, `tokio`, or another async runtime.
-
-2. This article assumes you are using the `tokio` async runtime. Add the following to your `Cargo.toml`:
-```toml
-tokio = { 
-    version = "1", 
-    features = [
-        "macros", 
-        "rt", 
-        "rt-multi-thread"
-    ] 
-}
-```
-
-3. Write the basic code in your `main.rs` or other program entry point.
+2. Write the basic code in your `main.rs` or other program entry point.
 ```rust
 use mingling::macros::{dispatcher, gen_program, r_println, renderer};
  
@@ -55,7 +41,7 @@ fn render_hello(_prev: HelloEntry) {
 gen_program!();
 ```
 
-4. Install your command-line program and run it.
+3. Install your command-line program and run it.
 ```bash
 cargo install --path ./
 your_bin hello
@@ -64,6 +50,18 @@ Result:
 ```bash
 Hello, World!
 ```
+
+## About Async Runtime
+
+**Mingling** supports **async runtime**, you can enable the `async` feature to activate it.
+
+After enabling it, **Mingling** will have the following changes:
+
+- The `Chain` trait and `chain!` macro will require you to use **async functions**
+- `Program::exec` will become an async function
+- The `gen_program!` macro will generate async functions
+
+**Mingling** does not depend on any specific asynchronous runtime internally, which means you can freely choose a suitable asynchronous runtime for your program (such as `async-std`, `tokio`)
 
 ## 💡 Next Steps
 > **Mingling**'s basic components [Go](./pages/2-basic)

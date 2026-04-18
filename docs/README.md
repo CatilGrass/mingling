@@ -53,13 +53,12 @@ The example below shows how to use `Mingling` to create a simple command-line pr
 ```rust
 use mingling::macros::{dispatcher, gen_program, r_println, renderer};
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     program.with_dispatcher(HelloCommand);
 
     // Execute
-    program.exec().await;
+    program.exec();
 }
 
 // Define command: "<bin> hello"
@@ -139,11 +138,11 @@ You can read the following docs to learn more about the `Mingling` framework:
 
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
 - [x] core: \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] Completion *( Bash Zsh Fish Pwsh )*
-- [ ] \[**0.1.6**\] Smarter Completion Suggest Generation
+- [ ] core: \[**0.1.6**\] Smarter Completion Suggest Generation
 - [ ] \[**0.1.7**\] Clap Parser Support
-- [ ] \[**0.1.8**\] Faster Dispatcher
+- [ ] core: \[**0.1.8**\] Faster Dispatcher
 - [ ] \[**0.1.9**\] Helpdoc Generation
-- [ ] \[**0.1.9**\] Debug Toolkits (InvokeStackDisplay ...)
+- [ ] core: \[**0.1.9**\] Debug Toolkits (InvokeStackDisplay ...)
 - [ ] ...
 - [ ] \[**unplanned**\] Parser Theme
 - [ ] core: \[**unplanned**\] Parallel Chains

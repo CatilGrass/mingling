@@ -45,13 +45,12 @@ dispatcher!(MyProgram, "hello",
 **Tips:** Finally, add the `Dispatcher` you created to the [Program](pages/2-basic/1-program):
 
 ```rust
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     program.with_dispatcher(HelloCommand);
     program.with_dispatcher(SubFooCommand);
     program.with_dispatcher(SubBarCommand);
-    program.exec().await;
+    program.exec();
 }
 ```
 

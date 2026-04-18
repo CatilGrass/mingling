@@ -19,7 +19,7 @@ pack!(ParsedHello = String);
 // Define chain parse_hello (expands to ParseHello)
 // Declare conversion from HelloEntry
 #[chain]
-async fn parse_hello(prev: HelloEntry) -> NextProcess {
+fn parse_hello(prev: HelloEntry) -> NextProcess {
     // Take the inner reference of HelloEntry
     let args = &*prev;
 
@@ -41,10 +41,6 @@ async fn parse_hello(prev: HelloEntry) -> NextProcess {
 
 ## Manual Impl
 
-> ⚠️ WARNING
->
-> The following content is not yet fully implemented; currently, only the `chain!` macro is allowed for implementation.
-
 You can also manually implement the basic `Chain` for finer control.
 
 However, please note that within the `chain!` macro, a `register_type!` macro is executed. This macro does not expand to any content; it only informs the `gen_program` context that this type exists.
@@ -58,7 +54,7 @@ pack!(ParsedHello = String);
 struct ParseHello;
 impl Chain<ThisProgram> for ParseHello {
     type Previous = HelloEntry;
-    async fn proc(prev: Self::Previous) 
+    fn proc(prev: Self::Previous) 
         -> ChainProcess<ThisProgram> 
     {
         let args = &*prev;
@@ -72,9 +68,8 @@ impl Chain<ThisProgram> for ParseHello {
     }
 }
  
-// Register HelloEntry to the context and 
-//   assign an ID for it
-register_type!(HelloEntry);
+// Register chain to the context
+register_chain!(HelloEntry);
 ```
 
 ## 💡 Next Page

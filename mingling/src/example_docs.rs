@@ -16,7 +16,6 @@
 ///
 /// [dependencies]
 /// mingling = { path = "../../mingling" }
-/// tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 /// ```
 ///
 /// main.rs
@@ -29,8 +28,7 @@
 /// // Define dispatcher `HelloCommand`, directing subcommand "hello" to `HelloEntry`
 /// dispatcher!("hello", HelloCommand => HelloEntry);
 ///
-/// #[tokio::main]
-/// async fn main() {
+/// fn main() {
 ///     // Create program
 ///     let mut program = ThisProgram::new();
 ///
@@ -38,7 +36,7 @@
 ///     program.with_dispatcher(HelloCommand);
 ///
 ///     // Run program
-///     program.exec().await;
+///     program.exec();
 /// }
 ///
 /// // Register wrapper type `Hello`, setting inner to `String`
@@ -46,7 +44,7 @@
 ///
 /// // Register chain to `ThisProgram`, handling logic from `HelloEntry`
 /// #[chain]
-/// async fn parse_name(prev: HelloEntry) -> NextProcess {
+/// fn parse_name(prev: HelloEntry) -> NextProcess {
 ///     // Extract string from `HelloEntry` as argument
 ///     let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
 ///
@@ -102,7 +100,6 @@ pub mod example_basic {}
 ///
 /// [dependencies]
 /// mingling = { path = "../../mingling", features = ["comp", "parser"] }
-/// tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 /// ```
 ///
 /// main.rs
@@ -137,12 +134,11 @@ pub mod example_basic {}
 ///     return suggest!();
 /// }
 ///
-/// #[tokio::main]
-/// async fn main() {
+/// fn main() {
 ///     let mut program = ThisProgram::new();
 ///     program.with_dispatcher(CompletionDispatcher);
 ///     program.with_dispatcher(FruitCommand);
-///     program.exec().await;
+///     program.exec();
 /// }
 ///
 /// #[derive(Groupped)]
@@ -181,7 +177,7 @@ pub mod example_basic {}
 /// impl PickableEnum for FruitType {}
 ///
 /// #[chain]
-/// async fn parse_fruit_info(prev: FruitEntry) -> NextProcess {
+/// fn parse_fruit_info(prev: FruitEntry) -> NextProcess {
 ///     let picker = Picker::<()>::from(prev.inner);
 ///     let (fruit_name, fruit_type) = picker.pick("--name").pick("--type").unpack_directly();
 ///     let info = FruitInfo {
@@ -259,7 +255,6 @@ pub mod example_completion {}
 ///     "general_renderer",
 /// ] }
 /// serde = { version = "1", features = ["derive"] }
-/// tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 /// ```
 ///
 /// main.rs
@@ -275,13 +270,12 @@ pub mod example_completion {}
 ///
 /// dispatcher!("render", RenderCommand => RenderCommandEntry);
 ///
-/// #[tokio::main]
-/// async fn main() {
+/// fn main() {
 ///     let mut program = ThisProgram::new();
 ///     // Add `GeneralRendererSetup` to receive user input `--json` `--yaml` parameters
 ///     program.with_setup(GeneralRendererSetup);
 ///     program.with_dispatcher(RenderCommand);
-///     program.exec().await;
+///     program.exec();
 /// }
 ///
 /// // Manually implement Info struct
@@ -294,7 +288,7 @@ pub mod example_completion {}
 /// }
 ///
 /// #[chain]
-/// async fn parse_render(prev: RenderCommandEntry) -> NextProcess {
+/// fn parse_render(prev: RenderCommandEntry) -> NextProcess {
 ///     let (name, age) = Picker::<()>::new(prev.inner)
 ///         .pick::<String>(())
 ///         .pick::<i32>(())
@@ -352,18 +346,17 @@ pub mod example_general_renderer {}
 ///
 /// dispatcher!("pick", PickCommand => PickEntry);
 ///
-/// #[tokio::main]
-/// async fn main() {
+/// fn main() {
 ///     let mut program = ThisProgram::new();
 ///     program.with_dispatcher(PickCommand);
-///     program.exec().await;
+///     program.exec();
 /// }
 ///
 /// pack!(NoNameProvided = ());
 /// pack!(ParsedPickInput = (i32, String));
 ///
 /// #[chain]
-/// async fn parse(prev: PickEntry) -> NextProcess {
+/// fn parse(prev: PickEntry) -> NextProcess {
 ///     // Extract arguments from `PickEntry`'s inner and create a `Picker`
 ///     let picker = Picker::new(prev.inner);
 ///     let picked = picker

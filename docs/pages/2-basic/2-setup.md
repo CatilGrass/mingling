@@ -38,11 +38,10 @@ use mingling::{
 static OUTPUT_PATH: std::sync::OnceLock<PathBuf> 
     = std::sync::OnceLock::new();
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     program.with_setup(MySetup);
-    program.exec().await;
+    program.exec();
 }
 
 // Define two Dispatchers using `dispatcher!`
