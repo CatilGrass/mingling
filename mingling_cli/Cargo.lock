@@ -86,7 +86,6 @@ dependencies = [
  "just_template",
  "once_cell",
  "thiserror",
- "tokio",
 ]
 
 [[package]]

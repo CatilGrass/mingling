@@ -70,5 +70,5 @@ impl Renderer for RenderHello {
 }
  
 // Register renderer to the context
-register_renderer!(ParsedHello);
+register_renderer!(ParsedHello, RenderHello);
 ```

@@ -69,7 +69,7 @@ impl Chain<ThisProgram> for ParseHello {
 }
  
 // Register chain to the context
-register_chain!(HelloEntry);
+register_chain!(HelloEntry, ParseHello);
 ```
 
 ## 💡 Next Page
