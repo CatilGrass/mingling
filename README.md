@@ -139,11 +139,11 @@ You can read the following docs to learn more about the `Mingling` framework:
 
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
 - [x] core: \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] Completion *( Bash Zsh Fish Pwsh )*
-- [ ] \[**0.1.6**\] Smarter Completion Suggest Generation
+- [ ] core: \[**0.1.6**\] Smarter Completion Suggest Generation
 - [ ] \[**0.1.7**\] Clap Parser Support
-- [ ] \[**0.1.8**\] Faster Dispatcher
+- [ ] core: \[**0.1.8**\] Faster Dispatcher
 - [ ] \[**0.1.9**\] Helpdoc Generation
-- [ ] \[**0.1.9**\] Debug Toolkits (InvokeStackDisplay ...)
+- [ ] core: \[**0.1.9**\] Debug Toolkits (InvokeStackDisplay ...)
 - [ ] ...
 - [ ] \[**unplanned**\] Parser Theme
 - [ ] core: \[**unplanned**\] Parallel Chains
