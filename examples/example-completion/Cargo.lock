@@ -26,7 +26,7 @@ dependencies = [
 
 [[package]]
 name = "mingling"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "mingling_core",
  "mingling_macros",
@@ -35,7 +35,7 @@ dependencies = [
 
 [[package]]
 name = "mingling_core"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "just_fmt",
  "just_template",
@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "mingling_macros"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "just_fmt",
  "once_cell",

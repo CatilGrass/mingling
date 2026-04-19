@@ -61,7 +61,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "mingling"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "mingling_core",
  "mingling_macros",
@@ -71,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "mingling_core"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "just_fmt",
  "once_cell",
@@ -85,7 +85,7 @@ dependencies = [
 
 [[package]]
 name = "mingling_macros"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "just_fmt",
  "once_cell",
