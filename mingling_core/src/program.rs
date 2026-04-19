@@ -4,6 +4,9 @@ use crate::{ShellContext, Suggest};
 #[cfg(feature = "general_renderer")]
 use crate::error::GeneralRendererSerializeError;
 
+#[cfg(not(windows))]
+use std::env;
+
 use crate::{
     AnyOutput, ChainProcess, RenderResult, asset::dispatcher::Dispatcher,
     error::ProgramExecuteError,
