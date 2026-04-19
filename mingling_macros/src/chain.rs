@@ -77,18 +77,9 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the function item
     let input_fn = parse_macro_input!(item as ItemFn);
 
-    // Validate the chain functions is a async function
+    // In `async` mode, check if the function is an async function
     #[cfg(feature = "async")]
-    {
-        if input_fn.sig.asyncness.is_none() {
-            return syn::Error::new(
-                input_fn.sig.span(),
-                "Chain function must be async when async feature is enabled",
-            )
-            .to_compile_error()
-            .into();
-        }
-    }
+    let is_async_fn = input_fn.sig.asyncness.is_some();
 
     // Validate the chain functions is a regular function
     #[cfg(not(feature = "async"))]
@@ -145,23 +136,46 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let struct_name = Ident::new(&pascal_case_name, fn_name.span());
 
     #[cfg(feature = "async")]
-    let proc_fn = quote! {
-        async fn proc(#prev_param: Self::Previous) ->
-            ::mingling::ChainProcess<ThisProgram>
-        {
-            let _ = NextProcess;
-            // Call the original function
-            #fn_name(#prev_param).await
+    let proc_fn = if is_async_fn {
+        quote! {
+            async fn proc(#prev_param: Self::Previous) ->
+                ::mingling::ChainProcess<ThisProgram>
+            {
+                let _ = NextProcess;
+                // Call the original function
+                #fn_name(#prev_param).await
+            }
+        }
+    } else {
+        quote! {
+            async fn proc(#prev_param: Self::Previous) ->
+                ::mingling::ChainProcess<ThisProgram>
+            {
+                let _ = NextProcess;
+                // Call the original function
+                #fn_name(#prev_param)
+            }
         }
     };
 
     #[cfg(feature = "async")]
-    let origin_proc_fn = quote! {
-        #(#fn_attrs)*
-        #vis async fn #fn_name(#prev_param: #previous_type)
-            -> ::mingling::ChainProcess<#group_name>
-        {
-            #fn_body
+    let origin_proc_fn = if is_async_fn {
+        quote! {
+            #(#fn_attrs)*
+            #vis async fn #fn_name(#prev_param: #previous_type)
+                -> ::mingling::ChainProcess<#group_name>
+            {
+                #fn_body
+            }
+        }
+    } else {
+        quote! {
+            #(#fn_attrs)*
+            #vis fn #fn_name(#prev_param: #previous_type)
+                -> ::mingling::ChainProcess<#group_name>
+            {
+                #fn_body
+            }
         }
     };
 
