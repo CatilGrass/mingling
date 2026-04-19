@@ -143,7 +143,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             {
                 let _ = NextProcess;
                 // Call the original function
-                #fn_name(#prev_param).await
+                #fn_name(#prev_param).await.into()
             }
         }
     } else {
@@ -153,7 +153,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             {
                 let _ = NextProcess;
                 // Call the original function
-                #fn_name(#prev_param)
+                #fn_name(#prev_param).into()
             }
         }
     };
@@ -163,7 +163,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         quote! {
             #(#fn_attrs)*
             #vis async fn #fn_name(#prev_param: #previous_type)
-                -> ::mingling::ChainProcess<#group_name>
+                -> impl Into<::mingling::ChainProcess<#group_name>>
             {
                 #fn_body
             }
@@ -172,7 +172,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         quote! {
             #(#fn_attrs)*
             #vis fn #fn_name(#prev_param: #previous_type)
-                -> ::mingling::ChainProcess<#group_name>
+                -> impl Into<::mingling::ChainProcess<#group_name>>
             {
                 #fn_body
             }
@@ -186,7 +186,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         {
             let _ = NextProcess;
             // Call the original function
-            #fn_name(#prev_param)
+            #fn_name(#prev_param).into()
         }
     };
 
@@ -194,7 +194,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let origin_proc_fn = quote! {
         #(#fn_attrs)*
         #vis fn #fn_name(#prev_param: #previous_type)
-            -> ::mingling::ChainProcess<#group_name>
+            -> impl Into<::mingling::ChainProcess<#group_name>>
         {
             #fn_body
         }

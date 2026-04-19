@@ -15,7 +15,7 @@ pub fn parse_add_dispatcher(args: AddDispatcherEntry) -> NextProcess {
     let picker: Picker<ThisProgram> = Picker::new(args.inner);
     let dispatcher_name = picker.pick::<String>(()).unpack_directly().0;
     let input = AddDispatcherInput::new(dispatcher_name);
-    input.into()
+    input
 }
 
 #[chain]
@@ -23,7 +23,7 @@ pub fn parse_remove_dispatcher(args: RemoveDispatcherEntry) -> NextProcess {
     let picker: Picker<ThisProgram> = Picker::new(args.inner);
     let dispatcher_name = picker.pick::<String>(()).unpack_directly().0;
     let input = AddDispatcherInput::new(dispatcher_name);
-    input.into()
+    input
 }
 
 pack!(AddDispatcherInput = String);
