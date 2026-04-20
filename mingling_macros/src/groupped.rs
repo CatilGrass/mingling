@@ -38,6 +38,8 @@ pub fn derive_groupped(input: TokenStream) -> TokenStream {
 
     // Generate the Groupped trait implementation
     let expanded = quote! {
+        ::mingling::macros::register_type!(#struct_name);
+
         impl ::mingling::Groupped<#group_ident> for #struct_name {
             fn member_id() -> #group_ident {
                 #group_ident::#struct_name
