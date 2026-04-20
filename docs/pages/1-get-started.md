@@ -16,8 +16,7 @@ mingling = "0.1.6"
 ```rust
 use mingling::macros::{dispatcher, gen_program, r_println, renderer};
  
-#[tokio::main]
-async fn main() {
+fn main() {
     // Create ThisProgram
     let mut program = ThisProgram::new();
  
@@ -25,7 +24,7 @@ async fn main() {
     program.with_dispatcher(HelloCommand);
  
     // Run the program
-    program.exec().await;
+    program.exec();
 }
  
 // Define the dispatcher `HelloCommand`, which routes the "hello" subcommand to `HelloEntry`
