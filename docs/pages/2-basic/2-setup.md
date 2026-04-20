@@ -5,9 +5,13 @@
 
 ---
 
+## Intro
+
+`Setup` is used to organize and package the initialization process of a `Program`, making the project easier to manage. 
+
 ## Usage
 
-`Setup` is used to organize and package the initialization process of a `Program`, making the project easier to manage. It is defined as follows:
+It is defined as follows:
 
 ```rust
 struct MySetup;
@@ -75,18 +79,6 @@ impl ProgramSetup<ThisProgram, ThisProgram> for MySetup {
     }
 }
 
-// Define empty renderer types to give the two types type IDs
-
-#[renderer]
-fn phantom_renderer_add_member(
-    _prev: AddMemberEntry
-) {}
-
-#[renderer]
-fn phantom_renderer_remove_member(
-    _prev: RemoveMemberEntry
-) {}
-
 gen_program!();
 ```
 
@@ -150,16 +142,6 @@ fn my_setup(
         let _ = OUTPUT_PATH.set(PathBuf::from(v));
     });
 }
-
-#[renderer]
-fn phantom_renderer_add_member(
-    _prev: AddMemberEntry
-) {}
-
-#[renderer]
-fn phantom_renderer_remove_member(
-    _prev: RemoveMemberEntry
-) {}
 
 gen_program!();
 ```

@@ -43,7 +43,7 @@ fn parse_hello(prev: HelloEntry) -> NextProcess {
     // Extract the first argument from the Picker, 
     //   fallback to "World" if it doesn't exist
     let first = picker
-        .pick_or((), "World".to_string())
+        .pick_or((), "World")
         .unpack_directly().0;
 
     ParsedHello::new(first).to_render()
