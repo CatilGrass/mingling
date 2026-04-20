@@ -17,7 +17,7 @@ mingling = {
 }
 ```
 
-## Intro
+## Setup
 
 `general_renderer` requires you to implement the `serde::Serialize` trait for **all** structs, so your project needs to include `serde`
 

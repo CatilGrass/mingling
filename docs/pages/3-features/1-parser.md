@@ -17,7 +17,7 @@ mingling = {
 }
 ```
 
-## Intro
+## Usage
 
 `parser` provides the ability to transform user input into structured data. Its core concept is **pick**.
 

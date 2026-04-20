@@ -12,3 +12,4 @@
   - [Parser](./pages/3-features/1-parser)
   - [General Renderer](./pages/3-features/2-general-renderer)
   - [Completion](./pages/3-features/3-comp)
+  - [Async](./pages/3-features/4-async)
