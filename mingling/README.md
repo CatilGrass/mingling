@@ -13,13 +13,12 @@ The example below shows how to use `Mingling` to create a simple command-line pr
 ```rust
 use mingling::macros::{dispatcher, gen_program, r_println, renderer};
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let mut program = ThisProgram::new();
     program.with_dispatcher(HelloCommand);
 
     // Execute
-    program.exec().await;
+    program.exec();
 }
 
 // Define command: "<bin> hello"
