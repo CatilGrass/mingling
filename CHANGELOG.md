@@ -4,6 +4,10 @@
 
 `Mingling` 0.1.6 primarily focuses on optimizing the writing experience and code completion.
 
+> [!warning]
+>
+> To align with the `mingling` version, `mingling_core` and `mingling_macros` will skip version `0.1.5` and be released directly as `0.1.6`.
+
 #### Fixes:
 
 1. **\[core\]** Fixed an issue where the `Powershell` completion script could not be used.
