@@ -50,11 +50,11 @@ impl<R> Picker<R> {
     ///
     /// The extracted type `TNext` must implement `Pickable`.
     /// If the flag is not present, the provided `or` value is used.
-    pub fn pick_or<TNext>(mut self, val: impl Into<Flag>, or: TNext) -> Pick1<TNext, R>
+    pub fn pick_or<TNext>(mut self, val: impl Into<Flag>, or: impl Into<TNext>) -> Pick1<TNext, R>
     where
         TNext: Pickable<Output = TNext>,
     {
-        let v = TNext::pick(&mut self.args, val.into()).unwrap_or(or);
+        let v = TNext::pick(&mut self.args, val.into()).unwrap_or(or.into());
         Pick1 {
             args: self.args,
             val_1: v,
@@ -265,11 +265,11 @@ macro_rules! impl_pick_structs {
             ///
             /// The extracted type `TNext` must implement `Pickable`.
             /// If the flag is not present, the provided `or` value is used.
-            pub fn pick_or<TNext>(mut self, val: impl Into<mingling_core::Flag>, or: TNext) -> $next<$($T,)+ TNext, R>
+            pub fn pick_or<TNext>(mut self, val: impl Into<mingling_core::Flag>, or: impl Into<TNext>) -> $next<$($T,)+ TNext, R>
             where
                 TNext: Pickable<Output = TNext>,
             {
-                let v = TNext::pick(&mut self.args, val.into()).unwrap_or(or);
+                let v = TNext::pick(&mut self.args, val.into()).unwrap_or(or.into());
                 $next {
                     args: self.args,
                     $($val: self.$val,)+
