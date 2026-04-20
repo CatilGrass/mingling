@@ -162,6 +162,10 @@ pub fn pack(input: TokenStream) -> TokenStream {
         }
     };
 
+    let register_impl = quote! {
+        ::mingling::macros::register_type!(#type_name);
+    };
+
     let any_out_impl = quote! {
         impl Into<mingling::AnyOutput<#group_name>> for #type_name {
             fn into(self) -> mingling::AnyOutput<#group_name> {
@@ -207,6 +211,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
             #as_ref_impl
             #deref_impl
             #default_impl
+            #register_impl
 
             impl Into<mingling::AnyOutput<ThisProgram>> for #type_name {
                 fn into(self) -> mingling::AnyOutput<ThisProgram> {
@@ -248,6 +253,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
             #as_ref_impl
             #deref_impl
             #default_impl
+            #register_impl
 
             #any_out_impl
             #group_impl

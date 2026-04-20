@@ -87,11 +87,13 @@ pub mod macros {
     pub use mingling_macros::node;
     /// Used to create a wrapper type for use with `Chain` and `Renderer`
     pub use mingling_macros::pack;
-    /// Internal macro for 'gen_program' used to finally generate the program
-    pub use mingling_macros::program_final_gen;
     #[cfg(feature = "comp")]
     /// Internal macro for 'gen_program' used to finally generate the completion structure
-    pub use mingling_macros::program_gen_completion;
+    pub use mingling_macros::program_comp_gen;
+    /// Internal macro for 'gen_program' used to finally generate the fallback
+    pub use mingling_macros::program_fallback_gen;
+    /// Internal macro for 'gen_program' used to finally generate the program
+    pub use mingling_macros::program_final_gen;
     // Used to generate program setup
     pub use mingling_macros::program_setup;
     /// Used to print content within a `Renderer` context

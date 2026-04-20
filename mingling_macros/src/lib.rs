@@ -116,11 +116,13 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
 
     #[cfg(feature = "comp")]
     let out = TokenStream::from(quote! {
-        ::mingling::macros::program_gen_completion!(#name);
+        ::mingling::macros::program_comp_gen!(#name);
+        ::mingling::macros::program_fallback_gen!(#name);
         ::mingling::macros::program_final_gen!(#name);
     });
     #[cfg(not(feature = "comp"))]
     let out = TokenStream::from(quote! {
+        ::mingling::macros::program_fallback_gen!(#name);
         ::mingling::macros::program_final_gen!(#name);
     });
 
@@ -129,7 +131,7 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 #[cfg(feature = "comp")]
-pub fn program_gen_completion(input: TokenStream) -> TokenStream {
+pub fn program_comp_gen(input: TokenStream) -> TokenStream {
     let name = read_name(&input);
 
     #[cfg(feature = "async")]
@@ -210,12 +212,21 @@ pub fn register_renderer(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+pub fn program_fallback_gen(input: TokenStream) -> TokenStream {
+    let name = read_name(&input);
+
+    let expanded = quote! {
+        ::mingling::macros::pack!(#name, RendererNotFound = String);
+        ::mingling::macros::pack!(#name, DispatcherNotFound = Vec<String>);
+    };
+    TokenStream::from(expanded)
+}
+
+#[proc_macro]
 pub fn program_final_gen(input: TokenStream) -> TokenStream {
     let name = read_name(&input);
 
-    let mut packed_types = PACKED_TYPES.lock().unwrap().clone();
-    packed_types.insert("DispatcherNotFound".to_string());
-    packed_types.insert("RendererNotFound".to_string());
+    let packed_types = PACKED_TYPES.lock().unwrap().clone();
 
     let renderers = RENDERERS.lock().unwrap().clone();
     let chains = CHAINS.lock().unwrap().clone();
@@ -295,9 +306,6 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
     let comp = quote! {};
 
     let expanded = quote! {
-        ::mingling::macros::pack!(#name, RendererNotFound = String);
-        ::mingling::macros::pack!(#name, DispatcherNotFound = Vec<String>);
-
         #[derive(Debug, Default, PartialEq, Eq, Clone)]
         #[repr(u32)]
         pub enum #name {
@@ -353,36 +361,6 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(expanded)
-}
-
-/// Internal macro for registering chains.
-///
-/// This macro is used internally by the `#[chain]` attribute macro
-/// and should not be used directly.
-#[doc(hidden)]
-#[proc_macro]
-pub fn __register_chain(input: TokenStream) -> TokenStream {
-    let chain_entry = parse_macro_input!(input as syn::LitStr);
-    let entry_str = chain_entry.value();
-
-    CHAINS.lock().unwrap().insert(entry_str);
-
-    TokenStream::new()
-}
-
-/// Internal macro for registering renderers.
-///
-/// This macro is used internally by the `#[renderer]` attribute macro
-/// and should not be used directly.
-#[doc(hidden)]
-#[proc_macro]
-pub fn __register_renderer(input: TokenStream) -> TokenStream {
-    let renderer_entry = parse_macro_input!(input as syn::LitStr);
-    let entry_str = renderer_entry.value();
-
-    RENDERERS.lock().unwrap().insert(entry_str);
-
-    TokenStream::new()
 }
 
 #[cfg(feature = "comp")]

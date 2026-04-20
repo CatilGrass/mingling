@@ -297,8 +297,5 @@ pub fn register_chain(input: TokenStream) -> TokenStream {
     chains.insert(chain_entry_str);
     chain_exist.insert(chain_exist_entry_str);
 
-    quote! {
-        ::mingling::macros::register_type!(#previous_type);
-    }
-    .into()
+    quote! {}.into()
 }

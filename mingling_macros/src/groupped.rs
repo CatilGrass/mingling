@@ -70,6 +70,8 @@ pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
         #[derive(serde::Serialize)]
         #input_parsed
 
+        ::mingling::macros::register_type!(#struct_name);
+
         impl ::mingling::Groupped<#group_ident> for #struct_name {
             fn member_id() -> #group_ident {
                 #group_ident::#struct_name

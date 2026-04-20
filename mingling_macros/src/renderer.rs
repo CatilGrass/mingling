@@ -222,8 +222,5 @@ pub fn register_renderer(input: TokenStream) -> TokenStream {
     #[cfg(feature = "general_renderer")]
     general_renderers.insert(general_renderer_entry_str);
 
-    quote! {
-        ::mingling::macros::register_type!(#previous_type);
-    }
-    .into()
+    quote! {}.into()
 }
