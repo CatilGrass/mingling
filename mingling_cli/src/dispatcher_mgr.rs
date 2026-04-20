@@ -14,16 +14,16 @@ dispatcher!("remove.dispatcher", RemoveDispatcherCommand => RemoveDispatcherEntr
 pub fn parse_add_dispatcher(args: AddDispatcherEntry) -> NextProcess {
     let picker: Picker<ThisProgram> = Picker::new(args.inner);
     let dispatcher_name = picker.pick::<String>(()).unpack_directly().0;
-    let input = AddDispatcherInput::new(dispatcher_name);
-    input
+
+    AddDispatcherInput::new(dispatcher_name)
 }
 
 #[chain]
 pub fn parse_remove_dispatcher(args: RemoveDispatcherEntry) -> NextProcess {
     let picker: Picker<ThisProgram> = Picker::new(args.inner);
     let dispatcher_name = picker.pick::<String>(()).unpack_directly().0;
-    let input = AddDispatcherInput::new(dispatcher_name);
-    input
+
+    AddDispatcherInput::new(dispatcher_name)
 }
 
 pack!(AddDispatcherInput = String);

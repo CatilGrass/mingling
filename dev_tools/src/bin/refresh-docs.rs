@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use just_fmt::snake_case;
 use just_template::{Template, tmpl};
@@ -29,12 +29,12 @@ fn gen_example_doc_module() {
     let mut examples = Vec::new();
     if let Ok(entries) = std::fs::read_dir(&example_root) {
         for entry in entries.flatten() {
-            if let Ok(file_type) = entry.file_type() {
-                if file_type.is_dir() {
-                    let example_name = entry.file_name().to_string_lossy().to_string();
-                    let example_content = ExampleContent::read(&example_name);
-                    examples.push(example_content);
-                }
+            if let Ok(file_type) = entry.file_type()
+                && file_type.is_dir()
+            {
+                let example_name = entry.file_name().to_string_lossy().to_string();
+                let example_content = ExampleContent::read(&example_name);
+                examples.push(example_content);
             }
         }
     }
@@ -50,7 +50,7 @@ fn gen_example_doc_module() {
                 )
             }
         });
-        println!("  Refresh: {}", example.name.to_string());
+        println!("  Refresh: {}", example.name);
     }
 
     let template_str = template.to_string();
@@ -110,7 +110,7 @@ impl ExampleContent {
         }
     }
 
-    fn read_header_and_code(repo: &PathBuf, name: &str) -> (String, String) {
+    fn read_header_and_code(repo: &Path, name: &str) -> (String, String) {
         let file_path = repo
             .join(EXAMPLE_ROOT)
             .join(name)
@@ -122,7 +122,7 @@ impl ExampleContent {
         let mut code = String::new();
 
         // Collect header lines (starting with //!)
-        while let Some(line) = lines.next() {
+        for line in lines.by_ref() {
             if line.trim_start().starts_with("//!") {
                 let trimmed = line.trim_start_matches("//!");
                 header.push_str(trimmed);
@@ -144,10 +144,10 @@ impl ExampleContent {
         (header.trim().to_string(), code.trim().to_string())
     }
 
-    fn read_cargo_toml(repo: &PathBuf, name: &str) -> String {
+    fn read_cargo_toml(repo: &Path, name: &str) -> String {
         let file_path = repo.join(EXAMPLE_ROOT).join(name).join("Cargo.toml");
-        let content = std::fs::read_to_string(&file_path).unwrap_or_default();
-        content
+
+        std::fs::read_to_string(&file_path).unwrap_or_default()
     }
 }
 
