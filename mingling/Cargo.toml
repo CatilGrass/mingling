@@ -1,6 +1,6 @@
 [package]
 name = "mingling"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2024"
 authors = ["Weicao-CatilGrass"]
 license = "MIT OR Apache-2.0"
@@ -30,7 +30,7 @@ comp = ["mingling_core/comp", "mingling_macros/comp"]
 parser = ["dep:size"]
 
 [dependencies]
-mingling_core = { version = "0.1.6", default-features = false }
-mingling_macros = { version = "0.1.6", default-features = false }
+mingling_core = { path = "../mingling_core", default-features = false }
+mingling_macros = { path = "../mingling_macros", default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
 size = { version = "0.5", optional = true }
