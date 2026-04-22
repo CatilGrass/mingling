@@ -48,6 +48,18 @@
 
 ## Quick Start
 
+> To use a release version of `Mingling`, get the latest version from [`crates.io`](https://crates.io/crates/mingling)
+>
+> To use the latest version, pull the project from the `main` branch on `github`
+
+```toml
+# From crates.io
+mingling = "0.1.6"
+
+# From GitHub
+mingling = { git = "https://github.com/catilgrass/mingling", branch = "main" }
+```
+
 The example below shows how to use `Mingling` to create a simple command-line program:
 
 ```rust

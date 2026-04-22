@@ -1,0 +1,17 @@
+[package]
+name = "mingling_workspace"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+members = ["mingling", "mingling_core", "mingling_macros"]
+exclude = [
+    "mingling_cli",
+    "dev_tools",
+    "examples/example-basic",
+    "examples/example-completion",
+    "examples/example-general-renderer",
+    "examples/example-picker",
+]
+
+[dependencies]
