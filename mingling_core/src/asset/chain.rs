@@ -1,15 +1,10 @@
-use std::fmt::Display;
-
 use crate::ChainProcess;
 
 #[doc(hidden)]
 pub mod error;
 
 /// Takes over a type (G: Previous) and converts it to another [AnyOutput](./struct.AnyOutput.html)
-pub trait Chain<G>
-where
-    G: Display,
-{
+pub trait Chain<G> {
     /// The previous type in the chain
     type Previous;
 

@@ -6,10 +6,7 @@ use crate::{ChainProcess, Program, asset::node::Node};
 ///
 /// Note: If you are using [mingling_macros](https://crates.io/crates/mingling_macros),
 /// you can use the `dispatcher!("node.subnode", CommandType => Entry)` macro to declare a `Dispatcher`
-pub trait Dispatcher<G>
-where
-    G: Display,
-{
+pub trait Dispatcher<G> {
     /// Returns a command node for matching user input
     fn node(&self) -> Node;
 

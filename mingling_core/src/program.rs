@@ -8,8 +8,9 @@ use crate::error::GeneralRendererSerializeError;
 use std::env;
 
 use crate::{
-    AnyOutput, ChainProcess, RenderResult, asset::dispatcher::Dispatcher,
-    error::ProgramExecuteError,
+    AnyOutput, ChainProcess, RenderResult,
+    asset::dispatcher::Dispatcher,
+    error::{ChainProcessError, ProgramExecuteError},
 };
 use std::{fmt::Display, sync::OnceLock};
 
@@ -27,13 +28,16 @@ pub use config::*;
 mod flag;
 pub use flag::*;
 
+mod string_vec;
+pub use string_vec::*;
+
 /// Global static reference to the current program instance
 static THIS_PROGRAM: OnceLock<Option<Box<dyn std::any::Any + Send + Sync>>> = OnceLock::new();
 
 /// Returns a reference to the current program instance, panics if not set.
 pub fn this<C>() -> &'static Program<C, C>
 where
-    C: ProgramCollect + Display + 'static,
+    C: ProgramCollect + 'static,
 {
     try_get_this_program().expect("Program not initialized")
 }
@@ -41,7 +45,7 @@ where
 /// Returns a reference to the current program instance, if set.
 fn try_get_this_program<C>() -> Option<&'static Program<C, C>>
 where
-    C: ProgramCollect + Display + 'static,
+    C: ProgramCollect + 'static,
 {
     THIS_PROGRAM
         .get()?
@@ -54,7 +58,6 @@ where
 pub struct Program<C, G>
 where
     C: ProgramCollect,
-    G: Display,
 {
     pub(crate) collect: std::marker::PhantomData<C>,
     pub(crate) group: std::marker::PhantomData<G>,
@@ -72,26 +75,31 @@ where
 impl<C, G> Program<C, G>
 where
     C: ProgramCollect<Enum = G>,
-    G: Display,
 {
-    /// Creates a new Program instance, initializing args from environment.
+    /// Creates a new Program instance, initializing command-line arguments from the environment.
     pub fn new() -> Self {
+        #[cfg(not(windows))]
+        return Self::new_with_args(env::args().collect::<Vec<String>>());
+
+        #[cfg(windows)]
+        return Self::new_with_args({
+            std::env::args_os()
+                .map(|arg| {
+                    use std::os::windows::ffi::OsStrExt;
+
+                    let wide: Vec<u16> = arg.encode_wide().collect();
+                    String::from_utf16_lossy(&wide)
+                })
+                .collect()
+        });
+    }
+
+    /// Creates a new Program instance with the provided command-line arguments.
+    pub fn new_with_args(args: impl Into<StringVec>) -> Self {
         Program {
             collect: std::marker::PhantomData,
             group: std::marker::PhantomData,
-            #[cfg(not(windows))]
-            args: env::args().collect(),
-            #[cfg(windows)]
-            args: {
-                std::env::args_os()
-                    .map(|arg| {
-                        use std::os::windows::ffi::OsStrExt;
-
-                        let wide: Vec<u16> = arg.encode_wide().collect();
-                        String::from_utf16_lossy(&wide)
-                    })
-                    .collect()
-            },
+            args: args.into().into(),
             dispatcher: Vec::new(),
             stdout_setting: Default::default(),
             user_context: Default::default(),
@@ -116,9 +124,20 @@ where
             .unwrap()
     }
 
-    // Get all registered dispatcher names from the program
+    /// Get all registered dispatcher names from the program
     pub fn get_nodes(&self) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
         get_nodes(self)
+    }
+
+    /// Dynamically dispatch input arguments to registered entry types
+    pub fn dispatch_args_dynamic(
+        &self,
+        args: impl Into<StringVec>,
+    ) -> Result<AnyOutput<G>, ChainProcessError> {
+        match exec::dispatch_args_dynamic(self, args.into().into()) {
+            Ok(ok) => Ok(ok),
+            Err(e) => Err(e.into()),
+        }
     }
 }
 
@@ -127,7 +146,6 @@ where
 impl<C, G> Program<C, G>
 where
     C: ProgramCollect<Enum = G>,
-    G: Display,
 {
     /// Sets the current program instance and runs the provided async function.
     async fn set_instance_and_run<F, Fut>(self, f: F) -> Fut::Output
@@ -201,7 +219,6 @@ where
 impl<C, G> Program<C, G>
 where
     C: ProgramCollect<Enum = G>,
-    G: Display,
 {
     /// Sets the current program instance and runs the provided function.
     fn set_instance_and_run<F, R>(self, f: F) -> R
@@ -386,7 +403,7 @@ macro_rules! __dispatch_program_chains {
 }
 
 /// Get all registered dispatcher names from the program
-pub fn get_nodes<C: ProgramCollect<Enum = G>, G: Display>(
+pub fn get_nodes<C: ProgramCollect<Enum = G>, G>(
     program: &Program<C, G>,
 ) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
     program

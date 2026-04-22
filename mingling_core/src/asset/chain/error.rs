@@ -1,3 +1,5 @@
+use crate::error::{ProgramExecuteError, ProgramInternalExecuteError};
+
 #[derive(thiserror::Error, Debug)]
 pub enum ChainProcessError {
     #[error("Other error: {0}")]
@@ -5,4 +7,35 @@ pub enum ChainProcessError {
 
     #[error("IO error: {0}")]
     IO(#[from] std::io::Error),
+}
+
+impl From<ProgramExecuteError> for ChainProcessError {
+    fn from(value: ProgramExecuteError) -> Self {
+        match value {
+            ProgramExecuteError::DispatcherNotFound => {
+                ChainProcessError::Other("DispatcherNotFound".into())
+            }
+            ProgramExecuteError::RendererNotFound(r) => {
+                ChainProcessError::Other(format!("RendererNotFound: {}", r))
+            }
+            ProgramExecuteError::Other(e) => ChainProcessError::Other(e),
+        }
+    }
+}
+
+impl From<ProgramInternalExecuteError> for ChainProcessError {
+    fn from(value: ProgramInternalExecuteError) -> Self {
+        match value {
+            ProgramInternalExecuteError::DispatcherNotFound => {
+                ChainProcessError::Other("DispatcherNotFound".into())
+            }
+            ProgramInternalExecuteError::RendererNotFound(r) => {
+                ChainProcessError::Other(format!("RendererNotFound: {}", r))
+            }
+            ProgramInternalExecuteError::Other(e) => ChainProcessError::Other(e),
+            ProgramInternalExecuteError::IO(e) => {
+                ChainProcessError::Other(format!("IOError: {:?}", e))
+            }
+        }
+    }
 }

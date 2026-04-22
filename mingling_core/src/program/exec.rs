@@ -1,7 +1,5 @@
 #![allow(clippy::borrowed_box)]
 
-use std::fmt::Display;
-
 use crate::{
     AnyOutput, ChainProcess, Dispatcher, Next, Program, ProgramCollect, RenderResult,
     error::ProgramInternalExecuteError,
@@ -16,29 +14,9 @@ pub async fn exec<C, G>(
 ) -> Result<RenderResult, ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = G>,
-    G: Display,
 {
-    let mut current;
+    let mut current = dispatch_args_dynamic(program, program.args.clone())?;
     let mut stop_next = false;
-
-    // Match user input
-    match match_user_input(program, program.args.clone()) {
-        Ok((dispatcher, args)) => {
-            // Entry point
-            current = match dispatcher.begin(args) {
-                ChainProcess::Ok((any, Next::Renderer)) => {
-                    return Ok(render::<C, G>(program, any));
-                }
-                ChainProcess::Ok((any, Next::Chain)) => any,
-                ChainProcess::Err(e) => return Err(e.into()),
-            };
-        }
-        Err(ProgramInternalExecuteError::DispatcherNotFound) => {
-            // No matching Dispatcher is found
-            current = C::build_dispatcher_not_found(program.args.clone());
-        }
-        Err(e) => return Err(e),
-    };
 
     loop {
         let final_exec = stop_next;
@@ -76,29 +54,9 @@ where
 pub fn exec<C, G>(program: &Program<C, G>) -> Result<RenderResult, ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = G>,
-    G: Display,
 {
-    let mut current;
+    let mut current = dispatch_args_dynamic(program, program.args.clone())?;
     let mut stop_next = false;
-
-    // Match user input
-    match match_user_input(program, program.args.clone()) {
-        Ok((dispatcher, args)) => {
-            // Entry point
-            current = match dispatcher.begin(args) {
-                ChainProcess::Ok((any, Next::Renderer)) => {
-                    return Ok(render::<C, G>(program, any));
-                }
-                ChainProcess::Ok((any, Next::Chain)) => any,
-                ChainProcess::Err(e) => return Err(e.into()),
-            };
-        }
-        Err(ProgramInternalExecuteError::DispatcherNotFound) => {
-            // No matching Dispatcher is found
-            current = C::build_dispatcher_not_found(program.args.clone());
-        }
-        Err(e) => return Err(e),
-    };
 
     loop {
         let final_exec = stop_next;
@@ -132,15 +90,39 @@ where
     Ok(RenderResult::default())
 }
 
+/// Dynamically dispatch input arguments to registered entry types
+pub(crate) fn dispatch_args_dynamic<C, G>(
+    program: &Program<C, G>,
+    args: Vec<String>,
+) -> Result<AnyOutput<G>, ProgramInternalExecuteError>
+where
+    C: ProgramCollect<Enum = G>,
+{
+    let next = match match_user_input(program, args) {
+        Ok((dispatcher, args)) => {
+            // Entry point
+            match dispatcher.begin(args) {
+                ChainProcess::Ok((any, _)) => any,
+                ChainProcess::Err(e) => return Err(e.into()),
+            }
+        }
+        Err(ProgramInternalExecuteError::DispatcherNotFound) => {
+            // No matching Dispatcher is found
+            C::build_dispatcher_not_found(program.args.clone())
+        }
+        Err(e) => return Err(e),
+    };
+    Ok(next)
+}
+
 /// Match user input against registered dispatchers and return the matched dispatcher and remaining arguments.
 #[allow(clippy::type_complexity)]
-pub fn match_user_input<C, G>(
+pub(crate) fn match_user_input<C, G>(
     program: &Program<C, G>,
     args: Vec<String>,
 ) -> Result<(&(dyn Dispatcher<G> + Send + Sync), Vec<String>), ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = G>,
-    G: Display,
 {
     let nodes = program.get_nodes();
     let command = format!("{} ", args.join(" "));
@@ -180,7 +162,7 @@ where
 
 #[inline(always)]
 #[allow(unused_variables)]
-fn render<C: ProgramCollect<Enum = G>, G: Display>(
+fn render<C: ProgramCollect<Enum = G>, G>(
     program: &Program<C, G>,
     any: AnyOutput<G>,
 ) -> RenderResult {

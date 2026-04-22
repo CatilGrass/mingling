@@ -1,5 +1,23 @@
 # Changelogs
 
+### Release 0.1.7
+
+#### Fixes:
+
+None
+
+#### Features:
+
+1. Added function `new_with_args` to `Program`
+2. Added function `dispatch_args_dynamic` to `Program`
+
+#### **BREAKING CHANGES**:
+
+1. Removed macro `dispatcher_render!` from `mingling_macros`
+2. The `<..., Group>` in `Program<Collect, Group>` no longer requires `std::fmt::Display`
+
+---
+
 ### Release 0.1.6
 
 `Mingling` 0.1.6 primarily focuses on optimizing the writing experience and code completion.

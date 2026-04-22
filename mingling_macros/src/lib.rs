@@ -59,11 +59,6 @@ pub fn dispatcher(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn dispatcher_render(input: TokenStream) -> TokenStream {
-    dispatcher_chain::dispatcher_render(input)
-}
-
-#[proc_macro]
 pub fn r_print(input: TokenStream) -> TokenStream {
     render::r_print(input)
 }
