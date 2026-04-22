@@ -108,7 +108,10 @@ impl<G> std::ops::DerefMut for AnyOutput<G> {
 /// - Returns `Ok((`[`AnyOutput`](./struct.AnyOutput.html)`, `[`Next::Chain`](./enum.Next.html)`))` to continue execution with this type next
 /// - Returns `Ok((`[`AnyOutput`](./struct.AnyOutput.html)`, `[`Next::Renderer`](./enum.Next.html)`))` to render this type next and output to the terminal
 /// - Returns `Err(`[`ChainProcessError`](./error/enum.ChainProcessError.html)`]` to terminate the program directly
-pub type ChainProcess<G> = Result<(AnyOutput<G>, Next), ChainProcessError>;
+pub enum ChainProcess<G> {
+    Ok((AnyOutput<G>, Next)),
+    Err(ChainProcessError),
+}
 
 /// Indicates the next step after processing
 ///
