@@ -4,7 +4,7 @@
 
 #### Fixes:
 
-None
+1. Fixed a build failure on **Windows** caused by `mingling_core/src/program.rs`
 
 #### Features:
 
@@ -21,6 +21,10 @@ None
 ### Release 0.1.6
 
 `Mingling` 0.1.6 primarily focuses on optimizing the writing experience and code completion.
+
+> [!CAUTION]
+>
+> This version cannot be built correctly on **Windows**, please do not use this version.
 
 > [!warning]
 >
