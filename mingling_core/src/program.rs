@@ -90,7 +90,7 @@ where
                     let wide: Vec<u16> = arg.encode_wide().collect();
                     String::from_utf16_lossy(&wide)
                 })
-                .collect()
+                .collect::<Vec<_>>()
         });
     }
 
