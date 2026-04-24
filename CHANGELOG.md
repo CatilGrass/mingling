@@ -18,7 +18,7 @@
 
 ---
 
-### Release 0.1.6
+### Release 0.1.6 **\[YANKED\]**
 
 `Mingling` 0.1.6 primarily focuses on optimizing the writing experience and code completion.
 
