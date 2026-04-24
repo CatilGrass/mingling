@@ -45,8 +45,7 @@ struct YourInfo {
 }
 ```
 
-> 💡 Tips
-> 
+> [!Tip]
 > If there are types that do not implement `serde::Serialize`, compilation will fail.
 
 ## Import GeneralRendererSetup

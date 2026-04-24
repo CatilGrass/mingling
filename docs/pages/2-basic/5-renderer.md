@@ -44,8 +44,7 @@ fn render_hello(prev: ParsedHello) {
 }
 ```
 
-> **About r_print**
->
+> [!Tip]
 > `r_print!` can only be used inside a `Renderer`. This is because after the `renderer!` macro expands, it injects `r: &mut RenderResult` into the context.
 >
 > And `r_print!` directly writes content to the value `r`.

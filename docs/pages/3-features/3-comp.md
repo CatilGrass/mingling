@@ -112,6 +112,7 @@ fn main() {
 
 `build_comp_scripts` will generate the corresponding completion scripts based on your platform and output them to the `target` directory.
 
+> [!Note]
 > The completion script does not contain the actual completion logic; 
 >
 > it is just a thin invocation layer.

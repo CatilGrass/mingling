@@ -33,8 +33,7 @@ fn parse_hello(prev: HelloEntry) -> NextProcess {
 }
 ```
 
-> **About NextProcess**
->
+> [!Tip] 
 > `NextProcess` is a marker type in **Mingling**, from `mingling::marker`.
 >
 > It serves no functional purpose other than to simplify the declaration of chain functions. After the `chain!` macro expands, `NextProcess` will be replaced with `mingling::ChainProcess<ThisProgram>`.
