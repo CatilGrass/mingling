@@ -1,0 +1,8 @@
+[package]
+name = "example-async"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+mingling = { path = "../../mingling", features = ["async"] }

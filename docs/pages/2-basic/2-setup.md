@@ -15,12 +15,12 @@ It is defined as follows:
 
 ```rust
 struct MySetup;
-impl ProgramSetup<ThisProgram, ThisProgram> 
+impl ProgramSetup<ThisProgram> 
     for MySetup 
 {
     fn setup(
         &mut self, 
-        program: &mut Program<ThisProgram, ThisProgram>
+        program: &mut Program<ThisProgram>
     ) {
         // Your setup logic
     }
@@ -89,7 +89,7 @@ If you find the above declaration method too **verbose**, you can use the `progr
 ```rust
 #[program_setup]
 fn my_setup(
-    program: &mut Program<ThisProgram, ThisProgram>
+    program: &mut Program<ThisProgram>
 ) {
     // Your setup logic
 }
@@ -127,7 +127,7 @@ dispatcher!("member.rm",
 
 #[program_setup]
 fn my_setup(
-    program: &mut Program<ThisProgram, ThisProgram>
+    program: &mut Program<ThisProgram>
 ) {
     program.with_dispatcher(AddMemberCommand);
     program.with_dispatcher(RemoveMemberCommand);

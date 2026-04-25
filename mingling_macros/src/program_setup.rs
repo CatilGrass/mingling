@@ -1,6 +1,6 @@
 //! Setup Attribute Macro Implementation
 //!
-//! This module provides the `#[setup]` attribute macro for automatically
+//! This module provides the `#[program_setup]` attribute macro for automatically
 //! generating structs that implement the `ProgramSetup` trait from functions.
 
 use proc_macro::TokenStream;
@@ -53,7 +53,7 @@ fn extract_return_type(sig: &Signature) -> syn::Result<()> {
 }
 
 pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
-    // Parse the attribute arguments (e.g., MyProgram from #[setup(MyProgram)])
+    // Parse the attribute arguments (e.g., MyProgram from #[program_setup(MyProgram)])
     // If no argument is provided, use ThisProgram
     let (program_name, use_crate_prefix) = if attr.is_empty() {
         (
@@ -91,7 +91,7 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Get function attributes (excluding the setup attribute)
     let mut fn_attrs = input_fn.attrs.clone();
 
-    // Remove any #[setup(...)] attributes to avoid infinite recursion
+    // Remove any #[program_setup(...)] attributes to avoid infinite recursion
     fn_attrs.retain(|attr| !attr.path().is_ident("setup"));
 
     // Get function visibility

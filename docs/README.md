@@ -134,6 +134,7 @@ The Mingling project consists of two main parts:
 ## Example Projects
 
 - **[`examples/example-basic/`](examples/example-basic/src/main.rs)** - A simple "Hello, World!" example demonstrating the most basic usage of a Dispatcher and Renderer.
+- **[`examples/example-async/`](examples/example-async/src/main.rs)** - Based on `example-basic`, demonstrates how to integrate an async runtime
 - **[`examples/example-picker/`](examples/example-picker/src/main.rs)** - Demonstrates how to use a Chain to process and transform command arguments.
 - **[`examples/example-general-renderer/`](examples/example-general-renderer/src/main.rs)** - Shows how to use a general renderer for different data types (e.g., JSON, YAML, TOML, RON).
 - **[`examples/example-completion/`](examples/example-completion/src/main.rs)** - An example implementing auto-completion for the shell.

@@ -15,6 +15,7 @@
 
 1. Removed macro `dispatcher_render!` from `mingling_macros`
 2. The `<..., Group>` in `Program<Collect, Group>` no longer requires `std::fmt::Display`
+3. Changed `Program<Collect, Group>` to `Program<Collect>` (merged the Group and Collect types)
 
 ---
 
