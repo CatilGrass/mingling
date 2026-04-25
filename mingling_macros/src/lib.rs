@@ -15,6 +15,8 @@ mod chain;
 #[cfg(feature = "comp")]
 mod completion;
 mod dispatcher;
+#[cfg(feature = "clap_parser")]
+mod dispatcher_clap;
 mod enum_tag;
 mod groupped;
 mod node;
@@ -87,6 +89,12 @@ pub fn completion(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn program_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
     program_setup::setup_attr(attr, item)
+}
+
+#[cfg(feature = "clap_parser")]
+#[proc_macro_attribute]
+pub fn dispatcher_clap(attr: TokenStream, item: TokenStream) -> TokenStream {
+    dispatcher_clap::dispatcher_clap_attr(attr, item)
 }
 
 #[proc_macro_derive(Groupped, attributes(group))]
