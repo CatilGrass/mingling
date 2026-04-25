@@ -164,6 +164,7 @@ impl Parse for DispatcherClapInput {
     }
 }
 
+#[cfg(feature = "clap_parser")]
 pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attr_input = parse_macro_input!(attr as DispatcherClapInput);
     let input_struct = parse_macro_input!(item as ItemStruct);
@@ -241,9 +242,21 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
             #[allow(non_snake_case)]
             #[::mingling::macros::help]
             fn #help_fn_name(_prev: #struct_name) {
-                <#struct_name as ::clap::CommandFactory>::command()
-                    .write_help(r)
-                    .unwrap();
+                use clap::ColorChoice;
+
+                let this = ::mingling::this::<#program_ident>();
+                match this.stdout_setting.clap_help_print_behaviour {
+                    ::mingling::ClapHelpPrintBehaviour::WriteToRenderResult => {
+                        <#struct_name as ::clap::CommandFactory>::command()
+                            .color(ColorChoice::Always)
+                            .write_help(r)
+                            .unwrap();
+                    }
+                    ::mingling::ClapHelpPrintBehaviour::PrintDirectly => {
+                        let mut command = <#struct_name as ::clap::CommandFactory>::command();
+                        command.print_help().unwrap();
+                    }
+                }
             }
         })
     } else {

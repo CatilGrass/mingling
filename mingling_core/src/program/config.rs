@@ -6,6 +6,21 @@ pub struct ProgramStdoutSetting {
 
     /// Render results and output
     pub render_output: bool,
+
+    #[cfg(feature = "clap_parser")]
+    /// Behavior when Clap Dispatcher outputs help information
+    pub clap_help_print_behaviour: ClapHelpPrintBehaviour,
+}
+
+#[cfg(feature = "clap_parser")]
+#[derive(Debug, Default, Clone)]
+pub enum ClapHelpPrintBehaviour {
+    /// Write to RenderResult
+    WriteToRenderResult,
+
+    /// Print directly
+    #[default]
+    PrintDirectly,
 }
 
 impl Default for ProgramStdoutSetting {
@@ -13,6 +28,8 @@ impl Default for ProgramStdoutSetting {
         ProgramStdoutSetting {
             error_output: true,
             render_output: true,
+            #[cfg(feature = "clap_parser")]
+            clap_help_print_behaviour: ClapHelpPrintBehaviour::default(),
         }
     }
 }

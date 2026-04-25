@@ -21,7 +21,7 @@ async = ["mingling_core/async", "mingling_macros/async"]
 
 default = ["mingling_core/default"]
 
-clap_parser = ["mingling_macros/clap_parser"]
+clap_parser = ["mingling_core/clap_parser", "mingling_macros/clap_parser"]
 full = ["mingling_core/full", "mingling_macros/full", "comp", "parser"]
 general_renderer = [
     "mingling_core/general_renderer",
