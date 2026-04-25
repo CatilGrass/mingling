@@ -80,7 +80,7 @@ pub mod macros {
     /// Used to create a dispatcher that routes to a `Chain`
     pub use mingling_macros::dispatcher;
     /// Used to create a dispatcher with clap argument parsing
-    #[cfg(feature = "clap_parser")]
+    #[cfg(feature = "clap")]
     pub use mingling_macros::dispatcher_clap;
     /// Used to collect data and create a command-line context
     pub use mingling_macros::gen_program;

@@ -12,7 +12,7 @@ async = []
 
 full = ["comp", "general_renderer"]
 
-clap_parser = []
+clap = []
 comp = ["dep:just_template"]
 debug = ["dep:log", "dep:env_logger"]
 general_renderer = [

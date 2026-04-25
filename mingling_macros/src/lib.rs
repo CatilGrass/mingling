@@ -15,7 +15,7 @@ mod chain;
 #[cfg(feature = "comp")]
 mod completion;
 mod dispatcher;
-#[cfg(feature = "clap_parser")]
+#[cfg(feature = "clap")]
 mod dispatcher_clap;
 mod enum_tag;
 mod groupped;
@@ -94,7 +94,7 @@ pub fn program_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
     program_setup::setup_attr(attr, item)
 }
 
-#[cfg(feature = "clap_parser")]
+#[cfg(feature = "clap")]
 #[proc_macro_attribute]
 pub fn dispatcher_clap(attr: TokenStream, item: TokenStream) -> TokenStream {
     dispatcher_clap::dispatcher_clap_attr(attr, item)

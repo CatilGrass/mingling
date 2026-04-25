@@ -15,7 +15,7 @@ async = []
 
 full = ["comp", "general_renderer"]
 
-clap_parser = []
+clap = []
 comp = []
 general_renderer = []
 

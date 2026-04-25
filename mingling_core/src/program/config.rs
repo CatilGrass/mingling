@@ -7,12 +7,12 @@ pub struct ProgramStdoutSetting {
     /// Render results and output
     pub render_output: bool,
 
-    #[cfg(feature = "clap_parser")]
+    #[cfg(feature = "clap")]
     /// Behavior when Clap Dispatcher outputs help information
     pub clap_help_print_behaviour: ClapHelpPrintBehaviour,
 }
 
-#[cfg(feature = "clap_parser")]
+#[cfg(feature = "clap")]
 #[derive(Debug, Default, Clone)]
 pub enum ClapHelpPrintBehaviour {
     /// Write to RenderResult
@@ -28,7 +28,7 @@ impl Default for ProgramStdoutSetting {
         ProgramStdoutSetting {
             error_output: true,
             render_output: true,
-            #[cfg(feature = "clap_parser")]
+            #[cfg(feature = "clap")]
             clap_help_print_behaviour: ClapHelpPrintBehaviour::default(),
         }
     }

@@ -8,7 +8,7 @@
 
 #### Features:
 
-1. **\[macros\]** Completed the `clap_parser` feature: **Mingling** now supports parsing input using `clap::Parser`
+1. **\[macros\]** Completed the `clap` feature: **Mingling** now supports parsing input using `clap::Parser`
 
 ```rust
 #[derive(Groupped, clap::Parser)]
@@ -22,7 +22,7 @@ struct YourCommandEntry {
 }
 ```
 
-2. **\[clap_parser\]** Added the `stdout_setting.clap_help_print_behaviour` configuration item to `Program`, used to control the behavior of Clap Help
+2. **\[clap\]** Added the `stdout_setting.clap_help_print_behaviour` configuration item to `Program`, used to control the behavior of Clap Help
 
 3. **\[core\]** Added function `new_with_args` to `Program`
 4. **\[core\]** Added function `dispatch_args_dynamic` to `Program`
