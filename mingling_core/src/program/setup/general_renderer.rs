@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::{
     ProgramCollect,
     program::{Program, setup::ProgramSetup},
@@ -10,12 +8,11 @@ use crate::{
 /// - Adds a `--renderer` global argument to specify the renderer type
 pub struct GeneralRendererSimpleSetup;
 
-impl<C, G> ProgramSetup<C, G> for GeneralRendererSimpleSetup
+impl<C> ProgramSetup<C> for GeneralRendererSimpleSetup
 where
     C: ProgramCollect,
-    G: Display,
 {
-    fn setup(&mut self, program: &mut Program<C, G>) {
+    fn setup(&mut self, program: &mut Program<C>) {
         program.global_argument("--renderer", |p, renderer| {
             p.general_renderer_name = renderer.into();
         });
@@ -33,12 +30,11 @@ where
 ///   * `--ron-pretty` for pretty-printed RON output
 pub struct GeneralRendererSetup;
 
-impl<C, G> ProgramSetup<C, G> for GeneralRendererSetup
+impl<C> ProgramSetup<C> for GeneralRendererSetup
 where
     C: ProgramCollect,
-    G: Display,
 {
-    fn setup(&mut self, program: &mut Program<C, G>) {
+    fn setup(&mut self, program: &mut Program<C>) {
         program.global_flag("--json", |p| {
             p.general_renderer_name = crate::GeneralRendererSetting::Json
         });

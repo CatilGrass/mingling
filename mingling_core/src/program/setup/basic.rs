@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::{
     ProgramCollect,
     program::{Program, setup::ProgramSetup},
@@ -12,12 +10,11 @@ use crate::{
 /// - Collects `--confirm` flag to skip user confirmation
 pub struct BasicProgramSetup;
 
-impl<C, G> ProgramSetup<C, G> for BasicProgramSetup
+impl<C> ProgramSetup<C> for BasicProgramSetup
 where
     C: ProgramCollect,
-    G: Display,
 {
-    fn setup(&mut self, program: &mut Program<C, G>) {
+    fn setup(&mut self, program: &mut Program<C>) {
         program.global_flag(["--quiet", "-q"], |p| {
             p.stdout_setting.render_output = false;
             p.stdout_setting.error_output = false;

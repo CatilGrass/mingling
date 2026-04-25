@@ -9,11 +9,9 @@ use crate::{
 pub mod error;
 
 #[cfg(feature = "async")]
-pub async fn exec<C, G>(
-    program: &Program<C, G>,
-) -> Result<RenderResult, ProgramInternalExecuteError>
+pub async fn exec<C>(program: &Program<C>) -> Result<RenderResult, ProgramInternalExecuteError>
 where
-    C: ProgramCollect<Enum = G>,
+    C: ProgramCollect<Enum = C>,
 {
     let mut current = dispatch_args_dynamic(program, program.args.clone())?;
     let mut stop_next = false;
@@ -26,7 +24,7 @@ where
             if C::has_chain(&current) {
                 match C::do_chain(current).await {
                     ChainProcess::Ok((any, Next::Renderer)) => {
-                        return Ok(render::<C, G>(program, any));
+                        return Ok(render::<C>(program, any));
                     }
                     ChainProcess::Ok((any, Next::Chain)) => any,
                     ChainProcess::Err(e) => return Err(e.into()),
@@ -34,7 +32,7 @@ where
             }
             // If no chain exists, attempt to render
             else if C::has_renderer(&current) {
-                return Ok(render::<C, G>(program, current));
+                return Ok(render::<C>(program, current));
             }
             // No renderer exists
             else {
@@ -51,9 +49,9 @@ where
 }
 
 #[cfg(not(feature = "async"))]
-pub fn exec<C, G>(program: &Program<C, G>) -> Result<RenderResult, ProgramInternalExecuteError>
+pub fn exec<C>(program: &Program<C>) -> Result<RenderResult, ProgramInternalExecuteError>
 where
-    C: ProgramCollect<Enum = G>,
+    C: ProgramCollect<Enum = C>,
 {
     let mut current = dispatch_args_dynamic(program, program.args.clone())?;
     let mut stop_next = false;
@@ -66,7 +64,7 @@ where
             if C::has_chain(&current) {
                 match C::do_chain(current) {
                     ChainProcess::Ok((any, Next::Renderer)) => {
-                        return Ok(render::<C, G>(program, any));
+                        return Ok(render::<C>(program, any));
                     }
                     ChainProcess::Ok((any, Next::Chain)) => any,
                     ChainProcess::Err(e) => return Err(e.into()),
@@ -74,7 +72,7 @@ where
             }
             // If no chain exists, attempt to render
             else if C::has_renderer(&current) {
-                return Ok(render::<C, G>(program, current));
+                return Ok(render::<C>(program, current));
             }
             // No renderer exists
             else {
@@ -91,12 +89,12 @@ where
 }
 
 /// Dynamically dispatch input arguments to registered entry types
-pub(crate) fn dispatch_args_dynamic<C, G>(
-    program: &Program<C, G>,
+pub(crate) fn dispatch_args_dynamic<C>(
+    program: &Program<C>,
     args: Vec<String>,
-) -> Result<AnyOutput<G>, ProgramInternalExecuteError>
+) -> Result<AnyOutput<C>, ProgramInternalExecuteError>
 where
-    C: ProgramCollect<Enum = G>,
+    C: ProgramCollect<Enum = C>,
 {
     let next = match match_user_input(program, args) {
         Ok((dispatcher, args)) => {
@@ -117,18 +115,18 @@ where
 
 /// Match user input against registered dispatchers and return the matched dispatcher and remaining arguments.
 #[allow(clippy::type_complexity)]
-pub(crate) fn match_user_input<C, G>(
-    program: &Program<C, G>,
+pub(crate) fn match_user_input<C>(
+    program: &Program<C>,
     args: Vec<String>,
-) -> Result<(&(dyn Dispatcher<G> + Send + Sync), Vec<String>), ProgramInternalExecuteError>
+) -> Result<(&(dyn Dispatcher<C> + Send + Sync), Vec<String>), ProgramInternalExecuteError>
 where
-    C: ProgramCollect<Enum = G>,
+    C: ProgramCollect<Enum = C>,
 {
     let nodes = program.get_nodes();
     let command = format!("{} ", args.join(" "));
 
     // Find all nodes that match the command prefix
-    let matching_nodes: Vec<&(String, &(dyn Dispatcher<G> + Send + Sync))> = nodes
+    let matching_nodes: Vec<&(String, &(dyn Dispatcher<C> + Send + Sync))> = nodes
         .iter()
         // Also add a space to the node string to ensure consistent matching logic
         .filter(|(node_str, _)| command.starts_with(&format!("{} ", node_str)))
@@ -162,10 +160,7 @@ where
 
 #[inline(always)]
 #[allow(unused_variables)]
-fn render<C: ProgramCollect<Enum = G>, G>(
-    program: &Program<C, G>,
-    any: AnyOutput<G>,
-) -> RenderResult {
+fn render<C: ProgramCollect<Enum = C>>(program: &Program<C>, any: AnyOutput<C>) -> RenderResult {
     #[cfg(not(feature = "general_renderer"))]
     {
         let mut render_result = RenderResult::default();

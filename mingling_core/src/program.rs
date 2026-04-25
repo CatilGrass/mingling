@@ -35,7 +35,7 @@ pub use string_vec::*;
 static THIS_PROGRAM: OnceLock<Option<Box<dyn std::any::Any + Send + Sync>>> = OnceLock::new();
 
 /// Returns a reference to the current program instance, panics if not set.
-pub fn this<C>() -> &'static Program<C, C>
+pub fn this<C>() -> &'static Program<C>
 where
     C: ProgramCollect + 'static,
 {
@@ -43,27 +43,23 @@ where
 }
 
 /// Returns a reference to the current program instance, if set.
-fn try_get_this_program<C>() -> Option<&'static Program<C, C>>
+fn try_get_this_program<C>() -> Option<&'static Program<C>>
 where
     C: ProgramCollect + 'static,
 {
-    THIS_PROGRAM
-        .get()?
-        .as_ref()?
-        .downcast_ref::<Program<C, C>>()
+    THIS_PROGRAM.get()?.as_ref()?.downcast_ref::<Program<C>>()
 }
 
 /// Program, used to define the behavior of the entire command-line program
 #[derive(Default)]
-pub struct Program<C, G>
+pub struct Program<C>
 where
     C: ProgramCollect,
 {
     pub(crate) collect: std::marker::PhantomData<C>,
-    pub(crate) group: std::marker::PhantomData<G>,
 
     pub(crate) args: Vec<String>,
-    pub(crate) dispatcher: Vec<Box<dyn Dispatcher<G> + Send + Sync>>,
+    pub(crate) dispatcher: Vec<Box<dyn Dispatcher<C> + Send + Sync>>,
 
     pub stdout_setting: ProgramStdoutSetting,
     pub user_context: ProgramUserContext,
@@ -72,9 +68,9 @@ where
     pub general_renderer_name: GeneralRendererSetting,
 }
 
-impl<C, G> Program<C, G>
+impl<C> Program<C>
 where
-    C: ProgramCollect<Enum = G>,
+    C: ProgramCollect<Enum = C>,
 {
     /// Creates a new Program instance, initializing command-line arguments from the environment.
     pub fn new() -> Self {
@@ -98,7 +94,6 @@ where
     pub fn new_with_args(args: impl Into<StringVec>) -> Self {
         Program {
             collect: std::marker::PhantomData,
-            group: std::marker::PhantomData,
             args: args.into().into(),
             dispatcher: Vec::new(),
             stdout_setting: Default::default(),
@@ -110,22 +105,21 @@ where
     }
 
     /// Returns a reference to the current program instance, if set.
-    pub fn this_program() -> &'static Program<C, G>
+    pub fn this_program() -> &'static Program<C>
     where
         C: 'static,
-        G: 'static,
     {
         THIS_PROGRAM
             .get()
             .unwrap()
             .as_ref()
             .unwrap()
-            .downcast_ref::<Program<C, G>>()
+            .downcast_ref::<Program<C>>()
             .unwrap()
     }
 
     /// Get all registered dispatcher names from the program
-    pub fn get_nodes(&self) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
+    pub fn get_nodes(&self) -> Vec<(String, &(dyn Dispatcher<C> + Send + Sync))> {
         get_nodes(self)
     }
 
@@ -133,7 +127,7 @@ where
     pub fn dispatch_args_dynamic(
         &self,
         args: impl Into<StringVec>,
-    ) -> Result<AnyOutput<G>, ChainProcessError> {
+    ) -> Result<AnyOutput<C>, ChainProcessError> {
         match exec::dispatch_args_dynamic(self, args.into().into()) {
             Ok(ok) => Ok(ok),
             Err(e) => Err(e.into()),
@@ -143,16 +137,15 @@ where
 
 // Async program
 #[cfg(feature = "async")]
-impl<C, G> Program<C, G>
+impl<C> Program<C>
 where
-    C: ProgramCollect<Enum = G>,
+    C: ProgramCollect<Enum = C>,
 {
     /// Sets the current program instance and runs the provided async function.
     async fn set_instance_and_run<F, Fut>(self, f: F) -> Fut::Output
     where
         C: 'static + Send + Sync,
-        G: 'static + Send + Sync,
-        F: FnOnce(&'static Program<C, G>) -> Fut + Send + Sync,
+        F: FnOnce(&'static Program<C>) -> Fut + Send + Sync,
         Fut: Future + Send,
     {
         THIS_PROGRAM.get_or_init(|| Some(Box::new(self)));
@@ -161,7 +154,7 @@ where
             .unwrap()
             .as_ref()
             .unwrap()
-            .downcast_ref::<Program<C, G>>()
+            .downcast_ref::<Program<C>>()
             .unwrap();
         f(program).await
     }
@@ -170,7 +163,6 @@ where
     pub async fn exec_without_render(mut self) -> Result<RenderResult, ProgramExecuteError>
     where
         C: 'static + Send + Sync,
-        G: 'static + Send + Sync,
     {
         self.args = self.args.iter().skip(1).cloned().collect();
         self.set_instance_and_run(|p| async { crate::exec::exec(p).await.map_err(|e| e.into()) })
@@ -181,7 +173,6 @@ where
     pub async fn exec(self)
     where
         C: 'static + Send + Sync,
-        G: 'static + Send + Sync,
     {
         let stdout_setting = self.stdout_setting.clone();
         let result = match self.exec_without_render().await {
@@ -216,16 +207,15 @@ where
 
 // Sync program
 #[cfg(not(feature = "async"))]
-impl<C, G> Program<C, G>
+impl<C> Program<C>
 where
-    C: ProgramCollect<Enum = G>,
+    C: ProgramCollect<Enum = C>,
 {
     /// Sets the current program instance and runs the provided function.
     fn set_instance_and_run<F, R>(self, f: F) -> R
     where
         C: 'static + Send + Sync,
-        G: 'static + Send + Sync,
-        F: FnOnce(&'static Program<C, G>) -> R + Send + Sync,
+        F: FnOnce(&'static Program<C>) -> R + Send + Sync,
     {
         THIS_PROGRAM.get_or_init(|| Some(Box::new(self)));
         let program = THIS_PROGRAM
@@ -233,7 +223,7 @@ where
             .unwrap()
             .as_ref()
             .unwrap()
-            .downcast_ref::<Program<C, G>>()
+            .downcast_ref::<Program<C>>()
             .unwrap();
         f(program)
     }
@@ -242,7 +232,6 @@ where
     pub fn exec_without_render(mut self) -> Result<RenderResult, ProgramExecuteError>
     where
         C: 'static + Send + Sync,
-        G: 'static + Send + Sync,
     {
         self.args = self.args.iter().skip(1).cloned().collect();
         self.set_instance_and_run(|p| crate::exec::exec(p).map_err(|e| e.into()))
@@ -252,7 +241,6 @@ where
     pub fn exec(self)
     where
         C: 'static + Send + Sync,
-        G: 'static + Send + Sync,
     {
         let stdout_setting = self.stdout_setting.clone();
         let result = match self.exec_without_render() {
@@ -403,9 +391,9 @@ macro_rules! __dispatch_program_chains {
 }
 
 /// Get all registered dispatcher names from the program
-pub fn get_nodes<C: ProgramCollect<Enum = G>, G>(
-    program: &Program<C, G>,
-) -> Vec<(String, &(dyn Dispatcher<G> + Send + Sync))> {
+pub fn get_nodes<C: ProgramCollect<Enum = C>>(
+    program: &Program<C>,
+) -> Vec<(String, &(dyn Dispatcher<C> + Send + Sync))> {
     program
         .dispatcher
         .iter()

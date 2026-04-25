@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::{Program, ProgramCollect};
 
 /// A wrapper for a collection of static string slices representing command-line flags or arguments.
@@ -474,15 +472,14 @@ mod tests {
     }
 }
 
-impl<C, G> Program<C, G>
+impl<C> Program<C>
 where
     C: ProgramCollect,
-    G: Display,
 {
     /// Registers a global argument (with value) and its handler.
     pub fn global_argument<F, A>(&mut self, arguments: A, mut do_fn: F)
     where
-        F: FnMut(&mut Program<C, G>, String),
+        F: FnMut(&mut Program<C>, String),
         A: Into<Flag>,
     {
         let flag = arguments.into();
@@ -498,7 +495,7 @@ where
     /// Registers a global flag (boolean) and its handler.
     pub fn global_flag<F, A>(&mut self, flag: A, mut do_fn: F)
     where
-        F: FnMut(&mut Program<C, G>),
+        F: FnMut(&mut Program<C>),
         A: Into<Flag>,
     {
         let flag = flag.into();

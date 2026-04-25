@@ -6,16 +6,16 @@ use crate::{ChainProcess, Program, asset::node::Node};
 ///
 /// Note: If you are using [mingling_macros](https://crates.io/crates/mingling_macros),
 /// you can use the `dispatcher!("node.subnode", CommandType => Entry)` macro to declare a `Dispatcher`
-pub trait Dispatcher<G> {
+pub trait Dispatcher<C> {
     /// Returns a command node for matching user input
     fn node(&self) -> Node;
 
     /// Returns a [ChainProcess](./enum.ChainProcess.html) based on user input arguments,
     /// to be sent to the specific invocation
-    fn begin(&self, args: Vec<String>) -> ChainProcess<G>;
+    fn begin(&self, args: Vec<String>) -> ChainProcess<C>;
 
     /// Clones the current dispatcher for implementing the `Clone` trait
-    fn clone_dispatcher(&self) -> Box<dyn Dispatcher<G>>;
+    fn clone_dispatcher(&self) -> Box<dyn Dispatcher<C>>;
 }
 
 impl<G> Clone for Box<dyn Dispatcher<G>>
@@ -27,11 +27,11 @@ where
     }
 }
 
-impl<C: crate::program::ProgramCollect, G: Display> Program<C, G> {
+impl<C: crate::program::ProgramCollect> Program<C> {
     /// Adds a dispatcher to the program.
     pub fn with_dispatcher<Disp>(&mut self, dispatcher: Disp)
     where
-        Disp: Dispatcher<G> + Send + Sync + 'static,
+        Disp: Dispatcher<C> + Send + Sync + 'static,
     {
         self.dispatcher.push(Box::new(dispatcher));
     }
@@ -39,7 +39,7 @@ impl<C: crate::program::ProgramCollect, G: Display> Program<C, G> {
     /// Add some dispatchers to the program.
     pub fn with_dispatchers<D>(&mut self, dispatchers: D)
     where
-        D: Into<Dispatchers<G>>,
+        D: Into<Dispatchers<C>>,
     {
         let dispatchers = dispatchers.into();
         self.dispatcher.extend(dispatchers.dispatcher);

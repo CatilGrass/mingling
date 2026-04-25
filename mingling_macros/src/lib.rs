@@ -349,7 +349,7 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
         }
 
         impl #name {
-            pub fn new() -> ::mingling::Program<#name, #name> {
+            pub fn new() -> ::mingling::Program<#name> {
                 ::mingling::Program::new()
             }
         }

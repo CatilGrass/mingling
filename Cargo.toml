@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["mingling", "mingling_core", "mingling_macros"]
+members = ["examples/example-async","mingling", "mingling_core", "mingling_macros"]
 exclude = [
     "mingling_cli",
     "dev_tools",
