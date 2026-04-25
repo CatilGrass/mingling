@@ -12,7 +12,9 @@
 
 ```rust
 #[derive(Groupped, clap::Parser)]
-#[dispatcher_clap("your_cmd", YourClapCommand, YourCommandParseError)]
+#[dispatcher_clap("your_cmd", YourClapCommand)]
+// #[dispatcher_clap("...", ..., error = YourCommandParseError)] // Dispatch when parse failed
+// #[dispatcher_clap("...", ..., help = true)] // Enable clap help
 struct YourCommandEntry {
     #[arg(long, short)]
     str_param: String,
