@@ -1,5 +1,6 @@
 use std::{
     fmt::{Display, Formatter},
+    io::Write,
     ops::Deref,
 };
 
@@ -7,6 +8,20 @@ use std::{
 #[derive(Default, Debug, PartialEq)]
 pub struct RenderResult {
     render_text: String,
+}
+
+impl Write for RenderResult {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let s = std::str::from_utf8(buf).map_err(|_| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, "not valid UTF-8")
+        })?;
+        self.render_text.push_str(s);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
 }
 
 impl Display for RenderResult {

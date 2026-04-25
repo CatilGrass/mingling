@@ -19,6 +19,7 @@ mod dispatcher;
 mod dispatcher_clap;
 mod enum_tag;
 mod groupped;
+mod help;
 mod node;
 mod pack;
 mod program_setup;
@@ -43,6 +44,8 @@ pub(crate) static RENDERERS: Lazy<Mutex<BTreeSet<String>>> =
 pub(crate) static CHAINS_EXIST: Lazy<Mutex<BTreeSet<String>>> =
     Lazy::new(|| Mutex::new(BTreeSet::new()));
 pub(crate) static RENDERERS_EXIST: Lazy<Mutex<BTreeSet<String>>> =
+    Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static HELP_REQUESTS: Lazy<Mutex<BTreeSet<String>>> =
     Lazy::new(|| Mutex::new(BTreeSet::new()));
 
 #[proc_macro]
@@ -95,6 +98,16 @@ pub fn program_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn dispatcher_clap(attr: TokenStream, item: TokenStream) -> TokenStream {
     dispatcher_clap::dispatcher_clap_attr(attr, item)
+}
+
+#[proc_macro]
+pub fn register_help(input: TokenStream) -> TokenStream {
+    help::register_help(input)
+}
+
+#[proc_macro_attribute]
+pub fn help(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    help::help_attr(item)
 }
 
 #[proc_macro_derive(Groupped, attributes(group))]
@@ -308,6 +321,14 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
     #[cfg(not(feature = "comp"))]
     let comp = quote! {};
 
+    let help_tokens: Vec<proc_macro2::TokenStream> = HELP_REQUESTS
+        .lock()
+        .unwrap()
+        .clone()
+        .iter()
+        .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
+        .collect();
+
     let expanded = quote! {
         #[derive(Debug, Default, PartialEq, Eq, Clone)]
         #[repr(u32)]
@@ -340,6 +361,12 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
             ::mingling::__dispatch_program_chains!(
                 #(#chain_tokens)*
             );
+            fn render_help(any: ::mingling::AnyOutput<Self::Enum>, r: &mut ::mingling::RenderResult) {
+                match any.member_id {
+                    #(#help_tokens)*
+                    _ => (),
+                }
+            }
             fn has_renderer(any: &::mingling::AnyOutput<Self::Enum>) -> bool {
                 match any.member_id {
                     #(#renderer_exist_tokens)*

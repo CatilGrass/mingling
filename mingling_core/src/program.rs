@@ -289,6 +289,9 @@ pub trait ProgramCollect {
     /// Render the input [AnyOutput](./struct.AnyOutput.html)
     fn render(any: AnyOutput<Self::Enum>, r: &mut RenderResult);
 
+    /// Render help for Entry
+    fn render_help(any: AnyOutput<Self::Enum>, r: &mut RenderResult);
+
     /// Find a matching chain to continue execution based on the input [AnyOutput](./struct.AnyOutput.html), returning a new [AnyOutput](./struct.AnyOutput.html)
     #[cfg(feature = "async")]
     fn do_chain(

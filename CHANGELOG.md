@@ -24,6 +24,15 @@ struct YourCommandEntry {
 
 2. **\[core\]** Added function `new_with_args` to `Program`
 3. **\[core\]** Added function `dispatch_args_dynamic` to `Program`
+4. **\[core\]** Impl `std::io::Write` trait for `RenderResult`
+5. **\[core\]** Added Help system, which allows binding an event for `--help` to an `Entry` via the `help!` macro
+
+```rust
+#[help]
+fn your_command_help(_prev: YourEntry) {
+    r_println!("Your help docs");
+}
+```
 
 #### **BREAKING CHANGES**:
 

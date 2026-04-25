@@ -84,6 +84,8 @@ pub mod macros {
     pub use mingling_macros::dispatcher_clap;
     /// Used to collect data and create a command-line context
     pub use mingling_macros::gen_program;
+    /// Used to generate a struct implementing the `HelpRequest` trait via a method
+    pub use mingling_macros::help;
     /// Used to create a `Node` struct via a literal
     pub use mingling_macros::node;
     /// Used to create a wrapper type for use with `Chain` and `Renderer`
@@ -103,6 +105,8 @@ pub mod macros {
     pub use mingling_macros::r_println;
     /// Used to register a chain
     pub use mingling_macros::register_chain;
+    /// Used to register a help
+    pub use mingling_macros::register_help;
     /// Used to register a renderer
     pub use mingling_macros::register_renderer;
     /// Used to register a type into the context

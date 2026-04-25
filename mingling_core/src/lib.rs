@@ -25,6 +25,7 @@ pub use crate::asset::chain::*;
 pub use crate::asset::comp::*;
 pub use crate::asset::dispatcher::*;
 pub use crate::asset::enum_tag::*;
+pub use crate::asset::help::*;
 pub use crate::asset::node::*;
 pub use crate::asset::renderer::*;
 

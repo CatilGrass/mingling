@@ -16,6 +16,11 @@ where
     let mut current = dispatch_args_dynamic(program, program.args.clone())?;
     let mut stop_next = false;
 
+    // If the program has Help enabled, skip actual logic and jump to Help
+    if program.user_context.help {
+        return Ok(render_help::<C>(program, current));
+    }
+
     loop {
         let final_exec = stop_next;
 
@@ -55,6 +60,11 @@ where
 {
     let mut current = dispatch_args_dynamic(program, program.args.clone())?;
     let mut stop_next = false;
+
+    // If the program has Help enabled, skip actual logic and jump to Help
+    if program.user_context.help {
+        return Ok(render_help::<C>(program, current));
+    }
 
     loop {
         let final_exec = stop_next;
@@ -176,6 +186,31 @@ fn render<C: ProgramCollect<Enum = C>>(program: &Program<C>, any: AnyOutput<C>) 
                 render_result
             }
             _ => C::general_render(any, &program.general_renderer_name).unwrap(),
+        }
+    }
+}
+
+#[inline(always)]
+#[allow(unused_variables)]
+fn render_help<C: ProgramCollect<Enum = C>>(
+    program: &Program<C>,
+    entry: AnyOutput<C>,
+) -> RenderResult {
+    #[cfg(not(feature = "general_renderer"))]
+    {
+        let mut render_result = RenderResult::default();
+        C::render_help(entry, &mut render_result);
+        render_result
+    }
+    #[cfg(feature = "general_renderer")]
+    {
+        match program.general_renderer_name {
+            super::GeneralRendererSetting::Disable => {
+                let mut render_result = RenderResult::default();
+                C::render_help(entry, &mut render_result);
+                render_result
+            }
+            _ => RenderResult::default(),
         }
     }
 }
