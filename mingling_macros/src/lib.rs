@@ -14,7 +14,7 @@ use syn::parse_macro_input;
 mod chain;
 #[cfg(feature = "comp")]
 mod completion;
-mod dispatcher_chain;
+mod dispatcher;
 mod enum_tag;
 mod groupped;
 mod node;
@@ -55,7 +55,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn dispatcher(input: TokenStream) -> TokenStream {
-    dispatcher_chain::dispatcher_chain(input)
+    dispatcher::dispatcher_chain(input)
 }
 
 #[proc_macro]
