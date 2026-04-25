@@ -8,8 +8,6 @@
 //!
 //! # Syntax
 //!
-//! ## Without error type (parse failure calls `e.exit()`):
-//!
 //! ```rust,ignore
 //! #[derive(Groupped, clap::Parser)]
 //! #[dispatcher_clap("command_name", DispatcherName)]
@@ -19,20 +17,25 @@
 //! }
 //! ```
 //!
-//! ## With error type (parse failure routes to error struct):
+//! Or with explicit program name:
 //!
 //! ```rust,ignore
-//! #[derive(Groupped, clap::Parser)]
-//! #[dispatcher_clap("command_name", DispatcherName, error = ParseError)]
-//! struct MyEntry {
+//! #[dispatcher_clap(MyProgram, "ok", CommandOk, error = CommandParseError)]
+//! struct OkEntry {
 //!     #[arg(long, short)]
-//!     name: String,
+//!     str: String,
 //! }
 //! ```
 //!
-//! When `error = ErrorType` is specified, a pack type named `ErrorType` is generated
-//! that wraps the clap error message as a `String`. On parse failure, the error
-//! message is routed to the renderer via `to_render()` instead of calling `e.exit()`.
+//! Or with help:
+//!
+//! ```rust,ignore
+//! #[dispatcher_clap("ok", CommandOk, error = CommandParseError, help = CommandOkHelp)]
+//! struct OkEntry {
+//!     #[arg(long, short)]
+//!     str: String,
+//! }
+//! ```
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -42,152 +45,236 @@ use syn::{
     parse_macro_input,
 };
 
+/// Parsed key-value options after the first positional arguments
+struct ClapOptions {
+    /// `error = ErrorStruct`
+    error_struct: Option<Ident>,
+    /// `help = HelpStruct`
+    help_struct: Option<Ident>,
+}
+
+impl Parse for ClapOptions {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut error_struct = None;
+        let mut help_struct = None;
+
+        while !input.is_empty() {
+            // Parse leading comma
+            input.parse::<Token![,]>()?;
+
+            let key: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+            let value: Ident = input.parse()?;
+
+            if key == "error" {
+                if error_struct.is_some() {
+                    return Err(syn::Error::new(key.span(), "duplicate `error` key"));
+                }
+                error_struct = Some(value);
+            } else if key == "help" {
+                if help_struct.is_some() {
+                    return Err(syn::Error::new(key.span(), "duplicate `help` key"));
+                }
+                help_struct = Some(value);
+            } else {
+                return Err(syn::Error::new(
+                    key.span(),
+                    "unknown key, expected `error` or `help`",
+                ));
+            }
+        }
+
+        Ok(ClapOptions {
+            error_struct,
+            help_struct,
+        })
+    }
+}
+
 /// Input for the dispatcher_clap attribute
-///
-/// Two forms:
-/// - `("command_name", DispatcherStruct)`
-/// - `("command_name", DispatcherStruct, error = ErrorStruct)`
 enum DispatcherClapInput {
-    /// No error type: `("cmd", DispatcherStruct)`
-    Simple {
+    /// `("cmd", Disp, ...)`
+    Default {
         command_name: LitStr,
         dispatcher_struct: Ident,
+        options: ClapOptions,
     },
-    /// With error type: `("cmd", DispatcherStruct, error = ErrorStruct)`
-    WithError {
+    /// `(Program, "cmd", Disp, ...)`
+    Explicit {
+        group_name: Ident,
         command_name: LitStr,
         dispatcher_struct: Ident,
-        error_struct: Ident,
+        options: ClapOptions,
     },
 }
 
 impl Parse for DispatcherClapInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let command_name: LitStr = input.parse()?;
-        input.parse::<Token![,]>()?;
-        let dispatcher_struct: Ident = input.parse()?;
+        let lookahead = input.lookahead1();
 
-        // Check if there's `, error = ErrorStruct`
-        if input.peek(Token![,]) {
+        if lookahead.peek(Ident) && input.peek2(Token![,]) && input.peek3(syn::LitStr) {
+            // Explicit format: Program, "cmd", Disp, ...
+            let group_name: Ident = input.parse()?;
             input.parse::<Token![,]>()?;
-            let error_ident: Ident = input.parse()?;
-            if error_ident != "error" {
-                return Err(syn::Error::new(
-                    error_ident.span(),
-                    "expected `error` keyword",
-                ));
-            }
-            input.parse::<Token![=]>()?;
-            let error_struct: Ident = input.parse()?;
-            Ok(DispatcherClapInput::WithError {
+            let command_name: LitStr = input.parse()?;
+            input.parse::<Token![,]>()?;
+            let dispatcher_struct: Ident = input.parse()?;
+
+            let options = if input.is_empty() {
+                ClapOptions {
+                    error_struct: None,
+                    help_struct: None,
+                }
+            } else {
+                input.parse::<ClapOptions>()?
+            };
+
+            Ok(DispatcherClapInput::Explicit {
+                group_name,
                 command_name,
                 dispatcher_struct,
-                error_struct,
+                options,
+            })
+        } else if lookahead.peek(syn::LitStr) {
+            // Default format: "cmd", Disp, ...
+            let command_name: LitStr = input.parse()?;
+            input.parse::<Token![,]>()?;
+            let dispatcher_struct: Ident = input.parse()?;
+
+            let options = if input.is_empty() {
+                ClapOptions {
+                    error_struct: None,
+                    help_struct: None,
+                }
+            } else {
+                input.parse::<ClapOptions>()?
+            };
+
+            Ok(DispatcherClapInput::Default {
+                command_name,
+                dispatcher_struct,
+                options,
             })
         } else {
-            Ok(DispatcherClapInput::Simple {
-                command_name,
-                dispatcher_struct,
-            })
+            Err(lookahead.error())
         }
     }
 }
 
 pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
-    // Parse the attribute arguments
     let attr_input = parse_macro_input!(attr as DispatcherClapInput);
-
-    // Parse the struct item to get the struct name
     let input_struct = parse_macro_input!(item as ItemStruct);
     let struct_name = &input_struct.ident;
 
-    let expanded = match attr_input {
-        DispatcherClapInput::Simple {
+    // Determine the program name and other fields
+    let (command_name_str, dispatcher_struct, options, program_ident) = match &attr_input {
+        DispatcherClapInput::Default {
             command_name,
             dispatcher_struct,
-        } => {
-            let command_name_str = command_name.value();
-            quote! {
-                // Keep the original struct definition
-                #input_struct
+            options,
+        } => (
+            command_name.value(),
+            dispatcher_struct.clone(),
+            ClapOptions {
+                error_struct: options.error_struct.clone(),
+                help_struct: options.help_struct.clone(),
+            },
+            Ident::new("ThisProgram", proc_macro2::Span::call_site()),
+        ),
+        DispatcherClapInput::Explicit {
+            group_name,
+            command_name,
+            dispatcher_struct,
+            options,
+        } => (
+            command_name.value(),
+            dispatcher_struct.clone(),
+            ClapOptions {
+                error_struct: options.error_struct.clone(),
+                help_struct: options.help_struct.clone(),
+            },
+            group_name.clone(),
+        ),
+    };
 
-                // Generate the dispatcher struct
-                #[doc(hidden)]
-                pub struct #dispatcher_struct;
-
-                impl ::mingling::Dispatcher<ThisProgram> for #dispatcher_struct {
-                    fn node(&self) -> ::mingling::Node {
-                        ::mingling::macros::node!(#command_name_str)
-                    }
-
-                    fn begin(
-                        &self,
-                        args: Vec<String>,
-                    ) -> ::mingling::ChainProcess<ThisProgram> {
-                        // Prepend a dummy program name for clap's parse_from
-                        let clap_args = std::iter::once(String::new())
-                            .chain(args)
-                            .collect::<Vec<_>>();
-
-                        // Parse using clap's Parser, exit on error
-                        let parsed = <#struct_name as ::clap::Parser>::try_parse_from(clap_args)
-                            .unwrap_or_else(|e| e.exit());
-
-                        parsed.to_chain()
-                    }
-
-                    fn clone_dispatcher(
-                        &self,
-                    ) -> Box<dyn ::mingling::Dispatcher<ThisProgram>> {
-                        Box::new(#dispatcher_struct)
-                    }
-                }
+    // Generate the `begin` method body
+    let begin_body = if let Some(ref error_struct) = options.error_struct {
+        quote! {
+            match <#struct_name as ::clap::Parser>::try_parse_from(clap_args) {
+                Ok(parsed) => parsed.to_chain(),
+                Err(e) => #error_struct::new(e.to_string()).to_render(),
             }
         }
-        DispatcherClapInput::WithError {
-            command_name,
-            dispatcher_struct,
-            error_struct,
-        } => {
-            let command_name_str = command_name.value();
-            quote! {
-                // Keep the original struct definition
-                #input_struct
+    } else {
+        quote! {
+            let parsed = <#struct_name as ::clap::Parser>::try_parse_from(clap_args)
+                .unwrap_or_else(|e| e.exit());
+            parsed.to_chain()
+        }
+    };
 
-                // Generate the error wrapper type via pack!
-                ::mingling::macros::pack!(#error_struct = String);
+    // Generate the error pack type
+    let error_pack = options.error_struct.as_ref().map(|error_struct| {
+        quote! {
+            ::mingling::macros::pack!(#program_ident, #error_struct = String);
+        }
+    });
 
-                // Generate the dispatcher struct
-                #[doc(hidden)]
-                pub struct #dispatcher_struct;
+    // Generate the help struct and #[help] function
+    let help_gen = options.help_struct.as_ref().map(|help_struct| {
+        let dispatcher_name_str = dispatcher_struct.to_string();
+        let help_fn_name_str = format!("__{}_help", just_fmt::snake_case!(&dispatcher_name_str));
+        let help_fn_name = Ident::new(&help_fn_name_str, help_struct.span());
 
-                impl ::mingling::Dispatcher<ThisProgram> for #dispatcher_struct {
-                    fn node(&self) -> ::mingling::Node {
-                        ::mingling::macros::node!(#command_name_str)
-                    }
+        quote! {
+            #[allow(non_snake_case)]
+            #[::mingling::macros::help]
+            fn #help_fn_name(_prev: #struct_name) {
+                let mut buf = Vec::new();
+                <#struct_name as ::clap::CommandFactory>::command()
+                    .write_help(&mut buf)
+                    .unwrap();
+                let help_txt = String::from_utf8(buf).unwrap();
+                r_println!("{}", help_txt)
+            }
+        }
+    });
 
-                    fn begin(
-                        &self,
-                        args: Vec<String>,
-                    ) -> ::mingling::ChainProcess<ThisProgram> {
-                        // Prepend a dummy program name for clap's parse_from
-                        let clap_args = std::iter::once(String::new())
-                            .chain(args)
-                            .collect::<Vec<_>>();
+    let expanded = quote! {
+        // Keep the original struct definition
+        #input_struct
 
-                        // Parse using clap's Parser, route error on failure
-                        match <#struct_name as ::clap::Parser>::try_parse_from(clap_args) {
-                            Ok(parsed) => parsed.to_chain(),
-                            Err(e) => #error_struct::new(e.to_string()).to_render(),
-                        }
-                    }
+        // Generate the error wrapper type via pack!
+        #error_pack
 
-                    fn clone_dispatcher(
-                        &self,
-                    ) -> Box<dyn ::mingling::Dispatcher<ThisProgram>> {
-                        Box::new(#dispatcher_struct)
-                    }
-                }
+        // Generate the help struct and HelpRequest implementation
+        #help_gen
+
+        // Generate the dispatcher struct
+        #[doc(hidden)]
+        struct #dispatcher_struct;
+
+        impl ::mingling::Dispatcher<#program_ident> for #dispatcher_struct {
+            fn node(&self) -> ::mingling::Node {
+                ::mingling::macros::node!(#command_name_str)
+            }
+
+            fn begin(
+                &self,
+                args: Vec<String>,
+            ) -> ::mingling::ChainProcess<#program_ident> {
+                // Prepend a dummy program name for clap's parse_from
+                let clap_args = std::iter::once(String::new())
+                    .chain(args)
+                    .collect::<Vec<_>>();
+
+                #begin_body
+            }
+
+            fn clone_dispatcher(
+                &self,
+            ) -> Box<dyn ::mingling::Dispatcher<#program_ident>> {
+                Box::new(#dispatcher_struct)
             }
         }
     };
