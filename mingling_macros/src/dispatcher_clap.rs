@@ -203,6 +203,9 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
     // Generate the `begin` method body
     let begin_body = if let Some(ref error_struct) = options.error_struct {
         quote! {
+            if ::mingling::this::<#program_ident>().user_context.help {
+                return #struct_name::default().to_chain();
+            }
             match <#struct_name as ::clap::Parser>::try_parse_from(clap_args) {
                 Ok(parsed) => parsed.to_chain(),
                 Err(e) => {
@@ -212,6 +215,9 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
         }
     } else {
         quote! {
+            if ::mingling::this::<#program_ident>().user_context.help {
+                return #struct_name::default().to_chain();
+            }
             let parsed = <#struct_name as ::clap::Parser>::try_parse_from(clap_args)
                 .unwrap_or_else(|e| e.exit());
             parsed.to_chain()
