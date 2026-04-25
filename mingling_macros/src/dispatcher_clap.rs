@@ -8,7 +8,7 @@
 //!
 //! # Syntax
 //!
-//! ## Two-argument form (parse failure calls `e.exit()`):
+//! ## Without error type (parse failure calls `e.exit()`):
 //!
 //! ```rust,ignore
 //! #[derive(Groupped, clap::Parser)]
@@ -19,18 +19,18 @@
 //! }
 //! ```
 //!
-//! ## Three-argument form (parse failure routes to error struct):
+//! ## With error type (parse failure routes to error struct):
 //!
 //! ```rust,ignore
 //! #[derive(Groupped, clap::Parser)]
-//! #[dispatcher_clap("command_name", DispatcherName, ParseError)]
+//! #[dispatcher_clap("command_name", DispatcherName, error = ParseError)]
 //! struct MyEntry {
 //!     #[arg(long, short)]
 //!     name: String,
 //! }
 //! ```
 //!
-//! When three arguments are given, a pack type named `ParseError` is generated
+//! When `error = ErrorType` is specified, a pack type named `ErrorType` is generated
 //! that wraps the clap error message as a `String`. On parse failure, the error
 //! message is routed to the renderer via `to_render()` instead of calling `e.exit()`.
 
@@ -45,15 +45,15 @@ use syn::{
 /// Input for the dispatcher_clap attribute
 ///
 /// Two forms:
-/// - Two args: `("command_name", DispatcherStruct)`
-/// - Three args: `("command_name", DispatcherStruct, ErrorStruct)`
+/// - `("command_name", DispatcherStruct)`
+/// - `("command_name", DispatcherStruct, error = ErrorStruct)`
 enum DispatcherClapInput {
     /// No error type: `("cmd", DispatcherStruct)`
     Simple {
         command_name: LitStr,
         dispatcher_struct: Ident,
     },
-    /// With error type: `("cmd", DispatcherStruct, ErrorStruct)`
+    /// With error type: `("cmd", DispatcherStruct, error = ErrorStruct)`
     WithError {
         command_name: LitStr,
         dispatcher_struct: Ident,
@@ -67,9 +67,17 @@ impl Parse for DispatcherClapInput {
         input.parse::<Token![,]>()?;
         let dispatcher_struct: Ident = input.parse()?;
 
-        // Check if there's a third argument (error struct)
+        // Check if there's `, error = ErrorStruct`
         if input.peek(Token![,]) {
             input.parse::<Token![,]>()?;
+            let error_ident: Ident = input.parse()?;
+            if error_ident != "error" {
+                return Err(syn::Error::new(
+                    error_ident.span(),
+                    "expected `error` keyword",
+                ));
+            }
+            input.parse::<Token![=]>()?;
             let error_struct: Ident = input.parse()?;
             Ok(DispatcherClapInput::WithError {
                 command_name,
