@@ -22,10 +22,12 @@ struct YourCommandEntry {
 }
 ```
 
-2. **\[core\]** Added function `new_with_args` to `Program`
-3. **\[core\]** Added function `dispatch_args_dynamic` to `Program`
-4. **\[core\]** Impl `std::io::Write` trait for `RenderResult`
-5. **\[core\]** Added Help system, which allows binding an event for `--help` to an `Entry` via the `help!` macro
+2. **\[clap_parser\]** Added the `stdout_setting.clap_help_print_behaviour` configuration item to `Program`, used to control the behavior of Clap Help
+
+3. **\[core\]** Added function `new_with_args` to `Program`
+4. **\[core\]** Added function `dispatch_args_dynamic` to `Program`
+5. **\[core\]** Impl `std::io::Write` trait for `RenderResult`
+6. **\[core\]** Added Help system, which allows binding an event for `--help` to an `Entry` via the `help!` macro
 
 ```rust
 #[help]
