@@ -241,12 +241,9 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
             #[allow(non_snake_case)]
             #[::mingling::macros::help]
             fn #help_fn_name(_prev: #struct_name) {
-                let mut buf = Vec::new();
                 <#struct_name as ::clap::CommandFactory>::command()
-                    .write_help(&mut buf)
+                    .write_help(r)
                     .unwrap();
-                let help_txt = String::from_utf8(buf).unwrap();
-                r_println!("{}", help_txt)
             }
         })
     } else {
