@@ -44,7 +44,7 @@ fn parse_hello(prev: HelloEntry) -> NextProcess {
     //   fallback to "World" if it doesn't exist
     let first = picker
         .pick_or((), "World")
-        .unpack_directly().0;
+        .unpack_directly();
 
     ParsedHello::new(first).to_render()
 }

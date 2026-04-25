@@ -13,9 +13,32 @@
 
 #### **BREAKING CHANGES**:
 
-1. Removed macro `dispatcher_render!` from `mingling_macros`
-2. The `<..., Group>` in `Program<Collect, Group>` no longer requires `std::fmt::Display`
-3. Changed `Program<Collect, Group>` to `Program<Collect>` (merged the Group and Collect types)
+1. **\[macros\]** Removed macro `dispatcher_render!` from `mingling_macros`
+2. **\[core\]** The `<..., Group>` in `Program<Collect, Group>` no longer requires `std::fmt::Display`
+3. **\[core\]** Changed `Program<Collect, Group>` to `Program<Collect>` (merged the Group and Collect types)
+4. **\[picker\]** When performing `unpack` or `unpack_directly` on the result of the first `pick` of `Picker`, it no longer returns a tuple
+
+```rust
+// Before
+#[chain]
+fn parse_sth(prev: SomeEntry) -> NextProcess {
+    let str: String = Picker::<()>::new(prev.inner)
+        .pick_or((), "None")
+        .unpack_directly().0;
+    let parsed = Something::new(ok);
+    parsed
+}
+
+// Now
+#[chain]
+fn parse_sth(prev: SomeEntry) -> NextProcess {
+    let str: String = Picker::<()>::new(prev.inner)
+        .pick_or((), "None")
+        .unpack_directly(); // Directly return the type instead of a tuple
+    let parsed = Something::new(ok);
+    parsed
+}
+```
 
 ---
 

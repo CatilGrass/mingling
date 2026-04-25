@@ -140,9 +140,10 @@ pub trait Pickable {
     fn pick(args: &mut Argument, flag: Flag) -> Option<Self::Output>;
 }
 
-#[doc(hidden)]
-macro_rules! define_pick_structs {
-    ($n:tt $final:ident $final_val:ident $($T:ident $val:ident),+) => {
+/// Internal macro: generates the struct definition and common methods
+/// (after, after_or_route, operate_args) for Pick2 through Pick12.
+macro_rules! define_pick_struct {
+    ($n:ident $final:ident $final_val:ident $($T:ident $val:ident),+) => {
         #[doc(hidden)]
         pub struct $n<$($T,)+ R>
         where
@@ -154,39 +155,10 @@ macro_rules! define_pick_structs {
             route: Option<R>,
         }
 
-        impl<$($T,)+ R> From<$n<$($T,)+ R>> for ($($T,)+)
-        where
-            $($T: Pickable,)+
-        {
-            fn from(pick: $n<$($T,)+ R>) -> Self {
-                ($(pick.$val,)+)
-            }
-        }
-
         impl<$($T,)+ R> $n<$($T,)+ R>
         where
             $($T: Pickable,)+
         {
-            /// Unpacks the builder into a tuple of extracted values.
-            ///
-            /// Returns `Ok((T1, T2, ...))` if all required flags were present.
-            /// Returns `Err(R)` if a required flag was missing and a route was provided via `pick_or_route`.
-            pub fn unpack(self) -> Result<($($T,)+), R> {
-                match self.route {
-                    Some(route) => Err(route),
-                    None => Ok(($(self.$val,)+)),
-                }
-            }
-
-            /// Unpacks the builder into a tuple of extracted values.
-            ///
-            /// Returns the tuple of extracted values regardless of whether any required flags were missing.
-            /// If a required flag was missing and a route was provided via `pick_or_route`, the default value
-            /// for that type is included in the tuple.
-            pub fn unpack_directly(self) -> ($($T,)+) {
-                ($(self.$val,)+)
-            }
-
             /// Applies a transformation to the last extracted value.
             ///
             /// Takes a closure that receives the last extracted value and returns a new value of the same type.
@@ -226,7 +198,7 @@ macro_rules! define_pick_structs {
                 self
             }
 
-            /// Applies an operation to the parsed arguments and returns the modified `Picker`.
+            /// Applies an operation to the parsed arguments and returns the modified builder.
             ///
             /// Takes a closure that receives the current `Argument` and returns a new `Argument`.
             /// The returned `Argument` replaces the original arguments in the builder.
@@ -238,6 +210,131 @@ macro_rules! define_pick_structs {
         }
     };
 }
+
+/// Internal macro: generates `From` impl for PickN into a tuple.
+macro_rules! impl_pick_from_tuple {
+    ($n:ident $($T:ident $val:ident),+) => {
+        impl<$($T,)+ R> From<$n<$($T,)+ R>> for ($($T,)+)
+        where
+            $($T: Pickable,)+
+        {
+            fn from(pick: $n<$($T,)+ R>) -> Self {
+                ($(pick.$val,)+)
+            }
+        }
+    };
+}
+
+/// Internal macro: generates `unpack` and `unpack_directly` for PickN (N >= 2)
+/// that return a tuple.
+macro_rules! impl_pick_unpack_tuple {
+    ($n:ident $($T:ident $val:ident),+) => {
+        impl<$($T,)+ R> $n<$($T,)+ R>
+        where
+            $($T: Pickable,)+
+        {
+            /// Unpacks the builder into a tuple of extracted values.
+            ///
+            /// Returns `Ok((T1, T2, ...))` if all required flags were present.
+            /// Returns `Err(R)` if a required flag was missing and a route was provided via `pick_or_route`.
+            pub fn unpack(self) -> Result<($($T,)+), R> {
+                match self.route {
+                    Some(route) => Err(route),
+                    None => Ok(($(self.$val,)+)),
+                }
+            }
+
+            /// Unpacks the builder into a tuple of extracted values.
+            ///
+            /// Returns the tuple of extracted values regardless of whether any required flags were missing.
+            /// If a required flag was missing and a route was provided via `pick_or_route`, the default value
+            /// for that type is included in the tuple.
+            pub fn unpack_directly(self) -> ($($T,)+) {
+                ($(self.$val,)+)
+            }
+        }
+    };
+}
+
+define_pick_struct! { Pick1 T1 val_1 T1 val_1 }
+
+impl<T1, R> From<Pick1<T1, R>> for (T1,)
+where
+    T1: Pickable,
+{
+    fn from(pick: Pick1<T1, R>) -> Self {
+        (pick.val_1,)
+    }
+}
+
+impl<T1, R> Pick1<T1, R>
+where
+    T1: Pickable,
+{
+    /// Unpacks the builder into a tuple of extracted values.
+    ///
+    /// Returns `Ok((T1, T2, ...))` if all required flags were present.
+    /// Returns `Err(R)` if a required flag was missing and a route was provided via `pick_or_route`.
+    pub fn unpack(self) -> Result<T1, R> {
+        match self.route {
+            Some(route) => Err(route),
+            None => Ok(self.val_1),
+        }
+    }
+
+    /// Unpacks the builder into a tuple of extracted values.
+    ///
+    /// Returns the tuple of extracted values regardless of whether any required flags were missing.
+    /// If a required flag was missing and a route was provided via `pick_or_route`, the default value
+    /// for that type is included in the tuple.
+    pub fn unpack_directly(self) -> T1 {
+        self.val_1
+    }
+}
+
+define_pick_struct! { Pick2 T2 val_2 T1 val_1, T2 val_2 }
+impl_pick_from_tuple! { Pick2 T1 val_1, T2 val_2 }
+impl_pick_unpack_tuple! { Pick2 T1 val_1, T2 val_2 }
+
+define_pick_struct! { Pick3 T3 val_3 T1 val_1, T2 val_2, T3 val_3 }
+impl_pick_from_tuple! { Pick3 T1 val_1, T2 val_2, T3 val_3 }
+impl_pick_unpack_tuple! { Pick3 T1 val_1, T2 val_2, T3 val_3 }
+
+define_pick_struct! { Pick4 T4 val_4 T1 val_1, T2 val_2, T3 val_3, T4 val_4 }
+impl_pick_from_tuple! { Pick4 T1 val_1, T2 val_2, T3 val_3, T4 val_4 }
+impl_pick_unpack_tuple! { Pick4 T1 val_1, T2 val_2, T3 val_3, T4 val_4 }
+
+define_pick_struct! { Pick5 T5 val_5 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5 }
+impl_pick_from_tuple! { Pick5 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5 }
+impl_pick_unpack_tuple! { Pick5 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5 }
+
+define_pick_struct! { Pick6 T6 val_6 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6 }
+impl_pick_from_tuple! { Pick6 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6 }
+impl_pick_unpack_tuple! { Pick6 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6 }
+
+define_pick_struct! { Pick7 T7 val_7 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7 }
+impl_pick_from_tuple! { Pick7 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7 }
+impl_pick_unpack_tuple! { Pick7 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7 }
+
+define_pick_struct! { Pick8 T8 val_8 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8 }
+impl_pick_from_tuple! { Pick8 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8 }
+impl_pick_unpack_tuple! { Pick8 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8 }
+
+define_pick_struct! { Pick9 T9 val_9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9 }
+impl_pick_from_tuple! { Pick9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9 }
+impl_pick_unpack_tuple! { Pick9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9 }
+
+define_pick_struct! { Pick10 T10 val_10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
+impl_pick_from_tuple! { Pick10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
+impl_pick_unpack_tuple! { Pick10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
+
+define_pick_struct! { Pick11 T11 val_11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
+impl_pick_from_tuple! { Pick11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
+impl_pick_unpack_tuple! { Pick11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
+
+define_pick_struct! { Pick12 T12 val_12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11, T12 val_12 }
+impl_pick_from_tuple! { Pick12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11, T12 val_12 }
+impl_pick_unpack_tuple! { Pick12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11, T12 val_12 }
 
 #[doc(hidden)]
 macro_rules! impl_pick_structs {
@@ -338,19 +435,6 @@ macro_rules! impl_pick_structs {
     };
 }
 
-define_pick_structs! { Pick1 T1 val_1 T1 val_1 }
-define_pick_structs! { Pick2 T2 val_2 T1 val_1, T2 val_2 }
-define_pick_structs! { Pick3 T3 val_3 T1 val_1, T2 val_2, T3 val_3 }
-define_pick_structs! { Pick4 T4 val_4 T1 val_1, T2 val_2, T3 val_3, T4 val_4 }
-define_pick_structs! { Pick5 T5 val_5 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5 }
-define_pick_structs! { Pick6 T6 val_6 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6 }
-define_pick_structs! { Pick7 T7 val_7 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7 }
-define_pick_structs! { Pick8 T8 val_8 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8 }
-define_pick_structs! { Pick9 T9 val_9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9 }
-define_pick_structs! { Pick10 T10 val_10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
-define_pick_structs! { Pick11 T11 val_11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
-define_pick_structs! { Pick12 T12 val_12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11, T12 val_12 }
-
 impl_pick_structs! { Pick1 Pick2 val_2 T1 val_1 }
 impl_pick_structs! { Pick2 Pick3 val_3 T1 val_1, T2 val_2 }
 impl_pick_structs! { Pick3 Pick4 val_4 T1 val_1, T2 val_2, T3 val_3 }
@@ -362,6 +446,10 @@ impl_pick_structs! { Pick8 Pick9 val_9 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T
 impl_pick_structs! { Pick9 Pick10 val_10 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9 }
 impl_pick_structs! { Pick10 Pick11 val_11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
 impl_pick_structs! { Pick11 Pick12 val_12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
+
+// ============================================================================
+// PickableEnum: 为枚举类型提供默认的 Pickable 实现
+// ============================================================================
 
 pub trait PickableEnum: EnumTag + Default {}
 
