@@ -8,8 +8,22 @@
 
 #### Features:
 
-1. Added function `new_with_args` to `Program`
-2. Added function `dispatch_args_dynamic` to `Program`
+1. **\[macros\]** Completed the `clap_parser` feature: **Mingling** now supports parsing input using `clap::Parser`
+
+```rust
+#[derive(Groupped, clap::Parser)]
+#[dispatcher_clap("your_cmd", YourClapCommand, YourCommandParseError)]
+struct YourCommandEntry {
+    #[arg(long, short)]
+    str_param: String,
+    
+    #[arg(long, short)]
+    path_param: PathBuf,
+}
+```
+
+2. **\[core\]** Added function `new_with_args` to `Program`
+3. **\[core\]** Added function `dispatch_args_dynamic` to `Program`
 
 #### **BREAKING CHANGES**:
 
