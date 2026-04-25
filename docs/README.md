@@ -152,7 +152,7 @@ You can read the following docs to learn more about the `Mingling` framework:
 - [x] core: \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] General Renderers *( Json, Yaml, Toml, Ron )* 
 - [x] core: \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] Completion *( Bash Zsh Fish Pwsh )*
 - [X] core: \[[0.1.6](https://docs.rs/mingling/0.1.6/mingling/)\] Smarter Completion Suggest Generation
-- [X] \[[0.1.6](https://docs.rs/mingling/0.1.7/mingling/)\] Clap Parser Support
+- [X] \[[0.1.7](https://docs.rs/mingling/0.1.7/mingling/)\] Clap Parser Support
 - [ ] core: \[**0.1.8**\] Faster Dispatcher
 - [ ] \[**0.1.9**\] Helpdoc Generation
 - [ ] core: \[**0.1.9**\] Debug Toolkits (InvokeStackDisplay ...)
