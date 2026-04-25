@@ -30,7 +30,7 @@
 //! Or with help:
 //!
 //! ```rust,ignore
-//! #[dispatcher_clap("ok", CommandOk, error = CommandParseError, help = CommandOkHelp)]
+//! #[dispatcher_clap("ok", CommandOk, error = CommandParseError, help = true)]
 //! struct OkEntry {
 //!     #[arg(long, short)]
 //!     str: String,
@@ -40,7 +40,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
-    Ident, ItemStruct, LitStr, Token,
+    Ident, ItemStruct, LitBool, LitStr, Token,
     parse::{Parse, ParseStream},
     parse_macro_input,
 };
@@ -49,14 +49,14 @@ use syn::{
 struct ClapOptions {
     /// `error = ErrorStruct`
     error_struct: Option<Ident>,
-    /// `help = HelpStruct`
-    help_struct: Option<Ident>,
+    /// `help = true` (bool only)
+    help_enabled: bool,
 }
 
 impl Parse for ClapOptions {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut error_struct = None;
-        let mut help_struct = None;
+        let mut help_enabled = false;
 
         while !input.is_empty() {
             // Parse leading comma
@@ -64,18 +64,21 @@ impl Parse for ClapOptions {
 
             let key: Ident = input.parse()?;
             input.parse::<Token![=]>()?;
-            let value: Ident = input.parse()?;
 
             if key == "error" {
+                let value: Ident = input.parse()?;
                 if error_struct.is_some() {
                     return Err(syn::Error::new(key.span(), "duplicate `error` key"));
                 }
                 error_struct = Some(value);
             } else if key == "help" {
-                if help_struct.is_some() {
-                    return Err(syn::Error::new(key.span(), "duplicate `help` key"));
+                let value: LitBool = input.parse()?;
+                if value.value() == false {
+                    // help = false is allowed but does nothing
+                    help_enabled = false;
+                } else {
+                    help_enabled = true;
                 }
-                help_struct = Some(value);
             } else {
                 return Err(syn::Error::new(
                     key.span(),
@@ -86,7 +89,7 @@ impl Parse for ClapOptions {
 
         Ok(ClapOptions {
             error_struct,
-            help_struct,
+            help_enabled,
         })
     }
 }
@@ -123,7 +126,7 @@ impl Parse for DispatcherClapInput {
             let options = if input.is_empty() {
                 ClapOptions {
                     error_struct: None,
-                    help_struct: None,
+                    help_enabled: false,
                 }
             } else {
                 input.parse::<ClapOptions>()?
@@ -144,7 +147,7 @@ impl Parse for DispatcherClapInput {
             let options = if input.is_empty() {
                 ClapOptions {
                     error_struct: None,
-                    help_struct: None,
+                    help_enabled: false,
                 }
             } else {
                 input.parse::<ClapOptions>()?
@@ -177,7 +180,7 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
             dispatcher_struct.clone(),
             ClapOptions {
                 error_struct: options.error_struct.clone(),
-                help_struct: options.help_struct.clone(),
+                help_enabled: options.help_enabled,
             },
             Ident::new("ThisProgram", proc_macro2::Span::call_site()),
         ),
@@ -191,7 +194,7 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
             dispatcher_struct.clone(),
             ClapOptions {
                 error_struct: options.error_struct.clone(),
-                help_struct: options.help_struct.clone(),
+                help_enabled: options.help_enabled,
             },
             group_name.clone(),
         ),
@@ -202,7 +205,9 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
         quote! {
             match <#struct_name as ::clap::Parser>::try_parse_from(clap_args) {
                 Ok(parsed) => parsed.to_chain(),
-                Err(e) => #error_struct::new(e.to_string()).to_render(),
+                Err(e) => {
+                    return #error_struct::new(e.to_string()).to_render()
+                },
             }
         }
     } else {
@@ -220,13 +225,13 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
         }
     });
 
-    // Generate the help struct and #[help] function
-    let help_gen = options.help_struct.as_ref().map(|help_struct| {
+    // Generate the #[help] block if help = true
+    let help_gen = if options.help_enabled {
         let dispatcher_name_str = dispatcher_struct.to_string();
         let help_fn_name_str = format!("__{}_help", just_fmt::snake_case!(&dispatcher_name_str));
-        let help_fn_name = Ident::new(&help_fn_name_str, help_struct.span());
+        let help_fn_name = Ident::new(&help_fn_name_str, proc_macro2::Span::call_site());
 
-        quote! {
+        Some(quote! {
             #[allow(non_snake_case)]
             #[::mingling::macros::help]
             fn #help_fn_name(_prev: #struct_name) {
@@ -237,8 +242,10 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
                 let help_txt = String::from_utf8(buf).unwrap();
                 r_println!("{}", help_txt)
             }
-        }
-    });
+        })
+    } else {
+        None
+    };
 
     let expanded = quote! {
         // Keep the original struct definition
@@ -247,7 +254,7 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
         // Generate the error wrapper type via pack!
         #error_pack
 
-        // Generate the help struct and HelpRequest implementation
+        // Generate the help block if enabled
         #help_gen
 
         // Generate the dispatcher struct
