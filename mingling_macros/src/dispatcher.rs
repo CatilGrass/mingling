@@ -67,7 +67,7 @@ impl Parse for DispatcherChainInput {
 // Additionally, the token stream generation patterns are nearly identical between
 // the two main functions and could benefit from refactoring.
 
-pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
+pub fn dispatcher(input: TokenStream) -> TokenStream {
     // Parse the input
     let dispatcher_input = syn::parse_macro_input!(input as DispatcherChainInput);
 
@@ -96,46 +96,29 @@ pub fn dispatcher_chain(input: TokenStream) -> TokenStream {
 
     let comp_entry = get_comp_entry(&pack);
 
-    let expanded = if use_default {
-        // For default case, use ThisProgram
+    let expanded = {
+        let program_ident = if use_default {
+            Ident::new("ThisProgram", proc_macro2::Span::call_site())
+        } else {
+            group_name.clone()
+        };
+
         quote! {
             #[derive(Debug, Default)]
             pub struct #command_struct;
 
-            ::mingling::macros::pack!(ThisProgram, #pack = Vec<String>);
+            ::mingling::macros::pack!(#program_ident, #pack = Vec<String>);
 
             #comp_entry
 
-            impl ::mingling::Dispatcher<ThisProgram> for #command_struct {
+            impl ::mingling::Dispatcher<#program_ident> for #command_struct {
                 fn node(&self) -> ::mingling::Node {
                     ::mingling::macros::node!(#command_name_str)
                 }
-                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess<ThisProgram> {
+                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess<#program_ident> {
                     #pack::new(args).to_chain()
                 }
-                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher<ThisProgram>> {
-                    Box::new(#command_struct)
-                }
-            }
-        }
-    } else {
-        // For explicit case, use the provided group_name
-        quote! {
-            #[derive(Debug, Default)]
-            pub struct #command_struct;
-
-            ::mingling::macros::pack!(#group_name, #pack = Vec<String>);
-
-            #comp_entry
-
-            impl ::mingling::Dispatcher<#group_name> for #command_struct {
-                fn node(&self) -> ::mingling::Node {
-                    ::mingling::macros::node!(#command_name_str)
-                }
-                fn begin(&self, args: Vec<String>) -> ::mingling::ChainProcess<#group_name> {
-                    #pack::new(args).to_chain()
-                }
-                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher<#group_name>> {
+                fn clone_dispatcher(&self) -> Box<dyn ::mingling::Dispatcher<#program_ident>> {
                     Box::new(#command_struct)
                 }
             }

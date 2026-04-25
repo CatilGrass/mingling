@@ -12,7 +12,10 @@ proc-macro = true
 [features]
 default = []
 async = []
+
 full = ["comp", "general_renderer"]
+
+clap_parser = []
 comp = []
 general_renderer = []
 

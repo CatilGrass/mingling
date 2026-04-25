@@ -9,7 +9,9 @@ repository = "https://github.com/catilgrass/mingling"
 [features]
 default = []
 async = []
+
 full = ["comp", "general_renderer"]
+
 comp = ["dep:just_template"]
 debug = ["dep:log", "dep:env_logger"]
 general_renderer = [

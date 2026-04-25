@@ -55,7 +55,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn dispatcher(input: TokenStream) -> TokenStream {
-    dispatcher::dispatcher_chain(input)
+    dispatcher::dispatcher(input)
 }
 
 #[proc_macro]
