@@ -54,56 +54,102 @@
 
 ```toml
 # From crates.io
-mingling = "0.1.6"
+mingling = "0.1.7"
 
 # From GitHub
 mingling = { git = "https://github.com/catilgrass/mingling", branch = "main" }
 ```
 
-The example below shows how to use `Mingling` to create a simple command-line program:
+The following example demonstrates how to use `Mingling` to create a complete CLI program with `help`, `completion`, `fallback`, and `parsing`:
 
 ```rust
-use mingling::macros::{dispatcher, gen_program, r_println, renderer};
+use mingling::{
+    ShellContext, Suggest,
+    macros::{
+        chain, completion, dispatcher, gen_program, help, pack, r_println, renderer, suggest,
+    },
+    marker::NextProcess,
+    parser::Picker,
+    setup::BasicProgramSetup,
+};
 
 fn main() {
+    // Initialize program
     let mut program = ThisProgram::new();
-    program.with_dispatcher(HelloCommand);
 
-    // Execute
+    // Load plugins
+    program.with_setup(BasicProgramSetup);
+    program.with_dispatcher(CompletionDispatcher);
+
+    // Load commands
+    program.with_dispatcher(GreetCommand);
+
+    // Run program
     program.exec();
 }
 
-// Define command: "<bin> hello"
-dispatcher!("hello", HelloCommand => HelloEntry);
+// Define dispatcher `greet`
+dispatcher!("greet", GreetCommand => GreetEntry);
 
-// Render HelloEntry
-#[renderer]
-fn render_hello_world(_prev: HelloEntry) {
-    r_println!("Hello, World!")
+// Define intermediate type `StateGreeting`
+pack!(StateGreeting = String);
+
+// Define `greet` command help
+#[help]
+fn help_greet_command(_prev: GreetEntry) {
+    r_println!("Usage: greet <NAME>");
 }
 
-// Fallbacks
-#[renderer]
-fn fallback_dispatcher_not_found(prev: DispatcherNotFound) {
-    r_println!("Dispatcher not found for command `{}`", prev.join(", "))
+// Define `greet` command completion
+#[completion(GreetEntry)]
+fn comp_greet_command(ctx: &ShellContext) -> Suggest {
+    if ctx.previous_word == "greet" {
+        return suggest! {
+            "Alice",
+            "Bob",
+            "Peter"
+        };
+    }
+    return suggest!();
 }
 
-#[renderer]
-fn fallback_renderer_not_found(prev: RendererNotFound) {
-    r_println!("Renderer not found `{}`", *prev)
+// Define chain, parsing `GreetEntry` into `StateGreeting`
+#[chain]
+fn parse_name_to_greet(prev: GreetEntry) -> NextProcess {
+    let state_greeting: StateGreeting = Picker::<()>::new(prev.inner)
+        .pick_or::<String>((), "World")
+        .unpack_directly()
+        .into();
+    state_greeting
 }
 
-// Collect renderers and chains to generate ThisProgram
+// Render `StateGreeting`
+#[renderer]
+fn render_state_greeting(prev: StateGreeting) {
+    r_println!("Hello, {}!", *prev);
+}
+
+// Define fallback logic when no matching dispatcher is found
+#[renderer]
+fn fallback_no_dispatcher_found(prev: DispatcherNotFound) {
+    r_println!("Command \"{}\" not found.", prev.join(" "));
+}
+
+// Generate program
 gen_program!();
 ```
 
 Output:
 
 ```
-> mycmd hello
-Hello, World!
-> mycmd hallo
-Dispatcher not found for command `hallo`
+~> mycmd greet
+   Hello, World!
+~> mycmd greet Alice
+   Hello, Alice!
+~> mycmd greet --help
+   Usage: greet <NAME>
+~> mycmd great
+   Command "great" not found.
 ```
 
 ## Core Concepts
