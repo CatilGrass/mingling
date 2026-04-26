@@ -4,7 +4,7 @@
 //! automatically generating a `Dispatcher` implementation that uses `clap::Parser`
 //! to parse command arguments into the annotated struct.
 //!
-//! This macro is only available when the `clap_parser` feature is enabled.
+//! This macro is only available when the `clap` feature is enabled.
 //!
 //! # Syntax
 //!
@@ -164,7 +164,7 @@ impl Parse for DispatcherClapInput {
     }
 }
 
-#[cfg(feature = "clap_parser")]
+#[cfg(feature = "clap")]
 pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attr_input = parse_macro_input!(attr as DispatcherClapInput);
     let input_struct = parse_macro_input!(item as ItemStruct);
