@@ -32,10 +32,7 @@
 ///
 /// main.rs
 /// ```ignore
-/// use mingling::{
-///     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
-///     marker::NextProcess,
-/// };
+/// use mingling::macros::{chain, dispatcher, gen_program, pack, r_println, renderer};
 ///
 /// dispatcher!("hello", HelloCommand => HelloEntry);
 ///
@@ -55,7 +52,7 @@
 ///
 /// #[chain]
 /// // fn parse_name(prev: HelloEntry) -> NextProcess {
-/// async fn parse_name(prev: HelloEntry) -> NextProcess {
+/// async fn parse_name(prev: HelloEntry) -> mingling::ChainProcess<ThisProgram> {
 ///     let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
 ///     Hello::new(name).to_render()
 /// }
@@ -90,8 +87,8 @@ pub mod example_async {}
 /// main.rs
 /// ```ignore
 /// use mingling::{
+///     ChainProcess,
 ///     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
-///     marker::NextProcess,
 /// };
 ///
 /// // Define dispatcher `HelloCommand`, directing subcommand "hello" to `HelloEntry`
@@ -113,7 +110,7 @@ pub mod example_async {}
 ///
 /// // Register chain to `ThisProgram`, handling logic from `HelloEntry`
 /// #[chain]
-/// fn parse_name(prev: HelloEntry) -> NextProcess {
+/// fn parse_name(prev: HelloEntry) -> ChainProcess<ThisProgram> {
 ///     // Extract string from `HelloEntry` as argument
 ///     let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
 ///
@@ -174,11 +171,10 @@ pub mod example_basic {}
 /// main.rs
 /// ```ignore
 /// use mingling::{
-///     EnumTag, Groupped, ShellContext, Suggest,
+///     ChainProcess, EnumTag, Groupped, ShellContext, Suggest,
 ///     macros::{
 ///         chain, completion, dispatcher, gen_program, r_println, renderer, suggest, suggest_enum,
 ///     },
-///     marker::NextProcess,
 ///     parser::{PickableEnum, Picker},
 /// };
 ///
@@ -246,7 +242,7 @@ pub mod example_basic {}
 /// impl PickableEnum for FruitType {}
 ///
 /// #[chain]
-/// fn parse_fruit_info(prev: FruitEntry) -> NextProcess {
+/// fn parse_fruit_info(prev: FruitEntry) -> ChainProcess<ThisProgram> {
 ///     let picker = Picker::<()>::from(prev.inner);
 ///     let (fruit_name, fruit_type) = picker.pick("--name").pick("--type").unpack_directly();
 ///     let info = FruitInfo {
@@ -329,9 +325,8 @@ pub mod example_completion {}
 /// main.rs
 /// ```ignore
 /// use mingling::{
-///     Groupped,
+///     ChainProcess, Groupped,
 ///     macros::{chain, dispatcher, gen_program, r_println, renderer},
-///     marker::NextProcess,
 ///     parser::Picker,
 ///     setup::GeneralRendererSetup,
 /// };
@@ -357,7 +352,7 @@ pub mod example_completion {}
 /// }
 ///
 /// #[chain]
-/// fn parse_render(prev: RenderCommandEntry) -> NextProcess {
+/// fn parse_render(prev: RenderCommandEntry) -> ChainProcess<ThisProgram> {
 ///     let (name, age) = Picker::<()>::new(prev.inner)
 ///         .pick::<String>(())
 ///         .pick::<i32>(())
@@ -409,7 +404,6 @@ pub mod example_general_renderer {}
 /// ```ignore
 /// use mingling::{
 ///     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
-///     marker::NextProcess,
 ///     parser::Picker,
 /// };
 ///
@@ -425,7 +419,7 @@ pub mod example_general_renderer {}
 /// pack!(ParsedPickInput = (i32, String));
 ///
 /// #[chain]
-/// fn parse(prev: PickEntry) -> NextProcess {
+/// fn parse(prev: PickEntry) -> mingling::ChainProcess<ThisProgram> {
 ///     // Extract arguments from `PickEntry`'s inner and create a `Picker`
 ///     let picker = Picker::new(prev.inner);
 ///     let picked = picker

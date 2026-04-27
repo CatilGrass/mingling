@@ -68,7 +68,6 @@ use mingling::{
     macros::{
         chain, completion, dispatcher, gen_program, help, pack, r_println, renderer, suggest,
     },
-    marker::NextProcess,
     parser::Picker,
     setup::BasicProgramSetup,
 };

@@ -67,6 +67,15 @@ fn parse_sth(prev: SomeEntry) -> NextProcess {
 }
 ```
 
+5. **\[core\]** Removed `mingling::marker::NextProcess` and moved its creation process to `gen_program!()`
+
+```rust
+use mingling::marker::NextProcess; // Remove this 
+
+// NextProcess generated here
+gen_program!();
+```
+
 ---
 
 ### Release 0.1.6 **\[YANKED\]**

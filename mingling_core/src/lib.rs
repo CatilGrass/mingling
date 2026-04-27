@@ -10,7 +10,6 @@
 
 mod any;
 mod asset;
-mod markers;
 mod program;
 mod renderer;
 
@@ -40,11 +39,6 @@ pub mod error {
 pub use crate::program::*;
 
 pub use crate::renderer::render_result::*;
-
-/// All marker types of `Mingling` that serve no practical purpose
-pub mod marker {
-    pub use crate::markers::next_process::*;
-}
 
 /// `Mingling`'s Program initialization system
 pub mod setup {

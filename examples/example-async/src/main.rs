@@ -16,10 +16,7 @@
 //! cargo run --manifest-path ./examples/example-async/Cargo.toml -- hello World
 //! ```
 
-use mingling::{
-    macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
-    marker::NextProcess,
-};
+use mingling::macros::{chain, dispatcher, gen_program, pack, r_println, renderer};
 
 dispatcher!("hello", HelloCommand => HelloEntry);
 
@@ -39,7 +36,7 @@ pack!(Hello = String);
 
 #[chain]
 // fn parse_name(prev: HelloEntry) -> NextProcess {
-async fn parse_name(prev: HelloEntry) -> NextProcess {
+async fn parse_name(prev: HelloEntry) -> mingling::ChainProcess<ThisProgram> {
     let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
     Hello::new(name).to_render()
 }

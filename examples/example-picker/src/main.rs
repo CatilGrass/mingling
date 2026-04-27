@@ -19,7 +19,6 @@
 
 use mingling::{
     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
-    marker::NextProcess,
     parser::Picker,
 };
 
@@ -35,7 +34,7 @@ pack!(NoNameProvided = ());
 pack!(ParsedPickInput = (i32, String));
 
 #[chain]
-fn parse(prev: PickEntry) -> NextProcess {
+fn parse(prev: PickEntry) -> mingling::ChainProcess<ThisProgram> {
     // Extract arguments from `PickEntry`'s inner and create a `Picker`
     let picker = Picker::new(prev.inner);
     let picked = picker

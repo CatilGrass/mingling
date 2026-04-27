@@ -25,11 +25,10 @@
 //! 4. Execute `cargo install --path ./`, then run the corresponding completion script in your shell
 
 use mingling::{
-    EnumTag, Groupped, ShellContext, Suggest,
+    ChainProcess, EnumTag, Groupped, ShellContext, Suggest,
     macros::{
         chain, completion, dispatcher, gen_program, r_println, renderer, suggest, suggest_enum,
     },
-    marker::NextProcess,
     parser::{PickableEnum, Picker},
 };
 
@@ -97,7 +96,7 @@ enum FruitType {
 impl PickableEnum for FruitType {}
 
 #[chain]
-fn parse_fruit_info(prev: FruitEntry) -> NextProcess {
+fn parse_fruit_info(prev: FruitEntry) -> ChainProcess<ThisProgram> {
     let picker = Picker::<()>::from(prev.inner);
     let (fruit_name, fruit_type) = picker.pick("--name").pick("--type").unpack_directly();
     let info = FruitInfo {

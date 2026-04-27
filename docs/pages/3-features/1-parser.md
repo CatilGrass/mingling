@@ -98,7 +98,6 @@ Then create the basic binary program `fruit`
 use mingling::{
     EnumTag, Groupped,
     macros::{chain, dispatcher, gen_program, r_println, renderer},
-    marker::NextProcess,
     parser::PickableEnum,
 };
 
@@ -242,7 +241,6 @@ Complete code:
 use mingling::{
     AnyOutput, EnumTag, Groupped,
     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
-    marker::NextProcess,
     parser::{PickableEnum, Picker},
 };
 

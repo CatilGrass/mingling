@@ -6,8 +6,8 @@
 //! ```
 
 use mingling::{
+    ChainProcess,
     macros::{chain, dispatcher, gen_program, pack, r_println, renderer},
-    marker::NextProcess,
 };
 
 // Define dispatcher `HelloCommand`, directing subcommand "hello" to `HelloEntry`
@@ -29,7 +29,7 @@ pack!(Hello = String);
 
 // Register chain to `ThisProgram`, handling logic from `HelloEntry`
 #[chain]
-fn parse_name(prev: HelloEntry) -> NextProcess {
+fn parse_name(prev: HelloEntry) -> ChainProcess<ThisProgram> {
     // Extract string from `HelloEntry` as argument
     let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
 

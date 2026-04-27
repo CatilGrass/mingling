@@ -131,18 +131,22 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
     let name = read_name(&input);
 
     #[cfg(feature = "comp")]
-    let out = TokenStream::from(quote! {
+    let comp_gen = quote! {
         ::mingling::macros::program_comp_gen!(#name);
-        ::mingling::macros::program_fallback_gen!(#name);
-        ::mingling::macros::program_final_gen!(#name);
-    });
-    #[cfg(not(feature = "comp"))]
-    let out = TokenStream::from(quote! {
-        ::mingling::macros::program_fallback_gen!(#name);
-        ::mingling::macros::program_final_gen!(#name);
-    });
+    };
 
-    out
+    #[cfg(not(feature = "comp"))]
+    let comp_gen = quote! {};
+
+    TokenStream::from(quote! {
+        // Shit, this feature is unstable
+        // pub type NextProcess = impl Into<::mingling::ChainProcess<#name>>;
+        pub type NextProcess = ::mingling::ChainProcess<#name>;
+
+        #comp_gen
+        ::mingling::macros::program_fallback_gen!(#name);
+        ::mingling::macros::program_final_gen!(#name);
+    })
 }
 
 #[proc_macro]
@@ -153,7 +157,7 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
     #[cfg(feature = "async")]
     let fn_exec_comp = quote! {
         #[::mingling::macros::chain(#name)]
-        pub async fn __exec_completion(prev: CompletionContext) -> NextProcess {
+        pub async fn __exec_completion(prev: CompletionContext) -> ::mingling::ChainProcess<#name> {
             let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
             match read_ctx {
                 Ok(ctx) => {
@@ -168,7 +172,7 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
     #[cfg(not(feature = "async"))]
     let fn_exec_comp = quote! {
         #[::mingling::macros::chain(#name)]
-        pub fn __exec_completion(prev: CompletionContext) -> NextProcess {
+        pub fn __exec_completion(prev: CompletionContext) -> ::mingling::ChainProcess<#name> {
             let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
             match read_ctx {
                 Ok(ctx) => {
@@ -185,7 +189,7 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
         use __completion_gen::*;
         pub mod __completion_gen {
             use super::*;
-            use mingling::marker::NextProcess;
+
             ::mingling::macros::dispatcher!(#name, "__comp", CompletionDispatcher => CompletionContext);
             ::mingling::macros::pack!(
                 #name,
