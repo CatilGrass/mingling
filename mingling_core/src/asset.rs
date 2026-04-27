@@ -12,6 +12,9 @@ pub mod dispatcher;
 pub mod enum_tag;
 
 #[doc(hidden)]
+pub mod global_resource;
+
+#[doc(hidden)]
 pub mod node;
 
 #[doc(hidden)]

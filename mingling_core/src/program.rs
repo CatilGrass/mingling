@@ -8,11 +8,15 @@ use crate::error::GeneralRendererSerializeError;
 use std::env;
 
 use crate::{
-    AnyOutput, ChainProcess, RenderResult,
+    AnyOutput, ChainProcess, GlobalResources, RenderResult,
     asset::dispatcher::Dispatcher,
     error::{ChainProcessError, ProgramExecuteError},
 };
-use std::{fmt::Display, sync::OnceLock};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    sync::{Arc, Mutex, OnceLock},
+};
 
 #[cfg(feature = "async")]
 use std::pin::Pin;
@@ -66,6 +70,8 @@ where
 
     #[cfg(feature = "general_renderer")]
     pub general_renderer_name: GeneralRendererSetting,
+
+    pub(crate) resources: GlobalResources,
 }
 
 impl<C> Program<C>
@@ -101,6 +107,7 @@ where
 
             #[cfg(feature = "general_renderer")]
             general_renderer_name: GeneralRendererSetting::Disable,
+            resources: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 

@@ -74,6 +74,29 @@ fn parse(prev: PickEntry) -> mingling::ChainProcess<ThisProgram> {
 }
 ```
 
+8. Added a resource system to `Program` for managing global resources [Details](docs/res/changlog_examples/feat_program_res.rs)
+
+```rust
+// Define global resource
+#[derive(Debug, Default, Clone)]
+struct Global {
+    name: String,
+    age: i32,
+}
+
+// Add global resource
+program.with_resource(Global::default());
+
+// Read the global resource
+let global = this::<ThisProgram>().res_or_default::<Global>();
+
+// Modify the global resource
+this::<ThisProgram>().modify_res(|r: &mut Global| {
+    r.name = name;
+    r.age = age
+});
+```
+
 #### **BREAKING CHANGES**:
 
 1. **\[macros\]** Removed macro `dispatcher_render!` from `mingling_macros`

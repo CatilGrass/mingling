@@ -152,6 +152,7 @@ pub fn gen_program(input: TokenStream) -> TokenStream {
 
     TokenStream::from(quote! {
         // Shit, this feature is unstable
+        // TODO :: This logic will be implemented when Rust's Impl In Type Alias feature becomes stable
         // pub type NextProcess = impl Into<::mingling::ChainProcess<#name>>;
         pub type NextProcess = ::mingling::ChainProcess<#name>;
 
