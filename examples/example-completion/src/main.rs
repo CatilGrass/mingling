@@ -25,7 +25,7 @@
 //! 4. Execute `cargo install --path ./`, then run the corresponding completion script in your shell
 
 use mingling::{
-    ChainProcess, EnumTag, Groupped, ShellContext, Suggest,
+    EnumTag, Groupped, ShellContext, Suggest,
     macros::{
         chain, completion, dispatcher, gen_program, r_println, renderer, suggest, suggest_enum,
     },

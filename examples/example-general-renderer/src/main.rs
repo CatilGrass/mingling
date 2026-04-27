@@ -33,7 +33,7 @@
 //! ```
 
 use mingling::{
-    ChainProcess, Groupped,
+    Groupped,
     macros::{chain, dispatcher, gen_program, r_println, renderer},
     parser::Picker,
     setup::GeneralRendererSetup,
