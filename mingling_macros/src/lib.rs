@@ -59,6 +59,18 @@ pub fn pack(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+pub fn route(input: TokenStream) -> TokenStream {
+    let expr = parse_macro_input!(input as syn::Expr);
+    let expanded = quote! {
+        match #expr {
+            Ok(r) => r,
+            Err(e) => return e,
+        }
+    };
+    TokenStream::from(expanded)
+}
+
+#[proc_macro]
 pub fn dispatcher(input: TokenStream) -> TokenStream {
     dispatcher::dispatcher(input)
 }

@@ -38,6 +38,42 @@ fn your_command_help(_prev: YourEntry) {
 }
 ```
 
+7. **\[macros\]** Added the `route!` macro, which allows quick error routing within the `chain!` function. Usage is as follows:
+
+```rust
+// Before
+#[chain]
+fn parse(prev: PickEntry) -> mingling::ChainProcess<ThisProgram> {
+    let picker = Picker::new(prev.inner);
+    let pick_result = picker
+        .pick_or_route((), NoNameProvided::default().to_render())
+        .unpack();
+
+    match pick_result {
+        Ok(name) => {
+            // use name here
+        }
+        Err(e) => {
+            // handle error route here
+            e
+        }
+    }
+}
+
+// After
+#[chain]
+fn parse(prev: PickEntry) -> mingling::ChainProcess<ThisProgram> {
+    let picker = Picker::new(prev.inner);
+    let name: String = route! {
+        picker
+            .pick_or_route((), NoNameProvided::default().to_render())
+            .unpack()
+    };
+
+    // use name here
+}
+```
+
 #### **BREAKING CHANGES**:
 
 1. **\[macros\]** Removed macro `dispatcher_render!` from `mingling_macros`

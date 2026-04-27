@@ -113,6 +113,8 @@ pub mod macros {
     pub use mingling_macros::register_type;
     /// Used to generate a struct implementing the `Renderer` trait via a method
     pub use mingling_macros::renderer;
+    /// Used to generate a route that either returns a successful result or early returns an error.
+    pub use mingling_macros::route;
     #[cfg(feature = "comp")]
     /// Used to generate suggestions
     pub use mingling_macros::suggest;
