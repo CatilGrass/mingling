@@ -447,10 +447,6 @@ impl_pick_structs! { Pick9 Pick10 val_10 T1 val_1, T2 val_2, T3 val_3, T4 val_4,
 impl_pick_structs! { Pick10 Pick11 val_11 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10 }
 impl_pick_structs! { Pick11 Pick12 val_12 T1 val_1, T2 val_2, T3 val_3, T4 val_4, T5 val_5, T6 val_6, T7 val_7, T8 val_8, T9 val_9, T10 val_10, T11 val_11 }
 
-// ============================================================================
-// PickableEnum: 为枚举类型提供默认的 Pickable 实现
-// ============================================================================
-
 pub trait PickableEnum: EnumTag + Default {}
 
 impl<T> Pickable for T
