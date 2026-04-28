@@ -1,4 +1,4 @@
-<h1 align="center">Get Started</h1>
+<h1 align="center">Get Started CN</h1>
 <p align="center">
     欢迎使用 Mìng Lìng
 </p>
