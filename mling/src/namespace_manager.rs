@@ -23,9 +23,9 @@ pub fn list_namespaces(
             Err(_) => continue,
         };
         let path = entry.path();
-        if path.is_dir() {
-            if let Some(name) = path.file_name() {
-                if let Some(name_str) = name.to_str() {
+        if path.is_dir()
+            && let Some(name) = path.file_name()
+                && let Some(name_str) = name.to_str() {
                     // Skip directories starting with a dot
                     if name_str.starts_with('.') {
                         continue;
@@ -42,8 +42,6 @@ pub fn list_namespaces(
                         namespaces.push(namespace);
                     }
                 }
-            }
-        }
     }
 
     namespaces

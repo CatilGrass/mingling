@@ -40,8 +40,7 @@ fn solve_inner(current: &PathBuf) -> Result<(PathBuf, PathBuf, Vec<BinaryItem>),
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
+        return Err(std::io::Error::other(
             format!("cargo metadata failed: {}", stderr),
         ));
     }

@@ -44,8 +44,7 @@ pub fn install_this_project(
             .current_dir(workspace_root)
             .status()?;
         if !status.success() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            return Err(std::io::Error::other(
                 "exec `cargo clean` failed",
             ));
         }
@@ -57,8 +56,7 @@ pub fn install_this_project(
         .current_dir(workspace_root)
         .status()?;
     if !status.success() {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
+        return Err(std::io::Error::other(
             "cargo build --release failed",
         ));
     }

@@ -64,14 +64,12 @@ pub(crate) fn render_dir(prev: ResultDir) {
 
 #[renderer]
 pub(crate) fn render_binaries(prev: ResultBinaries) {
-    let mut i = 1;
-    for item in prev.bin.iter() {
+    for (i, item) in (1..).zip(prev.bin.iter()) {
         r_println!(
             "{}. {} ({})",
             i.to_string(),
             item.name.bold(),
             item.path.to_string_lossy().underline().bright_cyan()
         );
-        i += 1;
     }
 }

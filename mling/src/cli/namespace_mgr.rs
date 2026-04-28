@@ -26,7 +26,7 @@ pub(crate) fn comp_trust(ctx: &ShellContext) -> Suggest {
         return Suggest::Suggest(
             list_namespaces(false, true, true)
                 .into_iter()
-                .map(|i| SuggestItem::new(i))
+                .map(SuggestItem::new)
                 .collect::<std::collections::BTreeSet<_>>(),
         );
     }
@@ -39,7 +39,7 @@ pub(crate) fn comp_untrust(ctx: &ShellContext) -> Suggest {
         return Suggest::Suggest(
             list_namespaces(true, false, true)
                 .into_iter()
-                .map(|i| SuggestItem::new(i))
+                .map(SuggestItem::new)
                 .collect::<std::collections::BTreeSet<_>>(),
         );
     }
@@ -61,7 +61,7 @@ pub(crate) fn comp_set_trust(ctx: &ShellContext) -> Suggest {
         return Suggest::Suggest(
             list_namespaces(true, true, true)
                 .into_iter()
-                .map(|i| SuggestItem::new(i))
+                .map(SuggestItem::new)
                 .collect::<std::collections::BTreeSet<_>>(),
         );
     }
@@ -74,7 +74,7 @@ pub(crate) fn comp_remove_namespace(ctx: &ShellContext) -> Suggest {
         return Suggest::Suggest(
             list_namespaces(true, true, true)
                 .into_iter()
-                .map(|i| SuggestItem::new(i))
+                .map(SuggestItem::new)
                 .collect::<std::collections::BTreeSet<_>>(),
         );
     }
