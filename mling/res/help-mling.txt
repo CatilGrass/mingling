@@ -1,0 +1,15 @@
+**Usage**: mling [COMMAND]
+
+**COMMANDS**
+__  *install*              Install programs in a Cargo workspace; **[--clean | -c]**
+__  *rm-namespace*         Delete a namespace
+__  *ls-namespace*         List namespaces
+__  *set-trust*            Set trust for a namespace **[--trusted | -t <yes/no>]**
+__  *trust*                Set a namespace as trusted
+__  *untrust*              Set a namespace as untrusted
+__  *show-binaries*        List binary programs in the current Cargo workspace
+__  *show-target-dir*      Show the output directory of the current Cargo workspace
+__  *show-workspace-root*  Show the root location of the current Cargo workspace
+
+**OPTIONS**
+__  [[b_cyan]]-h, --help[[/]]  Print this help message
