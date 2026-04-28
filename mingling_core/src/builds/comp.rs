@@ -55,13 +55,32 @@ pub fn build_comp_scripts(name: &str) -> Result<(), std::io::Error> {
 /// build_comp_script(&ShellFlag::Bash, "myapp").unwrap();
 /// ```
 pub fn build_comp_script(shell_flag: &ShellFlag, bin_name: &str) -> Result<(), std::io::Error> {
+    let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let target_dir = out_dir.join("../../../").to_path_buf();
+    build_comp_script_to(shell_flag, bin_name, &target_dir.to_string_lossy())
+}
+
+/// Generate a shell completion script to a specified directory.
+///
+/// This function takes a shell flag, a binary name, and a target directory path,
+/// selects the appropriate template, substitutes the binary name into the template,
+/// and writes the resulting completion script to the specified directory.
+///
+/// # Example
+/// ```
+/// build_comp_script_to(&ShellFlag::Bash, "myapp", "target/completions").unwrap();
+/// ```
+pub fn build_comp_script_to(
+    shell_flag: &ShellFlag,
+    bin_name: &str,
+    target_dir: &str,
+) -> Result<(), std::io::Error> {
     let (tmpl_str, ext) = get_tmpl(shell_flag);
     let mut tmpl = just_template::Template::from(tmpl_str);
     tmpl_param!(tmpl, bin_name = bin_name);
-    let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    let target_dir = out_dir.join("../../../").to_path_buf();
-    let output_path = target_dir.join(format!("{}_comp{}", bin_name, ext));
-    std::fs::create_dir_all(&target_dir)?;
+    let target_path = std::path::PathBuf::from(target_dir);
+    std::fs::create_dir_all(&target_path)?;
+    let output_path = target_path.join(format!("{}_comp{}", bin_name, ext));
     std::fs::write(&output_path, tmpl.to_string())
 }
 
