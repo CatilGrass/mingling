@@ -106,9 +106,12 @@ pub fn help_attr(item: TokenStream) -> TokenStream {
     // Get function name
     let fn_name = &input_fn.sig.ident;
 
-    // Generate struct name from function name using pascal_case
-    let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
-    let struct_name = Ident::new(&pascal_case_name, fn_name.span());
+    // Generate internal name using snake_case for the chain macro
+    let internal_name = format!(
+        "__internal_help_{}",
+        just_fmt::snake_case!(fn_name.to_string())
+    );
+    let struct_name = Ident::new(&internal_name, fn_name.span());
 
     // Register the help request mapping
     let help_entry = build_help_entry(&struct_name, &entry_type);
@@ -119,6 +122,7 @@ pub fn help_attr(item: TokenStream) -> TokenStream {
     let expanded = quote! {
         #(#fn_attrs)*
         #[doc(hidden)]
+        #[allow(non_camel_case_types)]
         #vis struct #struct_name;
 
         impl ::mingling::HelpRequest for #struct_name {

@@ -97,14 +97,18 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
     let fn_name = &input_fn.sig.ident;
 
     // Generate struct name from function name using pascal_case
-    let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
-    let struct_name = syn::Ident::new(&pascal_case_name, fn_name.span());
+    let internal_name = format!(
+        "__internal_renderer_{}",
+        just_fmt::snake_case!(fn_name.to_string())
+    );
+    let struct_name = syn::Ident::new(&internal_name, fn_name.span());
 
     // Generate the struct and implementation
     // We need to create a wrapper function that adds the r parameter
     let expanded = quote! {
         #(#fn_attrs)*
         #[doc(hidden)]
+        #[allow(non_camel_case_types)]
         #vis struct #struct_name;
 
         ::mingling::macros::register_renderer!(#previous_type, #struct_name);

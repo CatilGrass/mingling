@@ -63,14 +63,18 @@ pub fn completion_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Get function name
     let fn_name = &sig.ident;
 
-    // Generate struct name from function name using pascal_case
-    let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
-    let struct_name = Ident::new(&pascal_case_name, fn_name.span());
+    // Generate internal name from function name using snake_case
+    let internal_name = format!(
+        "__internal_completion_{}",
+        just_fmt::snake_case!(fn_name.to_string())
+    );
+    let struct_name = Ident::new(&internal_name, fn_name.span());
 
     // Generate the struct and implementation
     let expanded = quote! {
         #(#fn_attrs)*
         #[doc(hidden)]
+        #[allow(non_camel_case_types)]
         #vis struct #struct_name;
 
         impl ::mingling::Completion for #struct_name {

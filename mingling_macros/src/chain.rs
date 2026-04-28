@@ -100,9 +100,12 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Get function name
     let fn_name = &input_fn.sig.ident;
 
-    // Generate struct name from function name using pascal_case
-    let pascal_case_name = just_fmt::pascal_case!(fn_name.to_string());
-    let struct_name = Ident::new(&pascal_case_name, fn_name.span());
+    // Generate struct name from function name using snake_case
+    let internal_name = format!(
+        "__internal_chain_{}",
+        just_fmt::snake_case!(fn_name.to_string())
+    );
+    let struct_name = Ident::new(&internal_name, fn_name.span());
 
     // Determine the program type for the return type
     let program_type = if use_crate_prefix {
@@ -163,6 +166,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         quote! {
             #(#fn_attrs)*
             #[doc(hidden)]
+            #[allow(non_camel_case_types)]
             #vis struct #struct_name;
 
             ::mingling::macros::register_chain!(#previous_type, #struct_name);
@@ -179,6 +183,7 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     } else {
         quote! {
             #(#fn_attrs)*
+            #[allow(non_camel_case_types)]
             #vis struct #struct_name;
 
             ::mingling::macros::register_chain!(#previous_type, #struct_name);
