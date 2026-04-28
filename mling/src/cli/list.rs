@@ -111,7 +111,7 @@ fn print_list(title: String, list: Vec<String>, r: &mut RenderResult) {
 
     let mut i = 1;
     for namespace in list.iter() {
-        r_println!("  {}. {}\n", i.to_string(), namespace.bold());
+        r_println!("  {}. {}", i.to_string(), namespace.bold());
         i += 1;
     }
 }
