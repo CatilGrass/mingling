@@ -276,38 +276,38 @@ pack!(MinGreaterThanMax = ());
 fn parse_fruit_eat(prev: FruitEatEntry) -> NextProcess {
     let picker = Picker::new(prev.inner);
     let mut min_weight: i16 = 0;
-    let parsed = picker
-        .pick_or(["--count", "-n"], 1)
-        .pick::<i16>("--min-weight") // default: 0
-        .after(|min| {
-            // Copy `min` to external variable
-            min_weight = min;
-            min
-        })
-        .pick_or::<i16>("--max-weight", min_weight) // default: min_weight
-        .after_or_route(|max| {
-            // Check if `max` is valid
-            if max < &min_weight {
-                Err(MinGreaterThanMax::default())
-            } else {
-                Ok(max.clone())
-            }
-        })
-        .pick(())
-        .unpack();
+    let (count, min_weight, max_weight, fruit_type) = route! { 
+        picker
+            // Pick count
+            .pick_or::<i16>(["--count", "-n"], 1 as i16)
+            
+            // Pick min/max weight
+            .pick::<i16>("--min-weight")
+            .after(|min| {
+                min_weight = min;
+                min
+            })
+            
+            .pick_or::<i16>("--max-weight", min_weight)
+            .after_or_route(|max| {
+                if max < &min_weight {
+                    Err(MinGreaterThanMax::default().to_render())
+                } else {
+                    Ok(max.clone())
+                }
+            })
+            
+            // Pick Type
+            .pick(())
+            .unpack()
+    };
 
-    match parsed {
-        Ok((count, min_weight, max_weight, fruit_type)) => {
-            let parsed = ParsedEatFruit {
-                count,
-                weight_range: (min_weight, max_weight),
-                fruit_type,
-            };
-
-            AnyOutput::new(parsed).route_renderer()
-        }
-        Err(route) => route.to_render(),
+    ParsedEatFruit {
+        count,
+        weight_range: (min_weight, max_weight),
+        fruit_type,
     }
+    .to_render()
 }
 
 #[renderer]

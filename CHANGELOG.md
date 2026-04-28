@@ -135,6 +135,32 @@ use mingling::marker::NextProcess; // Remove this
 gen_program!();
 ```
 
+6. **\[picker\]** Simplified `Picker` logic:
+
+     - `Picker` no longer requires the generic parameter `<G>` by default; it only needs it when using `pick_or_route` or `after_or_route`
+
+     - Additionally, if no `or_route` operations are used, the `unpack_directly` function is no longer available; `unpack` will directly extract the inner value
+
+```rust
+// Before
+let (name, age) = Picker::<()>::new(prev.inner) // had to specify an arbitrary type even for routers Picker without routes
+    .pick::<String>(())
+    .pick::<i32>(())
+    .unpack_directly(); // had to use `unpack_directly` to get the inner value
+
+// After
+let (name, age) = Picker::new(prev.inner) // no longer need to specify an unused route type
+    .pick::<String>(())
+    .pick::<i32>(())
+    .unpack(); // no longer need to use `unpack_directly` 
+
+// But ...
+let (name, age) = Picker::new(prev.inner)
+    .pick::<String>(())
+    .pick_or_route::<i32>((), NoNumberProvided::default().to_render()) // if a route type is specified
+    .unpack(); // will return Result<Value, Route>
+```
+
 ---
 
 ### Release 0.1.6 **\[YANKED\]**

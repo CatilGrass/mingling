@@ -61,10 +61,10 @@ struct Info {
 
 #[chain]
 fn parse_render(prev: RenderCommandEntry) -> ChainProcess<ThisProgram> {
-    let (name, age) = Picker::<()>::new(prev.inner)
+    let (name, age) = Picker::new(prev.inner)
         .pick::<String>(())
         .pick::<i32>(())
-        .unpack_directly();
+        .unpack();
     Info { name, age }.to_render()
 }
 
