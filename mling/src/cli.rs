@@ -20,18 +20,17 @@ pub mod install;
 pub use install::*;
 
 pub fn cli_entry() {
-    // Facade
-    if std::env::args().len() == 1 {
-        println!("{}", include_str!("../res/guide.txt").trim_end());
-        return;
-    }
-
     let mut program = ThisProgram::new();
 
     // Plugins
     program.with_setup(BasicProgramSetup);
     program.with_setup(GeneralRendererSetup);
     program.with_dispatcher(CompletionDispatcher);
+
+    if program.pick_global_flag(["-v", "--version"]) {
+        println!("{}", include_str!("../res/version.txt").trim_end());
+        return;
+    }
 
     // Help
     if program.user_context.help {
