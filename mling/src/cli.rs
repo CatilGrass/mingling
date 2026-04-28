@@ -14,8 +14,8 @@ pub use namespace_mgr::*;
 pub mod read;
 pub use read::*;
 
-pub mod refresh;
-pub use refresh::*;
+pub mod install;
+pub use install::*;
 
 pub fn cli_entry() {
     let mut program = ThisProgram::new();
@@ -31,7 +31,7 @@ pub fn cli_entry() {
         SetTrustNamespaceCommand,
         RemoveNamespaceCommand,
     ));
-    program.with_dispatcher(RefreshCommand);
+    program.with_dispatcher(InstallCommand);
     program.with_dispatchers((
         ReadTargetDirCommand,
         ReadWorkspaceRootCommand,

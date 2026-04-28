@@ -6,12 +6,12 @@ use mingling::{
 
 use crate::{ThisProgram, project_installer::install_all};
 
-dispatcher!("refresh", RefreshCommand => RefreshEntry);
+dispatcher!("install", InstallCommand => InstallEntry);
 
-pack!(ResultRefreshCompleted = ());
+pack!(ResultInstallCompleted = ());
 
-#[completion(RefreshEntry)]
-pub(crate) fn comp_refresh(ctx: &ShellContext) -> Suggest {
+#[completion(InstallEntry)]
+pub(crate) fn comp_install(ctx: &ShellContext) -> Suggest {
     if ctx.typing_argument() {
         return suggest! {
             "--clean": "Clean build artifacts before installation",
@@ -22,11 +22,11 @@ pub(crate) fn comp_refresh(ctx: &ShellContext) -> Suggest {
 }
 
 #[chain]
-pub(crate) fn handle_refresh_entry(prev: RefreshEntry) -> NextProcess {
+pub(crate) fn handle_install_entry(prev: InstallEntry) -> NextProcess {
     let is_clean_before_build = Picker::new(prev.inner)
         .pick::<bool>(["--clean", "-c"])
         .unpack();
     let _ = install_all(is_clean_before_build);
 
-    ResultRefreshCompleted::new(())
+    ResultInstallCompleted::new(())
 }
