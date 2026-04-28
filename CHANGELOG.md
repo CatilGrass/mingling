@@ -9,7 +9,8 @@
 
 #### Features:
 
-1. **\[macros\]** Completed the `clap` feature: **Mingling** now supports parsing input using `clap::Parser`
+1. **\[mingling\]** Added the scaffolding tool `mling`, which can quickly deploy and test your command-line programs
+2. **\[macros\]** Completed the `clap` feature: **Mingling** now supports parsing input using `clap::Parser`
 
 ```rust
 #[derive(Groupped, clap::Parser)]
@@ -25,13 +26,13 @@ struct YourCommandEntry {
 }
 ```
 
-2. **\[clap\]** Added the `stdout_setting.clap_help_print_behaviour` configuration item to `Program`, used to control the behavior of Clap Help
+3. **\[clap\]** Added the `stdout_setting.clap_help_print_behaviour` configuration item to `Program`, used to control the behavior of Clap Help
 
-3. **\[core\]** Added function `new_with_args` to `Program`
-4. **\[core\]** Added function `dispatch_args_dynamic` to `Program`
-5. **\[core\]** Impl `std::io::Write` trait for `RenderResult`
-6. **\[core\]** Added Help system, which allows binding an event for `--help` to an `Entry` via the `help!` macro
-7. **\[core\]** Added the function `build_comp_script_to` to the `mingling::build` module: supports outputting completion scripts precisely to a specified directory
+4. **\[core\]** Added function `new_with_args` to `Program`
+5. **\[core\]** Added function `dispatch_args_dynamic` to `Program`
+6. **\[core\]** Impl `std::io::Write` trait for `RenderResult`
+7. **\[core\]** Added Help system, which allows binding an event for `--help` to an `Entry` via the `help!` macro
+8. **\[core\]** Added the function `build_comp_script_to` to the `mingling::build` module: supports outputting completion scripts precisely to a specified directory
 
 ```rust
 #[help]
@@ -40,7 +41,7 @@ fn your_command_help(_prev: YourEntry) {
 }
 ```
 
-7. **\[macros\]** Added the `route!` macro, which allows quick error routing within the `chain!` function. Usage is as follows:
+9. **\[macros\]** Added the `route!` macro, which allows quick error routing within the `chain!` function. Usage is as follows:
 
 ```rust
 // Before
@@ -76,7 +77,7 @@ fn parse(prev: PickEntry) -> mingling::ChainProcess<ThisProgram> {
 }
 ```
 
-8. Added a resource system to `Program` for managing global resources [Details](docs/res/changlog_examples/feat_program_res.rs)
+10. Added a resource system to `Program` for managing global resources [Details](docs/res/changlog_examples/feat_program_res.rs)
 
 ```rust
 // Define global resource

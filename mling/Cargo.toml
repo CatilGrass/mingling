@@ -1,0 +1,38 @@
+[package]
+name = "mingling-cli"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "mling"
+path = "src/main.rs"
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+
+[dependencies]
+mingling = { path = "../mingling", features = [
+    "parser",
+    "comp",
+    "general_renderer",
+] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+colored = "3.1.1"
+dirs = "6.0.0"
+just_fmt = "0.1.2"
+toml = "0.9.8"
+
+[build-dependencies]
+mingling = { path = "../mingling", features = ["comp"] }
