@@ -5,6 +5,7 @@
 #### Fixes:
 
 1. Fixed a build failure on **Windows** caused by `mingling_core/src/program.rs`
+2. **\[picker\]** Fixed an issue where the `Pickable` trait for `Yes` and `True` types could not correctly parse explicit boolean `--value true`
 
 #### Features:
 

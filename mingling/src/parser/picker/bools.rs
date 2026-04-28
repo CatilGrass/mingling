@@ -113,17 +113,12 @@ fn pick_bool(
     flag: mingling_core::Flag,
     positive: &[&str],
 ) -> bool {
-    let has_flag = args.pick_flag(flag.clone());
-    if !has_flag {
-        let content = args.pick_argument(flag);
-        match content {
-            Some(content) => {
-                let s = content.as_str();
-                positive.contains(&s)
-            }
-            None => false,
+    let content = args.pick_argument(flag);
+    match content {
+        Some(content) => {
+            let s = content.as_str();
+            positive.contains(&s)
         }
-    } else {
-        true
+        None => false,
     }
 }
