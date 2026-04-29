@@ -79,7 +79,7 @@ pub(crate) fn render_installed(prev: ResultInstalledNamespaces) {
         StateListInstalledOptions::All => {
             print_list("Trusted".bright_green().bold().to_string(), prev.trusted, r);
             print_list(
-                "Unrusted".bright_red().bold().to_string(),
+                "Untrusted".bright_red().bold().to_string(),
                 prev.untrusted,
                 r,
             );
@@ -94,7 +94,7 @@ pub(crate) fn render_installed(prev: ResultInstalledNamespaces) {
         }
         StateListInstalledOptions::OnlyUntrusted => {
             print_list(
-                "Unrusted".bright_red().bold().to_string(),
+                "Untrusted".bright_red().bold().to_string(),
                 prev.untrusted,
                 r,
             );

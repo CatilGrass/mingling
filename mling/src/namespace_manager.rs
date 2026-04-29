@@ -25,23 +25,24 @@ pub fn list_namespaces(
         let path = entry.path();
         if path.is_dir()
             && let Some(name) = path.file_name()
-                && let Some(name_str) = name.to_str() {
-                    // Skip directories starting with a dot
-                    if name_str.starts_with('.') {
-                        continue;
-                    }
-                    let namespace = name_str.to_string();
-                    let is_trusted = is_trusted_namespace(namespace.clone());
-                    let is_untrusted = is_untrusted_namespace(namespace.clone());
-                    let is_untagged = is_untagged_namespace(namespace.clone());
+            && let Some(name_str) = name.to_str()
+        {
+            // Skip directories starting with a dot
+            if name_str.starts_with('.') {
+                continue;
+            }
+            let namespace = name_str.to_string();
+            let is_trusted = is_trusted_namespace(namespace.clone());
+            let is_untrusted = is_untrusted_namespace(namespace.clone());
+            let is_untagged = is_untagged_namespace(namespace.clone());
 
-                    if (show_trusted && is_trusted)
-                        || (show_untrusted && is_untrusted)
-                        || (show_untagged && is_untagged)
-                    {
-                        namespaces.push(namespace);
-                    }
-                }
+            if (show_trusted && is_trusted)
+                || (show_untrusted && is_untrusted)
+                || (show_untagged && is_untagged)
+            {
+                namespaces.push(namespace);
+            }
+        }
     }
 
     namespaces
@@ -57,7 +58,8 @@ pub fn set_namespace_trusted(namespace: String, trusted: bool) {
         let _ = std::fs::write(&trusted_file, "");
         let _ = std::fs::remove_file(&untrusted_file);
     } else {
-        // Remove TRUSTED file
+        // Create UNTRUSTED file and remove TRUSTED if it exists
+        let _ = std::fs::write(&untrusted_file, "");
         let _ = std::fs::remove_file(&trusted_file);
     }
 }
