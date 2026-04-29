@@ -31,10 +31,10 @@ fn gen_sidebar() {
                 if !entries.is_empty() {
                     sub_dirs.insert(dir_name, entries);
                 }
-            } else if path.extension().map_or(false, |ext| ext == "md") {
+            } else if path.extension().is_some_and(|ext| ext == "md") {
                 let title = extract_title(&path);
                 let relative = path
-                    .strip_prefix(&repo_root.join("docs"))
+                    .strip_prefix(repo_root.join("docs"))
                     .unwrap()
                     .to_string_lossy()
                     .replace('\\', "/");
@@ -87,7 +87,7 @@ fn collect_markdown_files(dir: &Path) -> Vec<SidebarEntry> {
     if let Ok(read_dir) = std::fs::read_dir(dir) {
         for entry in read_dir.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "md") {
+            if path.extension().is_some_and(|ext| ext == "md") {
                 let title = extract_title(&path);
                 let relative = path
                     .strip_prefix(&docs_root)

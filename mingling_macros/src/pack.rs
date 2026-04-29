@@ -79,7 +79,6 @@ pub fn pack(input: TokenStream) -> TokenStream {
     // Generate the struct definition
     #[cfg(not(feature = "general_renderer"))]
     let struct_def = quote! {
-        #[derive(Debug)]
         pub struct #type_name {
             pub(crate) inner: #inner_type,
         }
@@ -87,7 +86,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
 
     #[cfg(feature = "general_renderer")]
     let struct_def = quote! {
-        #[derive(Debug, serde::Serialize)]
+        #[derive(serde::Serialize)]
         pub struct #type_name {
             pub(crate) inner: #inner_type,
         }

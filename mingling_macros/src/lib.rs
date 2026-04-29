@@ -346,19 +346,27 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
         .map(|s| syn::parse_str::<proc_macro2::TokenStream>(s).unwrap())
         .collect();
 
+    let num_variants = packed_types.len();
+    let repr_type = if num_variants <= u8::MAX as usize {
+        quote! { u8 }
+    } else if num_variants <= u16::MAX as usize {
+        quote! { u16 }
+    } else if num_variants <= u32::MAX as usize {
+        quote! { u32 }
+    } else {
+        quote! { u128 }
+    };
+
     let expanded = quote! {
-        #[derive(Debug, Default, PartialEq, Eq, Clone)]
-        #[repr(u32)]
+        #[derive(Debug, PartialEq, Eq, Clone)]
+        #[repr(#repr_type)]
         pub enum #name {
-            #[default]
-            __FallBack,
             #(#packed_types),*
         }
 
         impl ::std::fmt::Display for #name {
             fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
                 match self {
-                    #name::__FallBack => write!(f, "__FallBack"),
                     #(#name::#packed_types => write!(f, stringify!(#packed_types)),)*
                 }
             }
