@@ -12,7 +12,7 @@ pub struct BasicProgramSetup;
 
 impl<C> ProgramSetup<C> for BasicProgramSetup
 where
-    C: ProgramCollect,
+    C: ProgramCollect<Enum = C>,
 {
     fn setup(&mut self, program: &mut Program<C>) {
         program.global_flag(["--quiet", "-q"], |p| {

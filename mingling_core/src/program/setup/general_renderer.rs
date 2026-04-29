@@ -10,7 +10,7 @@ pub struct GeneralRendererSimpleSetup;
 
 impl<C> ProgramSetup<C> for GeneralRendererSimpleSetup
 where
-    C: ProgramCollect,
+    C: ProgramCollect<Enum = C>,
 {
     fn setup(&mut self, program: &mut Program<C>) {
         program.global_argument("--renderer", |p, renderer| {

@@ -97,7 +97,7 @@ pub mod macros {
     pub use mingling_macros::program_fallback_gen;
     /// Internal macro for 'gen_program' used to finally generate the program
     pub use mingling_macros::program_final_gen;
-    // Used to generate program setup
+    /// Used to generate program setup
     pub use mingling_macros::program_setup;
     /// Used to print content within a `Renderer` context
     pub use mingling_macros::r_print;
