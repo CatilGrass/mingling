@@ -25,6 +25,7 @@ fn main() {
     program.with_dispatcher(ChangeDirectoryCommand);
     program.with_dispatcher(ListCommand);
     program.with_dispatcher(ExitCommand);
+    program.with_dispatcher(ClearCommand);
 
     // Add hooks to handle REPL-related events
     program.with_hook(
@@ -65,6 +66,7 @@ pack!(ErrorDirectoryNotExist = PathBuf);
 dispatcher!("cd", ChangeDirectoryCommand => ChangeDirectoryEntry);
 dispatcher!("ls", ListCommand => ListEntry);
 dispatcher!("exit", ExitCommand => ExitEntry);
+dispatcher!("clear", ClearCommand => ClearEntry);
 
 // Define data needed for the cd command's execution phase
 pack!(StateChangeDirectory = String);
@@ -133,10 +135,23 @@ fn handle_exit(
     repl.exit = true;
 }
 
+// Handle clear command event
+#[chain]
+fn handle_clear(_prev: ClearEntry) {
+    // Clear the terminal screen
+    print!("\x1B[2J\x1B[1;1H");
+}
+
 // Handle path not found event
 #[renderer]
 fn render_error_directory_not_exist(err: ErrorDirectoryNotExist) {
     r_println!("Directory not found: {}", err.inner.display())
+}
+
+// Handle dispatcher not found event
+#[renderer]
+fn dispatcher_not_found(prev: DispatcherNotFound) {
+    r_println!("Command not found: \"{}\"", prev.join(", "))
 }
 
 gen_program!();
