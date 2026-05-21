@@ -7,6 +7,9 @@ pub mod builtin;
 #[doc(hidden)]
 pub mod bools;
 
+#[doc(hidden)]
+pub mod path;
+
 /// A builder for extracting values from command-line arguments.
 ///
 /// The `Picker` struct holds parsed arguments and provides a fluent interface

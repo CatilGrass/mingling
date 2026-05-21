@@ -26,6 +26,20 @@ fn maybe_skip(prev: SomeEntry) -> Next {
 
 Expands to: `crate::EmptyResult::new(()).to_chain()`
 
+2. **\[picker\]** Added support for `PathBuf` and `Vec<PathBuf>`, and added `PathChecker` for filtering and validating file paths
+
+```rust
+#[chain]
+fn handle_path_pick(prev: PathPick) {
+    let path = prev
+        // Extract the list of PathBufs
+        .pick::<Vec<PathBuf>>(())
+        // Filter, keep only existing files
+        .after(|p| p.passed(&PathCheckRule::new().must_file().must_exist()))
+        .unpack();
+}
+```
+
 #### **BREAKING CHANGES**:
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled
 
