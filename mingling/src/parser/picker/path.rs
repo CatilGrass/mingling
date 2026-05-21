@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::parser::Pickable;
 
@@ -10,7 +10,7 @@ impl Pickable for Vec<PathBuf> {
 
     fn pick(args: &mut crate::parser::Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
         let raw: Vec<String> = args.pick_arguments(flag);
-        let paths: Vec<PathBuf> = raw.into_iter().map(|s| PathBuf::from(s)).collect();
+        let paths: Vec<PathBuf> = raw.into_iter().map(PathBuf::from).collect();
         Some(paths)
     }
 }
@@ -107,7 +107,7 @@ fn check_path(path: impl Into<PathBuf>, rule: &PathCheckRule) -> Result<(), ()> 
     Ok(())
 }
 
-fn check_exist(path: &PathBuf, rule: &PathCheckRule) -> Result<(), ()> {
+fn check_exist(path: &Path, rule: &PathCheckRule) -> Result<(), ()> {
     let Some(exist_check) = &rule.exist_check else {
         return Ok(());
     };
@@ -118,7 +118,7 @@ fn check_exist(path: &PathBuf, rule: &PathCheckRule) -> Result<(), ()> {
     }
 }
 
-fn check_type(path: &PathBuf, rule: &PathCheckRule) -> Result<(), ()> {
+fn check_type(path: &Path, rule: &PathCheckRule) -> Result<(), ()> {
     let Some(type_check) = &rule.type_check else {
         return Ok(());
     };
