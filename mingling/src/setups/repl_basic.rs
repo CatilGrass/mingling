@@ -1,0 +1,86 @@
+use std::io::Write;
+
+use mingling_core::{Program, ProgramCollect, hook::ProgramHook, setup::ProgramSetup};
+
+/// Provides basic Readline capability for the REPL.
+pub struct BasicREPLReadlineSetup;
+impl<C> ProgramSetup<C> for BasicREPLReadlineSetup
+where
+    C: ProgramCollect<Enum = C>,
+{
+    fn setup(&mut self, program: &mut Program<C>) {
+        program.with_hook(ProgramHook::empty().on_repl_readline(|| readline().ok()));
+    }
+}
+
+/// A basic REPL prompt that displays a prompt string and reads input from the user.
+///
+/// **Note:** This setup uses static [`OnceLock`](std::sync::OnceLock) internally,
+/// meaning only the last configured instance will take effect globally.
+/// Do not configure multiple prompts with different values — only one will be used.
+pub enum BasicREPLPromptSetup {
+    Prompt(String),
+    Func(fn() -> String),
+}
+
+impl BasicREPLPromptSetup {
+    /// Creates a new [`BasicREPLPrompt`] with the given prompt string.
+    pub fn simple(prompt: impl Into<String>) -> Self {
+        Self::Prompt(prompt.into())
+    }
+
+    /// Creates a new [`BasicREPLPrompt`] with the given function.
+    pub fn func(func: fn() -> String) -> Self {
+        Self::Func(func)
+    }
+}
+
+impl<C> ProgramSetup<C> for BasicREPLPromptSetup
+where
+    C: ProgramCollect<Enum = C>,
+{
+    fn setup(&mut self, program: &mut Program<C>) {
+        match self {
+            BasicREPLPromptSetup::Prompt(prompt) => {
+                static PROMPT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+                let _ = PROMPT.set(prompt.clone());
+                fn print_prompt() {
+                    print!("{}", PROMPT.get().unwrap());
+                    let _ = std::io::stdout().flush();
+                }
+                program.with_hook(ProgramHook::empty().on_repl_pre_readline(print_prompt));
+            }
+            BasicREPLPromptSetup::Func(f) => {
+                static FUNC: std::sync::OnceLock<fn() -> String> = std::sync::OnceLock::new();
+                let _ = FUNC.set(*f);
+                fn print_func_prompt() {
+                    print!("{}", FUNC.get().unwrap()());
+                    let _ = std::io::stdout().flush();
+                }
+                program.with_hook(ProgramHook::empty().on_repl_pre_readline(print_func_prompt));
+            }
+        }
+    }
+}
+
+/// Prints the result of each REPL command to stdout.
+pub struct BasicREPLOutputSetup;
+impl<C> ProgramSetup<C> for BasicREPLOutputSetup
+where
+    C: ProgramCollect<Enum = C>,
+{
+    fn setup(&mut self, program: &mut Program<C>) {
+        program.with_hook(ProgramHook::empty().on_repl_receive_result(|r| {
+            if !r.is_empty() {
+                println!("{}", r.trim())
+            }
+        }));
+    }
+}
+
+fn readline() -> Result<String, std::io::Error> {
+    let mut input = String::new();
+    std::io::stdout().flush()?;
+    std::io::stdin().read_line(&mut input)?;
+    Ok(input.trim().to_string())
+}

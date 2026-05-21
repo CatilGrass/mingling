@@ -31,11 +31,12 @@ where
         self.exec_wrapper(|p| -> () {
             loop {
                 p.run_hook_repl_pre_readline();
-                let readline = readline_or_empty();
+                let readline = p.run_hook_repl_readline().unwrap_or_default();
                 p.run_hook_repl_post_readline(&readline);
 
                 let args = split_input_string(readline.clone());
 
+                p.run_hook_repl_pre_exec(&args);
                 match exec_once(p, args) {
                     Ok(r) => {
                         p.run_hook_repl_on_receive_result(&r);
@@ -45,10 +46,14 @@ where
                     }
                     _ => {}
                 }
+                p.run_hook_repl_post_exec();
 
                 if this::<C>().res::<REPL>().unwrap().exit {
+                    p.run_hook_repl_exit();
                     break;
                 }
+
+                p.run_hook_repl_loop_once();
             }
         });
     }
@@ -75,36 +80,30 @@ where
         self.exec_wrapper(async |p| -> () {
             loop {
                 p.run_hook_repl_pre_readline();
-                let readline = readline_or_empty();
+                let readline = p.run_hook_repl_readline().unwrap_or_default();
                 p.run_hook_repl_post_readline(&readline);
 
                 let args = split_input_string(readline.clone());
 
+                p.run_hook_repl_pre_exec(&args);
                 match exec_once(p, args).await {
                     Ok(r) => {
                         p.run_hook_repl_on_receive_result(&r);
                     }
                     _ => {}
                 }
+                p.run_hook_repl_post_exec();
 
                 if this::<C>().res::<REPL>().unwrap().exit {
+                    p.run_hook_repl_exit();
                     break;
                 }
+
+                p.run_hook_repl_loop_once();
             }
         })
         .await;
     }
-}
-
-fn readline() -> Result<String, std::io::Error> {
-    let mut input = String::new();
-    std::io::stdout().flush()?;
-    std::io::stdin().read_line(&mut input)?;
-    Ok(input.trim().to_string())
-}
-
-fn readline_or_empty() -> String {
-    readline().unwrap_or("".to_string())
 }
 
 #[cfg(not(feature = "async"))]

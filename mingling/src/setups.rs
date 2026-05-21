@@ -9,3 +9,9 @@ mod general_renderer;
 
 #[cfg(feature = "general_renderer")]
 pub use general_renderer::*;
+
+#[cfg(feature = "repl")]
+mod repl_basic;
+
+#[cfg(feature = "repl")]
+pub use repl_basic::*;

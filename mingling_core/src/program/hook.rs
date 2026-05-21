@@ -48,9 +48,21 @@ where
     #[cfg(feature = "repl")]
     pub repl_pre_readline: Option<fn()>,
 
+    /// Custom REPL line reader (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub repl_readline: Option<fn() -> Option<String>>,
+
     /// Executes after reading a REPL line (only available with `repl` feature)
     #[cfg(feature = "repl")]
     pub repl_post_readline: Option<fn(line: &str)>,
+
+    /// Executes before executing a REPL command (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub repl_pre_exec: Option<fn(args: &[String])>,
+
+    /// Executes after executing a REPL command (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub repl_post_exec: Option<fn()>,
 
     /// Executes when the REPL receives a render result (only available with `repl` feature)
     #[cfg(feature = "repl")]
@@ -59,6 +71,14 @@ where
     /// Executes when the REPL panics (only available with `repl` feature)
     #[cfg(all(feature = "repl", not(feature = "async")))]
     pub repl_on_panic: Option<fn(&ProgramPanic)>,
+
+    /// Executes when the REPL exits (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub repl_exit: Option<fn()>,
+
+    /// Executes after each REPL loop iteration (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub repl_loop_once: Option<fn()>,
 }
 
 impl<C> Program<C>
@@ -214,6 +234,22 @@ where
         }
     }
 
+    /// Runs the custom REPL readline hook (only available with `repl` feature)
+    /// Returns `Some(line)` if a hook was set and returned Some, otherwise `None`.
+    #[cfg(feature = "repl")]
+    pub(crate) fn run_hook_repl_readline(&self) -> Option<String> {
+        if !self.user_context.run_hook {
+            return None;
+        }
+
+        for hook in &self.hooks {
+            if let Some(repl_readline) = hook.repl_readline {
+                return repl_readline();
+            }
+        }
+        None
+    }
+
     /// Runs the REPL post-readline hooks (only available with `repl` feature)
     #[cfg(feature = "repl")]
     pub(crate) fn run_hook_repl_post_readline(&self, line: &str) {
@@ -224,6 +260,34 @@ where
         for hook in &self.hooks {
             if let Some(repl_post_readline) = hook.repl_post_readline {
                 repl_post_readline(line)
+            }
+        }
+    }
+
+    /// Runs the REPL pre-exec hooks (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub(crate) fn run_hook_repl_pre_exec(&self, args: &[String]) {
+        if !self.user_context.run_hook {
+            return;
+        }
+
+        for hook in &self.hooks {
+            if let Some(repl_pre_exec) = hook.repl_pre_exec {
+                repl_pre_exec(args)
+            }
+        }
+    }
+
+    /// Runs the REPL post-exec hooks (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub(crate) fn run_hook_repl_post_exec(&self) {
+        if !self.user_context.run_hook {
+            return;
+        }
+
+        for hook in &self.hooks {
+            if let Some(repl_post_exec) = hook.repl_post_exec {
+                repl_post_exec()
             }
         }
     }
@@ -255,6 +319,34 @@ where
             }
         }
     }
+
+    /// Runs the REPL exit hooks (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub(crate) fn run_hook_repl_exit(&self) {
+        if !self.user_context.run_hook {
+            return;
+        }
+
+        for hook in &self.hooks {
+            if let Some(repl_exit) = hook.repl_exit {
+                repl_exit()
+            }
+        }
+    }
+
+    /// Runs the REPL loop_once hooks (only available with `repl` feature)
+    #[cfg(feature = "repl")]
+    pub(crate) fn run_hook_repl_loop_once(&self) {
+        if !self.user_context.run_hook {
+            return;
+        }
+
+        for hook in &self.hooks {
+            if let Some(repl_loop_once) = hook.repl_loop_once {
+                repl_loop_once()
+            }
+        }
+    }
 }
 
 impl<C> ProgramHook<C>
@@ -279,11 +371,21 @@ where
             #[cfg(feature = "repl")]
             repl_pre_readline: None,
             #[cfg(feature = "repl")]
+            repl_readline: None,
+            #[cfg(feature = "repl")]
             repl_post_readline: None,
+            #[cfg(feature = "repl")]
+            repl_pre_exec: None,
+            #[cfg(feature = "repl")]
+            repl_post_exec: None,
             #[cfg(feature = "repl")]
             repl_on_receive_result: None,
             #[cfg(all(feature = "repl", not(feature = "async")))]
             repl_on_panic: None,
+            #[cfg(feature = "repl")]
+            repl_exit: None,
+            #[cfg(feature = "repl")]
+            repl_loop_once: None,
         }
     }
 
@@ -357,6 +459,15 @@ where
         self
     }
 
+    /// Sets the custom REPL line reader (only available with `repl` feature).
+    /// If set, this function will be called to read a line instead of the default mechanism.
+    /// Returning `None` signals that there is no input (e.g., EOF).
+    #[cfg(feature = "repl")]
+    pub fn on_repl_readline(mut self, handler: fn() -> Option<String>) -> Self {
+        let _ = self.repl_readline.insert(handler);
+        self
+    }
+
     /// Sets the handler for the REPL post-readline event (only available with `repl` feature).
     /// This hook runs after reading a line of input and receives the line as a `&str`.
     #[cfg(feature = "repl")]
@@ -365,7 +476,24 @@ where
         self
     }
 
+    /// Sets the handler for the REPL pre-exec event (only available with `repl` feature).
+    /// This hook runs before executing a REPL command, receiving the parsed arguments.
+    #[cfg(feature = "repl")]
+    pub fn on_repl_pre_exec(mut self, handler: fn(args: &[String])) -> Self {
+        let _ = self.repl_pre_exec.insert(handler);
+        self
+    }
+
+    /// Sets the handler for the REPL post-exec event (only available with `repl` feature).
+    /// This hook runs after executing a REPL command.
+    #[cfg(feature = "repl")]
+    pub fn on_repl_post_exec(mut self, handler: fn()) -> Self {
+        let _ = self.repl_post_exec.insert(handler);
+        self
+    }
+
     /// Sets the handler for the REPL receive result event (only available with `repl` feature).
+    /// This hook runs after a command is executed, receiving the render result on success.
     #[cfg(feature = "repl")]
     pub fn on_repl_receive_result(mut self, handler: fn(result: &RenderResult)) -> Self {
         let _ = self.repl_on_receive_result.insert(handler);
@@ -376,6 +504,22 @@ where
     #[cfg(all(feature = "repl", not(feature = "async")))]
     pub fn on_repl_panic(mut self, handler: fn(panic: &ProgramPanic)) -> Self {
         let _ = self.repl_on_panic.insert(handler);
+        self
+    }
+
+    /// Sets the handler for the REPL exit event (only available with `repl` feature).
+    /// This hook runs when the REPL is about to exit.
+    #[cfg(feature = "repl")]
+    pub fn on_repl_exit(mut self, handler: fn()) -> Self {
+        let _ = self.repl_exit.insert(handler);
+        self
+    }
+
+    /// Sets the handler for the REPL loop_once event (only available with `repl` feature).
+    /// This hook runs after each REPL loop iteration.
+    #[cfg(feature = "repl")]
+    pub fn on_repl_loop_once(mut self, handler: fn()) -> Self {
+        let _ = self.repl_loop_once.insert(handler);
         self
     }
 }

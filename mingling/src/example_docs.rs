@@ -584,7 +584,12 @@ pub mod example_picker {}
 ///
 /// main.rs
 /// ```ignore
-/// use mingling::{REPL, hook::ProgramHook, prelude::*, this};
+/// use mingling::{
+///     hook::ProgramHook,
+///     prelude::*,
+///     setup::{BasicREPLOutputSetup, BasicREPLPromptSetup, BasicREPLReadlineSetup},
+///     this, REPL,
+/// };
 /// use std::{env::current_dir, path::PathBuf};
 ///
 /// // Resource to store the current directory
@@ -611,34 +616,29 @@ pub mod example_picker {}
 ///     program.with_dispatcher(ChangeDirectoryCommand);
 ///     program.with_dispatcher(ListCommand);
 ///     program.with_dispatcher(ExitCommand);
+///     program.with_dispatcher(ClearCommand);
+///
+///     // Add setups
+///     program.with_setup(BasicREPLReadlineSetup);
+///     program.with_setup(BasicREPLOutputSetup);
+///     program.with_setup(BasicREPLPromptSetup::func(|| {
+///         let res = this::<ThisProgram>().res::<CurrentDir>().unwrap();
+///         let dir_str: String = res.dir.to_string_lossy().into();
+///         let prompt = format!(
+///             "{}> ",
+///             dir_str
+///                 .replace(&['/', '\\'][..], ">")
+///                 .trim_start_matches('>')
+///                 .trim_end_matches('>')
+///         );
+///         prompt
+///     }));
 ///
 ///     // Add hooks to handle REPL-related events
-///     program.with_hook(
-///         ProgramHook::empty()
-///             .on_repl_begin(|| {
-///                 // Print welcome message
-///                 println!("Welcome!")
-///             })
-///             .on_repl_pre_readline(|| {
-///                 // Print prompt
-///                 let res = this::<ThisProgram>().res::<CurrentDir>().unwrap();
-///                 let dir_str: String = res.dir.to_string_lossy().into();
-///                 let prompt = format!(
-///                     "{}> ",
-///                     dir_str
-///                         .replace(&['/', '\\'][..], ">")
-///                         .trim_start_matches('>')
-///                         .trim_end_matches('>')
-///                 );
-///                 print!("{}", prompt)
-///             })
-///             .on_repl_receive_result(|r| {
-///                 // Print output
-///                 if !r.is_empty() {
-///                     println!("{}", r.trim())
-///                 }
-///             }),
-///     );
+///     program.with_hook(ProgramHook::empty().on_repl_begin(|| {
+///         // Print welcome message
+///         println!("Welcome!")
+///     }));
 ///
 ///     // Start the REPL loop
 ///     program.exec_repl();
@@ -651,6 +651,7 @@ pub mod example_picker {}
 /// dispatcher!("cd", ChangeDirectoryCommand => ChangeDirectoryEntry);
 /// dispatcher!("ls", ListCommand => ListEntry);
 /// dispatcher!("exit", ExitCommand => ExitEntry);
+/// dispatcher!("clear", ClearCommand => ClearEntry);
 ///
 /// // Define data needed for the cd command's execution phase
 /// pack!(StateChangeDirectory = String);
@@ -719,10 +720,23 @@ pub mod example_picker {}
 ///     repl.exit = true;
 /// }
 ///
+/// // Handle clear command event
+/// #[chain]
+/// fn handle_clear(_prev: ClearEntry) {
+///     // Clear the terminal screen
+///     print!("\x1B[2J\x1B[1;1H");
+/// }
+///
 /// // Handle path not found event
 /// #[renderer]
 /// fn render_error_directory_not_exist(err: ErrorDirectoryNotExist) {
 ///     r_println!("Directory not found: {}", err.inner.display())
+/// }
+///
+/// // Handle dispatcher not found event
+/// #[renderer]
+/// fn dispatcher_not_found(prev: DispatcherNotFound) {
+///     r_println!("Command not found: \"{}\"", prev.join(", "))
 /// }
 ///
 /// gen_program!();

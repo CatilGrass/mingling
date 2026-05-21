@@ -1,4 +1,10 @@
-use mingling::{REPL, hook::ProgramHook, prelude::*, this};
+use mingling::{
+    REPL,
+    hook::ProgramHook,
+    prelude::*,
+    setup::{BasicREPLOutputSetup, BasicREPLPromptSetup, BasicREPLReadlineSetup},
+    this,
+};
 use std::{env::current_dir, path::PathBuf};
 
 // Resource to store the current directory
@@ -27,33 +33,27 @@ fn main() {
     program.with_dispatcher(ExitCommand);
     program.with_dispatcher(ClearCommand);
 
+    // Add setups
+    program.with_setup(BasicREPLReadlineSetup);
+    program.with_setup(BasicREPLOutputSetup);
+    program.with_setup(BasicREPLPromptSetup::func(|| {
+        let res = this::<ThisProgram>().res::<CurrentDir>().unwrap();
+        let dir_str: String = res.dir.to_string_lossy().into();
+        let prompt = format!(
+            "{}> ",
+            dir_str
+                .replace(&['/', '\\'][..], ">")
+                .trim_start_matches('>')
+                .trim_end_matches('>')
+        );
+        prompt
+    }));
+
     // Add hooks to handle REPL-related events
-    program.with_hook(
-        ProgramHook::empty()
-            .on_repl_begin(|| {
-                // Print welcome message
-                println!("Welcome!")
-            })
-            .on_repl_pre_readline(|| {
-                // Print prompt
-                let res = this::<ThisProgram>().res::<CurrentDir>().unwrap();
-                let dir_str: String = res.dir.to_string_lossy().into();
-                let prompt = format!(
-                    "{}> ",
-                    dir_str
-                        .replace(&['/', '\\'][..], ">")
-                        .trim_start_matches('>')
-                        .trim_end_matches('>')
-                );
-                print!("{}", prompt)
-            })
-            .on_repl_receive_result(|r| {
-                // Print output
-                if !r.is_empty() {
-                    println!("{}", r.trim())
-                }
-            }),
-    );
+    program.with_hook(ProgramHook::empty().on_repl_begin(|| {
+        // Print welcome message
+        println!("Welcome!")
+    }));
 
     // Start the REPL loop
     program.exec_repl();
