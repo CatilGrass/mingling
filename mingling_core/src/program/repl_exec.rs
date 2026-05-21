@@ -31,8 +31,8 @@ where
         self.exec_wrapper(|p| -> () {
             loop {
                 p.run_hook_repl_pre_readline();
-                let readline = p.run_hook_repl_readline().unwrap_or_default();
-                p.run_hook_repl_post_readline(&readline);
+                let mut readline = p.run_hook_repl_readline().unwrap_or_default();
+                p.run_hook_repl_post_readline(&mut readline);
 
                 let args = split_input_string(readline.clone());
 
@@ -80,8 +80,8 @@ where
         self.exec_wrapper(async |p| -> () {
             loop {
                 p.run_hook_repl_pre_readline();
-                let readline = p.run_hook_repl_readline().unwrap_or_default();
-                p.run_hook_repl_post_readline(&readline);
+                let mut readline = p.run_hook_repl_readline().unwrap_or_default();
+                p.run_hook_repl_post_readline(&mut readline);
 
                 let args = split_input_string(readline.clone());
 

@@ -54,7 +54,7 @@ where
 
     /// Executes after reading a REPL line (only available with `repl` feature)
     #[cfg(feature = "repl")]
-    pub repl_post_readline: Option<fn(line: &str)>,
+    pub repl_post_readline: Option<fn(line: &mut String)>,
 
     /// Executes before executing a REPL command (only available with `repl` feature)
     #[cfg(feature = "repl")]
@@ -252,7 +252,7 @@ where
 
     /// Runs the REPL post-readline hooks (only available with `repl` feature)
     #[cfg(feature = "repl")]
-    pub(crate) fn run_hook_repl_post_readline(&self, line: &str) {
+    pub(crate) fn run_hook_repl_post_readline(&self, line: &mut String) {
         if !self.user_context.run_hook {
             return;
         }
@@ -469,9 +469,9 @@ where
     }
 
     /// Sets the handler for the REPL post-readline event (only available with `repl` feature).
-    /// This hook runs after reading a line of input and receives the line as a `&str`.
+    /// This hook runs after reading a line of input and receives a mutable reference to the line.
     #[cfg(feature = "repl")]
-    pub fn on_repl_post_readline(mut self, handler: fn(line: &str)) -> Self {
+    pub fn on_repl_post_readline(mut self, handler: fn(line: &mut String)) -> Self {
         let _ = self.repl_post_readline.insert(handler);
         self
     }
