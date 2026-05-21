@@ -585,10 +585,11 @@ pub mod example_picker {}
 /// main.rs
 /// ```ignore
 /// use mingling::{
+///     REPL,
 ///     hook::ProgramHook,
 ///     prelude::*,
 ///     setup::{BasicREPLOutputSetup, BasicREPLPromptSetup, BasicREPLReadlineSetup},
-///     this, REPL,
+///     this,
 /// };
 /// use std::{env::current_dir, path::PathBuf};
 ///
