@@ -17,12 +17,12 @@
 //! - **Internal registration**: `register_type!`, `register_chain!`, `register_renderer!`,
 //!   `program_fallback_gen!`, `program_final_gen!`, `program_comp_gen!`
 
-use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
 use std::collections::BTreeSet;
 use std::sync::Mutex;
+use std::sync::OnceLock;
 use syn::parse_macro_input;
 
 mod chain;
@@ -55,29 +55,26 @@ pub(crate) fn default_program_path() -> proc_macro2::TokenStream {
     quote::quote! { crate::ThisProgram }
 }
 
+// Helper to get or init a OnceLock<Mutex<BTreeSet<String>>>
+pub(crate) fn get_global_set(lock: &OnceLock<Mutex<BTreeSet<String>>>) -> &Mutex<BTreeSet<String>> {
+    lock.get_or_init(|| Mutex::new(BTreeSet::new()))
+}
+
 // Global variables
 #[cfg(feature = "general_renderer")]
-pub(crate) static GENERAL_RENDERERS: Lazy<Mutex<BTreeSet<String>>> =
-    Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static GENERAL_RENDERERS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
 #[cfg(feature = "comp")]
-pub(crate) static COMPLETIONS: Lazy<Mutex<BTreeSet<String>>> =
-    Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static COMPLETIONS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
 
 #[cfg(feature = "dispatch_tree")]
-pub(crate) static COMPILE_TIME_DISPATCHERS: Lazy<Mutex<BTreeSet<String>>> =
-    Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static COMPILE_TIME_DISPATCHERS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
 
-pub(crate) static PACKED_TYPES: Lazy<Mutex<BTreeSet<String>>> =
-    Lazy::new(|| Mutex::new(BTreeSet::new()));
-pub(crate) static CHAINS: Lazy<Mutex<BTreeSet<String>>> = Lazy::new(|| Mutex::new(BTreeSet::new()));
-pub(crate) static RENDERERS: Lazy<Mutex<BTreeSet<String>>> =
-    Lazy::new(|| Mutex::new(BTreeSet::new()));
-pub(crate) static CHAINS_EXIST: Lazy<Mutex<BTreeSet<String>>> =
-    Lazy::new(|| Mutex::new(BTreeSet::new()));
-pub(crate) static RENDERERS_EXIST: Lazy<Mutex<BTreeSet<String>>> =
-    Lazy::new(|| Mutex::new(BTreeSet::new()));
-pub(crate) static HELP_REQUESTS: Lazy<Mutex<BTreeSet<String>>> =
-    Lazy::new(|| Mutex::new(BTreeSet::new()));
+pub(crate) static PACKED_TYPES: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static CHAINS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static RENDERERS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static CHAINS_EXIST: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static RENDERERS_EXIST: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static HELP_REQUESTS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
 
 /// Checks that a TypePath is a simple single-segment identifier (no `::` in the path).
 ///
@@ -1137,7 +1134,10 @@ pub fn register_type(input: TokenStream) -> TokenStream {
     let type_ident = parse_macro_input!(input as syn::Ident);
     let entry_str = type_ident.to_string();
 
-    PACKED_TYPES.lock().unwrap().insert(entry_str);
+    get_global_set(&PACKED_TYPES)
+        .lock()
+        .unwrap()
+        .insert(entry_str);
 
     TokenStream::new()
 }
@@ -1280,18 +1280,18 @@ pub fn program_fallback_gen(input: TokenStream) -> TokenStream {
 pub fn program_final_gen(input: TokenStream) -> TokenStream {
     let name = read_name(&input);
 
-    let packed_types = PACKED_TYPES.lock().unwrap().clone();
+    let packed_types = get_global_set(&PACKED_TYPES).lock().unwrap().clone();
 
-    let renderers = RENDERERS.lock().unwrap().clone();
-    let chains = CHAINS.lock().unwrap().clone();
-    let renderer_exist = RENDERERS_EXIST.lock().unwrap().clone();
-    let chain_exist = CHAINS_EXIST.lock().unwrap().clone();
+    let renderers = get_global_set(&RENDERERS).lock().unwrap().clone();
+    let chains = get_global_set(&CHAINS).lock().unwrap().clone();
+    let renderer_exist = get_global_set(&RENDERERS_EXIST).lock().unwrap().clone();
+    let chain_exist = get_global_set(&CHAINS_EXIST).lock().unwrap().clone();
 
     #[cfg(feature = "general_renderer")]
-    let general_renderers = GENERAL_RENDERERS.lock().unwrap().clone();
+    let general_renderers = get_global_set(&GENERAL_RENDERERS).lock().unwrap().clone();
 
     #[cfg(feature = "comp")]
-    let completions = COMPLETIONS.lock().unwrap().clone();
+    let completions = get_global_set(&COMPLETIONS).lock().unwrap().clone();
 
     let packed_types: Vec<proc_macro2::TokenStream> = packed_types
         .iter()
@@ -1341,7 +1341,7 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
     let general_render = quote! {};
 
     #[cfg(feature = "dispatch_tree")]
-    let compile_time_dispatchers: Vec<String> = COMPILE_TIME_DISPATCHERS
+    let compile_time_dispatchers: Vec<String> = get_global_set(&COMPILE_TIME_DISPATCHERS)
         .lock()
         .unwrap()
         .clone()
@@ -1398,7 +1398,7 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
     #[cfg(not(feature = "comp"))]
     let comp = quote! {};
 
-    let help_tokens: Vec<proc_macro2::TokenStream> = HELP_REQUESTS
+    let help_tokens: Vec<proc_macro2::TokenStream> = get_global_set(&HELP_REQUESTS)
         .lock()
         .unwrap()
         .clone()

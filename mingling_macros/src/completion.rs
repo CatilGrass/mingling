@@ -6,6 +6,8 @@ use syn::{FnArg, Ident, ItemFn, PatType, Type, parse_macro_input};
 #[cfg(feature = "comp")]
 pub fn completion_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the attribute arguments (e.g., HelloEntry from #[completion(HelloEntry)])
+
+    use crate::get_global_set;
     let previous_type_ident = if attr.is_empty() {
         return syn::Error::new(
             proc_macro2::Span::call_site(),
@@ -109,7 +111,7 @@ pub fn completion_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         Self::#previous_type_ident => <#struct_name as ::mingling::Completion>::comp(ctx),
     };
 
-    let mut completions = crate::COMPLETIONS.lock().unwrap();
+    let mut completions = get_global_set(&crate::COMPLETIONS).lock().unwrap();
     let completion_str = completion_entry.to_string();
     completions.insert(completion_str);
 

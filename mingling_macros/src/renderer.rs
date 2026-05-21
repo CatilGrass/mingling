@@ -3,6 +3,8 @@ use quote::{ToTokens, quote};
 use syn::spanned::Spanned;
 use syn::{FnArg, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input};
 
+use crate::get_global_set;
+
 /// Extracts the previous type and parameter name from function arguments
 fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
     // The function should have exactly one parameter
@@ -212,11 +214,11 @@ pub fn register_renderer(input: TokenStream) -> TokenStream {
     #[cfg(feature = "general_renderer")]
     let general_renderer_entry = build_general_renderer_entry(&previous_type);
 
-    let mut renderers = crate::RENDERERS.lock().unwrap();
-    let mut renderer_exist = crate::RENDERERS_EXIST.lock().unwrap();
+    let mut renderers = get_global_set(&crate::RENDERERS).lock().unwrap();
+    let mut renderer_exist = get_global_set(&crate::RENDERERS_EXIST).lock().unwrap();
 
     #[cfg(feature = "general_renderer")]
-    let mut general_renderers = crate::GENERAL_RENDERERS.lock().unwrap();
+    let mut general_renderers = get_global_set(&crate::GENERAL_RENDERERS).lock().unwrap();
 
     let renderer_entry_str = renderer_entry.to_string();
     let renderer_exist_entry_str = renderer_exist_entry.to_string();

@@ -27,7 +27,6 @@ debug = ["dep:log", "dep:env_logger"]
 
 [dependencies]
 just_fmt.workspace = true
-once_cell.workspace = true
 
 # comp
 just_template = { workspace = true, optional = true }

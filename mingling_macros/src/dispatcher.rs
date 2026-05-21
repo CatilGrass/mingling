@@ -208,10 +208,13 @@ pub fn register_dispatcher(input: TokenStream) -> TokenStream {
 
     // Register node info in the global collection at compile time
     // Format: "node.name:DispatcherType:EntryName"
-    COMPILE_TIME_DISPATCHERS.lock().unwrap().insert(format!(
-        "{}:{}:{}",
-        node_name_str, dispatcher_type, entry_name
-    ));
+    crate::get_global_set(&COMPILE_TIME_DISPATCHERS)
+        .lock()
+        .unwrap()
+        .insert(format!(
+            "{}:{}:{}",
+            node_name_str, dispatcher_type, entry_name
+        ));
 
     let expanded = quote! {
         #[doc(hidden)]

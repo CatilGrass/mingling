@@ -6,8 +6,9 @@
 None
 
 ### Optimizings:
-None
+1. **\[macros\]** Removed dependency `once_cell`, replaced with `std::sync::OnceLock`
 
+#### Features:
 1. **\[macros\]** Added the `empty_result!()` macro for early return from a chain function. This macro is a shorthand for constructing an `EmptyResult` and converting it into a `ChainProcess`, signaling to the pipeline that there is no meaningful output to continue processing.
 
 ```rust

@@ -5,6 +5,8 @@ use syn::{
     FnArg, Ident, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input,
 };
 
+use crate::get_global_set;
+
 /// Extracts the previous type and parameter name from function arguments
 fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
     // The function should have exactly one parameter
@@ -102,7 +104,10 @@ pub fn help_attr(item: TokenStream) -> TokenStream {
     // Register the help request mapping
     let help_entry = build_help_entry(&struct_name, &entry_type);
     let entry_str = help_entry.to_string();
-    crate::HELP_REQUESTS.lock().unwrap().insert(entry_str);
+    get_global_set(&crate::HELP_REQUESTS)
+        .lock()
+        .unwrap()
+        .insert(entry_str);
 
     // Generate the struct and HelpRequest implementation
     let expanded = quote! {
@@ -186,7 +191,10 @@ pub fn register_help(input: TokenStream) -> TokenStream {
     // Register the help request mapping
     let help_entry = build_help_entry(&struct_name, &entry_type);
     let entry_str = help_entry.to_string();
-    crate::HELP_REQUESTS.lock().unwrap().insert(entry_str);
+    get_global_set(&crate::HELP_REQUESTS)
+        .lock()
+        .unwrap()
+        .insert(entry_str);
 
     quote! {}.into()
 }

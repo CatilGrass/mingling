@@ -628,8 +628,8 @@ pub fn register_chain(input: TokenStream) -> TokenStream {
     // Record the chain existence check
     let chain_exist_entry = build_chain_exist_arm(&previous_type);
 
-    let mut chains = crate::CHAINS.lock().unwrap();
-    let mut chain_exist = crate::CHAINS_EXIST.lock().unwrap();
+    let mut chains = crate::get_global_set(&crate::CHAINS).lock().unwrap();
+    let mut chain_exist = crate::get_global_set(&crate::CHAINS_EXIST).lock().unwrap();
 
     let chain_entry_str = chain_entry.to_string();
     let chain_exist_entry_str = chain_exist_entry.to_string();
