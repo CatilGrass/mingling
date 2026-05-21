@@ -14,9 +14,15 @@ fn main() {
         run_cmd!("git commit -m \"CI Temp\"").unwrap();
     }
 
-    if ci().is_ok() {
-        println_cargo_style!("Done: All check passed!")
+    if let Err(exit_code) = ci() {
+        if needs_commit_temp {
+            run_cmd!("git restore .").unwrap();
+            run_cmd!("git reset --soft HEAD~1").unwrap();
+        }
+        exit(exit_code)
     }
+
+    println_cargo_style!("Done: All check passed!");
 
     let is_worktree_clean = run_cmd!("git diff-index --quiet HEAD --").is_ok();
     if !is_worktree_clean {
