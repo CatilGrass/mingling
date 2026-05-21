@@ -40,8 +40,10 @@ fn handle_path_pick(prev: PathPick) {
 }
 ```
 
-#### **BREAKING CHANGES**:
+#### **BREAKING CHANGES** (API CHANGES):
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled
+2. **\[core\]** `modify_res` signature changed: now returns `Return` instead of `()`
+3. **\[core\]** Renamed internal method `__modify_res_and_return_any` to `__modify_res_and_return_route`
 
 --- 
 

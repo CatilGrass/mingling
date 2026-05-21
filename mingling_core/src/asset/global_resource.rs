@@ -20,14 +20,15 @@ where
     }
 
     /// Modify a resource by type, applying a closure to the resource if present
-    pub fn modify_res<Res>(&self, f: impl FnOnce(&mut Res))
+    pub fn modify_res<Res, Return>(&self, f: impl FnOnce(&mut Res) -> Return) -> Return
     where
         Res: 'static + Default + ResourceMarker + Send + Sync,
+        Return: Default,
     {
         let mut guard = match self.resources.lock() {
             Ok(guard) => guard,
             Err(_) => {
-                return;
+                return Return::default();
             }
         };
         if let Some(arc_res) = guard
@@ -38,14 +39,16 @@ where
                 Ok(val) => val,
                 Err(arc) => (*arc).res_clone(),
             };
-            f(&mut new_res);
+            let r = f(&mut new_res);
             *arc_res = Arc::new(new_res);
+            return r;
         }
+        Return::default()
     }
 
     /// Internal syntax for the `&mut MyResource` syntax of #[chain], do not use directly
     #[doc(hidden)]
-    pub fn __modify_res_and_return_any<Res, Return>(
+    pub fn __modify_res_and_return_route<Res, Return>(
         &self,
         f: impl FnOnce(&mut Res) -> Return,
     ) -> impl Into<ChainProcess<C>>

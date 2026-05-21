@@ -236,7 +236,7 @@ fn generate_immut_resource_bindings<'a>(
         .collect()
 }
 
-/// Wraps the function body in nested `__modify_res_and_return_any` closures for
+/// Wraps the function body in nested `__modify_res_and_return_route` closures for
 /// each mutable resource parameter. The innermost closure gets the original body,
 /// and each mutable parameter wraps outward from last to first.
 fn wrap_body_with_mut_resources(
@@ -252,7 +252,7 @@ fn wrap_body_with_mut_resources(
         let var_name = &res.var_name;
         let inner_type = &res.inner_type;
         wrapped = quote! {
-            ::mingling::this::<#program_type>().__modify_res_and_return_any(|#var_name: &mut #inner_type| {
+            ::mingling::this::<#program_type>().__modify_res_and_return_route(|#var_name: &mut #inner_type| {
                 #wrapped
             }).into()
         };
