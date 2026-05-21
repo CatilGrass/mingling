@@ -212,7 +212,7 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
                     ::mingling::ClapHelpPrintBehaviour::WriteToRenderResult => {
                         <#struct_name as ::clap::CommandFactory>::command()
                             .color(ColorChoice::Always)
-                            .write_help(r)
+                            .write_help(__renderer_inner_result)
                             .unwrap();
                     }
                     ::mingling::ClapHelpPrintBehaviour::PrintDirectly => {

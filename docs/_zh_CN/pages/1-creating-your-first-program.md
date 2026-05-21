@@ -146,7 +146,7 @@ fn renderer_name (_prev: PreviousType) {  }
 
 ##### 关于 `r_println!()` 💡
 
-  您可能会注意到，在 `#[renderer]` 中使用的打印宏是 `r_println!` 而非 `println!`，这是因为框架的渲染逻辑并不在该函数内：在 `#[renderer]` 展开后，会向函数注入一个 `r: &mut RenderResult`；而 `r_println!` 将信息追加到 `RenderResult` 内，并在调度器关闭后，将最终的渲染数据交给 `Program::exec` 函数输出。
+  您可能会注意到，在 `#[renderer]` 中使用的打印宏是 `r_println!` 而非 `println!`，这是因为框架的渲染逻辑并不在该函数内：在 `#[renderer]` 展开后，会向函数注入一个 `__renderer_inner_result: &mut RenderResult`；而 `r_println!` 将信息追加到 `RenderResult` 内，并在调度器关闭后，将最终的渲染数据交给 `Program::exec` 函数输出。
 
 
 

@@ -160,14 +160,14 @@ macro_rules! __dispatch_program_renderers {
     (
         $( $render_ty:ty => $prev_ty:ident, )*
     ) => {
-        fn render(any: mingling::AnyOutput<Self::Enum>, r: &mut mingling::RenderResult) {
+        fn render(any: mingling::AnyOutput<Self::Enum>, __renderer_inner_result: &mut mingling::RenderResult) {
             match any.member_id {
                 $(
                     Self::$prev_ty => {
                         // SAFETY: The `type_id` check ensures that `any` contains a value of type `$prev_ty`,
                         // so downcasting to `$prev_ty` is safe.
                         let value = unsafe { any.downcast::<$prev_ty>().unwrap_unchecked() };
-                        <$render_ty as mingling::Renderer>::render(value, r);
+                        <$render_ty as mingling::Renderer>::render(value, __renderer_inner_result);
                     }
                 )*
                 _ => (),

@@ -44,6 +44,21 @@ fn handle_path_pick(prev: PathPick) {
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled
 2. **\[core\]** `modify_res` signature changed: now returns `Return` instead of `()`
 3. **\[core\]** Renamed internal method `__modify_res_and_return_any` to `__modify_res_and_return_route`
+4. **\[macros\]** Renamed the macro-internal function parameter `r` (used with the `r_` prefix) to `__renderer_inner_result` to reduce context pollution
+
+```rust
+// Before
+#[renderer]
+fn render(prev: Previous) { // Implicitly introduces `r`
+    r_println!("{}", *prev); // Modifies `r`
+}
+
+// After
+#[renderer]
+fn render(prev: Previous) { // Implicitly introduces `__renderer_inner_result`
+    r_println!("{}", *prev); // Modifies `__renderer_inner_result`
+}
+```
 
 --- 
 

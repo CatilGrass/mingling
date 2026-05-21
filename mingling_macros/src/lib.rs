@@ -328,7 +328,7 @@ pub fn dispatcher(input: TokenStream) -> TokenStream {
 /// Prints formatted text to the current `RenderResult` buffer within a
 /// `#[renderer]`(macro.renderer.html) function.
 ///
-/// This macro requires a mutable reference to a `RenderResult` named `r`
+/// This macro requires a mutable reference to a `RenderResult` named `__renderer_inner_result`
 /// to be in scope, which is automatically provided inside `#[renderer]`
 /// functions.
 ///
@@ -362,7 +362,7 @@ pub fn r_print(input: TokenStream) -> TokenStream {
 /// Prints formatted text followed by a newline to the current `RenderResult`
 /// buffer within a `#[renderer]`(macro.renderer.html) function.
 ///
-/// This macro requires a mutable reference to a `RenderResult` named `r`
+/// This macro requires a mutable reference to a `RenderResult` named `__renderer_inner_result`
 /// to be in scope, which is automatically provided inside `#[renderer]`
 /// functions.
 ///
@@ -1452,7 +1452,7 @@ pub fn program_final_gen(input: TokenStream) -> TokenStream {
             ::mingling::__dispatch_program_chains!(
                 #(#chain_tokens)*
             );
-            fn render_help(any: ::mingling::AnyOutput<Self::Enum>, r: &mut ::mingling::RenderResult) {
+            fn render_help(any: ::mingling::AnyOutput<Self::Enum>, __renderer_inner_result: &mut ::mingling::RenderResult) {
                 match any.member_id {
                     #(#help_tokens)*
                     _ => (),

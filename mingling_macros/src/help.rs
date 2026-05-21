@@ -119,11 +119,11 @@ pub fn help_attr(item: TokenStream) -> TokenStream {
         impl ::mingling::HelpRequest for #struct_name {
             type Entry = #entry_type;
 
-            fn render_help(#prev_param: Self::Entry, r: &mut ::mingling::RenderResult) {
-                // Create a local wrapper function that includes r parameter
-                // This allows r_println! to access r
+            fn render_help(#prev_param: Self::Entry, __renderer_inner_result: &mut ::mingling::RenderResult) {
+                // Create a local wrapper function that includes `__renderer_inner_result` parameter
+                // This allows r_println! to access `__renderer_inner_result`
                 #[allow(non_snake_case)]
-                fn help_wrapper(#prev_param: #entry_type, r: &mut ::mingling::RenderResult) {
+                fn help_wrapper(#prev_param: #entry_type, __renderer_inner_result: &mut ::mingling::RenderResult) {
                     #fn_body
                 }
 
@@ -134,11 +134,11 @@ pub fn help_attr(item: TokenStream) -> TokenStream {
 
         ::mingling::macros::register_help!(#entry_type, #struct_name);
 
-        // Keep the original function for internal use (without r parameter)
+        // Keep the original function for internal use (without `__renderer_inner_result` parameter)
         #(#fn_attrs)*
         #vis fn #fn_name(#prev_param: #entry_type) {
             let mut dummy_r = ::mingling::RenderResult::default();
-            let r = &mut dummy_r;
+            let __renderer_inner_result = &mut dummy_r;
             #fn_body
         }
     };

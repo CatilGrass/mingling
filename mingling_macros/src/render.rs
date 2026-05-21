@@ -22,7 +22,7 @@ pub fn r_print(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         {
             let formatted = #format_call;
-            ::mingling::RenderResult::print(r, &formatted)
+            ::mingling::RenderResult::print(__renderer_inner_result, &formatted)
         }
     };
 
@@ -48,7 +48,7 @@ pub fn r_println(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         {
             let formatted = #format_call;
-            ::mingling::RenderResult::println(r, &formatted)
+            ::mingling::RenderResult::println(__renderer_inner_result, &formatted)
         }
     };
 

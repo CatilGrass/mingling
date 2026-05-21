@@ -146,7 +146,7 @@ fn renderer_name (_prev: PreviousType) {  }
 
 ##### About `r_println!()` 💡
 
-  You might notice that the print macro used inside `#[renderer]` is `r_println!` instead of `println!`. This is because the framework's rendering logic doesn't happen inside that function: after `#[renderer]` expands, it injects a `r: &mut RenderResult` into the function; `r_println!` appends the message to the `RenderResult`, and after the dispatcher closes, the final rendered data is handed to `Program::exec` for output.
+  You might notice that the print macro used inside `#[renderer]` is `r_println!` instead of `println!`. This is because the framework's rendering logic doesn't happen inside that function: after `#[renderer]` expands, it injects a `__renderer_inner_result: &mut RenderResult` into the function; `r_println!` appends the message to the `RenderResult`, and after the dispatcher closes, the final rendered data is handed to `Program::exec` for output.
 
 
 

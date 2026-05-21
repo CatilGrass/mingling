@@ -118,16 +118,16 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         impl ::mingling::Renderer for #struct_name {
             type Previous = #previous_type;
 
-            fn render(#prev_param: Self::Previous, r: &mut ::mingling::RenderResult) {
-                // Create a local wrapper function that includes r parameter
-                // This allows r_println! to access r
+            fn render(#prev_param: Self::Previous, __renderer_inner_result: &mut ::mingling::RenderResult) {
+                // Create a local wrapper function that includes `__renderer_inner_result` parameter
+                // This allows r_println! to access `__renderer_inner_result`
                 #[allow(non_snake_case)]
-                fn render_wrapper(#prev_param: #previous_type, r: &mut ::mingling::RenderResult) {
+                fn render_wrapper(#prev_param: #previous_type, __renderer_inner_result: &mut ::mingling::RenderResult) {
                     #fn_body
                 }
 
                 // Call the wrapper function
-                render_wrapper(#prev_param, r);
+                render_wrapper(#prev_param, __renderer_inner_result);
             }
         }
 
@@ -137,7 +137,7 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
             let #prev_param = #prev_param.into();
             let mut dummy_r = ::mingling::RenderResult::default();
             {
-                let r = &mut dummy_r;
+                let __renderer_inner_result = &mut dummy_r;
                 #fn_body
             }
             dummy_r
@@ -172,9 +172,9 @@ pub fn build_general_renderer_entry(previous_type: &TypePath) -> proc_macro2::To
             // SAFETY: Only types that match will enter this branch for forced conversion,
             // and `AnyOutput::new` ensures the type implements serde::Serialize
             let raw = unsafe { any.restore::<#previous_type>().unwrap_unchecked() };
-            let mut r = ::mingling::RenderResult::default();
-            ::mingling::GeneralRenderer::render(&raw, setting, &mut r)?;
-            Ok(r)
+            let mut __renderer_inner_result = ::mingling::RenderResult::default();
+            ::mingling::GeneralRenderer::render(&raw, setting, &mut __renderer_inner_result)?;
+            Ok(__renderer_inner_result)
         }
     }
 }

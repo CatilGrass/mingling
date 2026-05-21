@@ -77,32 +77,40 @@ pub(crate) fn handle_state_list_installed_option(prev: StateListInstalledOptions
 pub(crate) fn render_installed(prev: ResultInstalledNamespaces) {
     match prev.option {
         StateListInstalledOptions::All => {
-            print_list("Trusted".bright_green().bold().to_string(), prev.trusted, r);
+            print_list(
+                "Trusted".bright_green().bold().to_string(),
+                prev.trusted,
+                __renderer_inner_result,
+            );
             print_list(
                 "Untrusted".bright_red().bold().to_string(),
                 prev.untrusted,
-                r,
+                __renderer_inner_result,
             );
             print_list(
                 "Untagged".bright_black().bold().to_string(),
                 prev.untagged,
-                r,
+                __renderer_inner_result,
             );
         }
         StateListInstalledOptions::OnlyTrusted => {
-            print_list("Trusted".bright_green().bold().to_string(), prev.trusted, r);
+            print_list(
+                "Trusted".bright_green().bold().to_string(),
+                prev.trusted,
+                __renderer_inner_result,
+            );
         }
         StateListInstalledOptions::OnlyUntrusted => {
             print_list(
                 "Untrusted".bright_red().bold().to_string(),
                 prev.untrusted,
-                r,
+                __renderer_inner_result,
             );
         }
     }
 }
 
-fn print_list(title: String, list: Vec<String>, r: &mut RenderResult) {
+fn print_list(title: String, list: Vec<String>, __renderer_inner_result: &mut RenderResult) {
     if list.is_empty() {
         return;
     }
