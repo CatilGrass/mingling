@@ -40,6 +40,11 @@ fn handle_path_pick(prev: PathPick) {
 }
 ```
 
+3. **\[macros\]** Extended the `#[renderer]` attribute to support custom return types. Previously, `#[renderer]` functions could only return `()`, and the generated helper function always returned `RenderResult`. Now:
+
+   - **`fn foo(x: T)` / `fn foo(x: T) -> ()`** → The generated helper function returns `()`. If the internal `RenderResult` (`dummy_r`) is non-empty, it is automatically printed to stdout.
+   - **`fn foo(x: T) -> U`** → The generated helper function returns `U`. The internal `RenderResult` is converted via `dummy_r.into()`, and no automatic printing occurs.
+
 #### **BREAKING CHANGES** (API CHANGES):
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled
 2. **\[core\]** `modify_res` signature changed: now returns `Return` instead of `()`

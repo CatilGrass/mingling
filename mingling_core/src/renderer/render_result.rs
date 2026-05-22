@@ -39,6 +39,18 @@ impl Deref for RenderResult {
     }
 }
 
+impl From<RenderResult> for String {
+    fn from(result: RenderResult) -> Self {
+        result.render_text
+    }
+}
+
+impl From<&RenderResult> for String {
+    fn from(result: &RenderResult) -> Self {
+        result.render_text.clone()
+    }
+}
+
 impl RenderResult {
     /// Appends the given text to the rendered content.
     ///

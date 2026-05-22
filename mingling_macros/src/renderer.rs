@@ -38,21 +38,18 @@ fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
     }
 }
 
-/// Extracts the return type from the function signature
-fn extract_return_type(sig: &Signature) -> syn::Result<()> {
-    // Renderer functions should return () or have no return type
+/// Extracts and returns the return type from the function signature (or None for `()` / no return type).
+fn extract_return_type(sig: &Signature) -> syn::Result<Option<syn::Type>> {
     match &sig.output {
         ReturnType::Type(_, ty) => {
-            // Check if it's ()
             match &**ty {
-                Type::Tuple(tuple) if tuple.elems.is_empty() => Ok(()),
-                _ => Err(syn::Error::new(
-                    ty.span(),
-                    "Renderer function must return () or have no return type",
-                )),
+                // `()` means no custom return type
+                Type::Tuple(tuple) if tuple.elems.is_empty() => Ok(None),
+                // Any other return type is allowed
+                custom_ty => Ok(Some((*custom_ty).clone())),
             }
         }
-        ReturnType::Default => Ok(()),
+        ReturnType::Default => Ok(None),
     }
 }
 
@@ -78,10 +75,11 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         return err_tokens.into();
     }
 
-    // Validate return type
-    if let Err(e) = extract_return_type(&input_fn.sig) {
-        return e.to_compile_error().into();
-    }
+    // Validate return type – now returns Some(type) if custom type, None if ()
+    let return_type = match extract_return_type(&input_fn.sig) {
+        Ok(rt) => rt,
+        Err(e) => return e.to_compile_error().into(),
+    };
 
     // Get the function body
     let fn_body = &input_fn.block;
@@ -103,6 +101,26 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         "__internal_renderer_{}",
         just_fmt::snake_case!(fn_name.to_string())
     );
+
+    // Determine public return type and the expression to return dummy_r
+    let (public_return_type, result_return) = match &return_type {
+        // User specified a custom return type (e.g. -> String)
+        Some(custom_ty) => {
+            let ret_ty = quote! { #custom_ty };
+            let expr = quote! { dummy_r.into() };
+            (ret_ty, expr)
+        }
+        // Return type is () — no custom return type specified
+        None => {
+            let ret_ty = quote! { () };
+            let expr = quote! {
+                if !dummy_r.is_empty() {
+                    ::std::println!("{}", &*dummy_r);
+                }
+            };
+            (ret_ty, expr)
+        }
+    };
     let struct_name = syn::Ident::new(&internal_name, fn_name.span());
 
     // Generate the struct and implementation
@@ -133,14 +151,14 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
 
         // Keep the original function for internal use (without r parameter)
         #(#fn_attrs)*
-        #vis fn #fn_name(#prev_param: impl Into<#previous_type>) -> ::mingling::RenderResult {
+        #vis fn #fn_name(#prev_param: impl Into<#previous_type>) -> #public_return_type {
             let #prev_param = #prev_param.into();
             let mut dummy_r = ::mingling::RenderResult::default();
             {
                 let __renderer_inner_result = &mut dummy_r;
                 #fn_body
             }
-            dummy_r
+            #result_return
         }
     };
 
