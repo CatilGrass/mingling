@@ -45,6 +45,18 @@ fn handle_path_pick(prev: PathPick) {
    - **`fn foo(x: T)` / `fn foo(x: T) -> ()`** → The generated helper function returns `()`. If the internal `RenderResult` (`dummy_r`) is non-empty, it is automatically printed to stdout.
    - **`fn foo(x: T) -> U`** → The generated helper function returns `U`. The internal `RenderResult` is converted via `dummy_r.into()`, and no automatic printing occurs.
 
+4. **\[macros\]** Resource injection is now shared between `#[chain]` and `#[renderer]`.  
+Extracted the common resource injection infrastructure (`ResourceInjection`, `extract_args_info`, `generate_immut_resource_bindings`, `wrap_body_with_mut_resources`) from `chain.rs` into a new `res_injection.rs` module. Both `#[chain]` and `#[renderer]` now reuse the same logic.
+
+The `#[renderer]` attribute now supports resource injection parameters (just like `#[chain]`):
+
+```rust
+#[renderer]
+fn render_greeting(prev: Greeting, res: &MyRes) {
+    println!("{}{}", res.prefix, *prev);
+}
+```
+
 #### **BREAKING CHANGES** (API CHANGES):
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled
 2. **\[core\]** `modify_res` signature changed: now returns `Return` instead of `()`

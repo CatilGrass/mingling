@@ -1,42 +1,12 @@
 use proc_macro::TokenStream;
 use quote::{ToTokens, quote};
 use syn::spanned::Spanned;
-use syn::{FnArg, ItemFn, Pat, PatType, ReturnType, Signature, Type, TypePath, parse_macro_input};
+use syn::{ItemFn, ReturnType, Signature, Type, TypePath, parse_macro_input};
 
 use crate::get_global_set;
-
-/// Extracts the previous type and parameter name from function arguments
-fn extract_previous_info(sig: &Signature) -> syn::Result<(Pat, TypePath)> {
-    // The function should have exactly one parameter
-    if sig.inputs.len() != 1 {
-        return Err(syn::Error::new(
-            sig.inputs.span(),
-            "Renderer function must have exactly one parameter (the previous type)",
-        ));
-    }
-
-    // First and only parameter is the previous type
-    let arg = &sig.inputs[0];
-    match arg {
-        FnArg::Typed(PatType { pat, ty, .. }) => {
-            // Extract the pattern (parameter name)
-            let param_pat = (**pat).clone();
-
-            // Extract the type
-            match &**ty {
-                Type::Path(type_path) => Ok((param_pat, type_path.clone())),
-                _ => Err(syn::Error::new(
-                    ty.span(),
-                    "Parameter type must be a type path",
-                )),
-            }
-        }
-        FnArg::Receiver(_) => Err(syn::Error::new(
-            arg.span(),
-            "Renderer function cannot have self parameter",
-        )),
-    }
-}
+use crate::res_injection::{
+    extract_args_info, generate_immut_resource_bindings, wrap_body_with_mut_resources,
+};
 
 /// Extracts and returns the return type from the function signature (or None for `()` / no return type).
 fn extract_return_type(sig: &Signature) -> syn::Result<Option<syn::Type>> {
@@ -53,7 +23,11 @@ fn extract_return_type(sig: &Signature) -> syn::Result<Option<syn::Type>> {
     }
 }
 
-pub fn renderer_attr(item: TokenStream) -> TokenStream {
+pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Parse attribute arguments for program path (e.g. #[renderer(my_crate::Program)])
+    let (program_path, _use_crate_prefix) = parse_renderer_attr_args(attr);
+    let program_type = &program_path;
+
     // Parse the function item
     let input_fn = parse_macro_input!(item as ItemFn);
 
@@ -64,8 +38,8 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
             .into();
     }
 
-    // Extract the previous type and parameter name from function arguments
-    let (prev_param, previous_type) = match extract_previous_info(&input_fn.sig) {
+    // Extract the previous type, parameter name, and resource injection params
+    let (prev_param, previous_type, resources) = match extract_args_info(&input_fn.sig) {
         Ok(info) => info,
         Err(e) => return e.to_compile_error().into(),
     };
@@ -81,8 +55,8 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         Err(e) => return e.to_compile_error().into(),
     };
 
-    // Get the function body
-    let fn_body = &input_fn.block;
+    // Get function body statements
+    let fn_body_stmts: Vec<syn::Stmt> = input_fn.block.stmts.clone();
 
     // Get function attributes (excluding the renderer attribute)
     let mut fn_attrs = input_fn.attrs.clone();
@@ -101,6 +75,13 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
         "__internal_renderer_{}",
         just_fmt::snake_case!(fn_name.to_string())
     );
+    let struct_name = syn::Ident::new(&internal_name, fn_name.span());
+
+    let has_resources = !resources.is_empty();
+
+    // Generate resource bindings for immutable resources
+    let immut_resource_stmts = generate_immut_resource_bindings(resources.iter(), program_type);
+    let mut_resources: Vec<_> = resources.iter().filter(|r| r.is_mut).collect();
 
     // Determine public return type and the expression to return dummy_r
     let (public_return_type, result_return) = match &return_type {
@@ -121,10 +102,46 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
             (ret_ty, expr)
         }
     };
-    let struct_name = syn::Ident::new(&internal_name, fn_name.span());
 
-    // Generate the struct and implementation
-    // We need to create a wrapper function that adds the r parameter
+    // Build the Renderer::render body with resource injection
+    let render_fn_body = if has_resources {
+        let wrapped_body =
+            wrap_body_with_mut_resources(&fn_body_stmts, &mut_resources, program_type);
+        quote! {
+            #(#immut_resource_stmts)*
+            #wrapped_body
+        }
+    } else {
+        quote! { #(#fn_body_stmts)* }
+    };
+
+    // Build the original function with resource injection (no `.into()` — signature is exactly as user wrote)
+    let original_fn_body = if has_resources {
+        let wrapped_body =
+            wrap_body_with_mut_resources(&fn_body_stmts, &mut_resources, program_type);
+        quote! {
+            let mut dummy_r = ::mingling::RenderResult::default();
+            {
+                let __renderer_inner_result = &mut dummy_r;
+                #(#immut_resource_stmts)*
+                #wrapped_body
+            }
+            #result_return
+        }
+    } else {
+        quote! {
+            let mut dummy_r = ::mingling::RenderResult::default();
+            {
+                let __renderer_inner_result = &mut dummy_r;
+                #(#fn_body_stmts)*
+            }
+            #result_return
+        }
+    };
+
+    // Keep the original function signature unchanged (same params as user wrote)
+    let original_inputs = input_fn.sig.inputs.clone();
+
     let expanded = quote! {
         #(#fn_attrs)*
         #[doc(hidden)]
@@ -137,32 +154,27 @@ pub fn renderer_attr(item: TokenStream) -> TokenStream {
             type Previous = #previous_type;
 
             fn render(#prev_param: Self::Previous, __renderer_inner_result: &mut ::mingling::RenderResult) {
-                // Create a local wrapper function that includes `__renderer_inner_result` parameter
-                // This allows r_println! to access `__renderer_inner_result`
-                #[allow(non_snake_case)]
-                fn render_wrapper(#prev_param: #previous_type, __renderer_inner_result: &mut ::mingling::RenderResult) {
-                    #fn_body
-                }
-
-                // Call the wrapper function
-                render_wrapper(#prev_param, __renderer_inner_result);
+                #render_fn_body
             }
         }
 
         // Keep the original function for internal use (without r parameter)
         #(#fn_attrs)*
-        #vis fn #fn_name(#prev_param: impl Into<#previous_type>) -> #public_return_type {
-            let #prev_param = #prev_param.into();
-            let mut dummy_r = ::mingling::RenderResult::default();
-            {
-                let __renderer_inner_result = &mut dummy_r;
-                #fn_body
-            }
-            #result_return
+        #vis fn #fn_name(#original_inputs) -> #public_return_type {
+            #original_fn_body
         }
     };
 
     expanded.into()
+}
+fn parse_renderer_attr_args(attr: TokenStream) -> (proc_macro2::TokenStream, bool) {
+    if attr.is_empty() {
+        (crate::default_program_path(), true)
+    } else {
+        let path: syn::Path =
+            syn::parse(attr).expect("Expected a path argument for #[renderer(path)]");
+        (quote! { #path }, false)
+    }
 }
 
 /// Builds the renderer entry for the global renderers list
@@ -201,7 +213,7 @@ pub fn register_renderer(input: TokenStream) -> TokenStream {
     // Parse the input as a comma-separated list of arguments
     let input_parsed = syn::parse_macro_input!(input with syn::punctuated::Punctuated<syn::Expr, syn::Token![,]>::parse_terminated);
 
-    // Check that we have exactly two elements
+    // Check that there are exactly two elements
     if input_parsed.len() != 2 {
         return syn::Error::new(
             input_parsed.span(),

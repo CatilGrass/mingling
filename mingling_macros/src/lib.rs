@@ -41,6 +41,7 @@ mod pack;
 mod program_setup;
 mod render;
 mod renderer;
+mod res_injection;
 #[cfg(feature = "comp")]
 mod suggest;
 
@@ -616,8 +617,8 @@ pub fn chain(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn renderer(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    renderer::renderer_attr(item)
+pub fn renderer(attr: TokenStream, item: TokenStream) -> TokenStream {
+    renderer::renderer_attr(attr, item)
 }
 
 /// Declares a completion suggestion provider for a command entry type.
