@@ -92,6 +92,10 @@ pub fn cargo_tomls() -> Vec<std::path::PathBuf> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.is_dir() {
+                    // Skip the dev_tools directory
+                    if path.file_name().and_then(|n| n.to_str()) == Some("dev_tools") {
+                        continue;
+                    }
                     dirs.push(path);
                 } else if path.file_name().and_then(|n| n.to_str()) == Some("Cargo.toml") {
                     cargo_tomls.push(path);
