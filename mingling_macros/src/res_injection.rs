@@ -149,7 +149,7 @@ pub(crate) fn generate_immut_resource_bindings<'a>(
         .filter(|r| !r.is_mut)
         .map(|res| {
             let var_binding_name = syn::Ident::new(
-                &format!("{}_binding", &res.var_name.to_string()),
+                &format!("__{}_binding", &res.var_name.to_string()),
                 res.var_name.span(),
             );
             let var_name = &res.var_name;

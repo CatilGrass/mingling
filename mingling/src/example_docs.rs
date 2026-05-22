@@ -368,10 +368,7 @@ pub mod example_dispatch_tree {}
 /// main.rs
 /// ```ignore
 /// use mingling::prelude::*;
-/// use mingling::{
-///     res::{ExitCode, exit_code},
-///     setup::ExitCodeSetup,
-/// };
+/// use mingling::{res::ExitCode, setup::ExitCodeSetup};
 ///
 /// fn main() {
 ///     let mut program = ThisProgram::new();
@@ -390,9 +387,8 @@ pub mod example_dispatch_tree {}
 /// }
 ///
 /// #[renderer]
-/// fn render_error(_prev: ResultError) {
-///     let exit_code = exit_code::<ThisProgram>();
-///     r_println!("Exit with exit code: {}", exit_code);
+/// fn render_error(_prev: ResultError, ec: &ExitCode) {
+///     r_println!("Exit with exit code: {}", ec.exit_code);
 /// }
 ///
 /// gen_program!();

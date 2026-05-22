@@ -115,16 +115,14 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         quote! { #(#fn_body_stmts)* }
     };
 
-    // Build the original function with resource injection (no `.into()` — signature is exactly as user wrote)
+    // Build the original function with resource injection - use the resource bindings directly
+    // from the function parameters rather than re-fetching from context.
     let original_fn_body = if has_resources {
-        let wrapped_body =
-            wrap_body_with_mut_resources(&fn_body_stmts, &mut_resources, program_type);
         quote! {
             let mut dummy_r = ::mingling::RenderResult::default();
             {
                 let __renderer_inner_result = &mut dummy_r;
-                #(#immut_resource_stmts)*
-                #wrapped_body
+                #(#fn_body_stmts)*
             }
             #result_return
         }
