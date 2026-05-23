@@ -4,9 +4,7 @@ use syn::spanned::Spanned;
 use syn::{ItemFn, ReturnType, Signature, Type, TypePath, parse_macro_input};
 
 use crate::get_global_set;
-use crate::res_injection::{
-    extract_args_info, generate_immut_resource_bindings, wrap_body_with_mut_resources,
-};
+use crate::res_injection::{extract_args_info, generate_immut_resource_bindings};
 
 /// Extracts and returns the return type from the function signature (or None for `()` / no return type).
 fn extract_return_type(sig: &Signature) -> syn::Result<Option<syn::Type>> {
@@ -78,6 +76,7 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let struct_name = syn::Ident::new(&internal_name, fn_name.span());
 
     let has_resources = !resources.is_empty();
+    let has_mut_resources = resources.iter().any(|r| r.is_mut);
 
     // Generate resource bindings for immutable resources
     let immut_resource_stmts = generate_immut_resource_bindings(resources.iter(), program_type);
@@ -103,30 +102,38 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
 
-    // Build the Renderer::render body with resource injection
-    let render_fn_body = if has_resources {
-        let wrapped_body =
-            wrap_body_with_mut_resources(&fn_body_stmts, &mut_resources, program_type);
-        quote! {
-            #(#immut_resource_stmts)*
-            #wrapped_body
+    let inner_body_with_resources = if has_mut_resources {
+        let mut wrapped = quote! { #(#fn_body_stmts)* };
+        for res in mut_resources.iter().rev() {
+            let var_name = &res.var_name;
+            let inner_type = &res.inner_type;
+            wrapped = quote! {
+                ::mingling::this::<#program_type>().modify_res(|#var_name: &mut #inner_type| {
+                    #wrapped
+                })
+            };
         }
+        wrapped
     } else {
         quote! { #(#fn_body_stmts)* }
     };
 
-    // Build the original function with resource injection - use the resource bindings directly
-    // from the function parameters rather than re-fetching from context.
-    let original_fn_body = if has_resources {
+    // Build the Renderer::render body with resource injection
+    // Renderer::render returns (), output goes through __renderer_inner_result parameter.
+    // Resources are injected from the program context here.
+    let render_fn_body = if has_resources {
         quote! {
-            let mut dummy_r = ::mingling::RenderResult::default();
-            {
-                let __renderer_inner_result = &mut dummy_r;
-                #(#fn_body_stmts)*
-            }
-            #result_return
+            #(#immut_resource_stmts)*
+            #inner_body_with_resources
         }
     } else {
+        quote! { #inner_body_with_resources }
+    };
+
+    // Build the original function body
+    // The original function preserves the user's signature and return type.
+    // Resource parameters are passed directly by the caller, NOT injected from context.
+    let original_fn_body = {
         quote! {
             let mut dummy_r = ::mingling::RenderResult::default();
             {
