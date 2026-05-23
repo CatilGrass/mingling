@@ -57,6 +57,10 @@ fn render_greeting(prev: Greeting, res: &MyRes) {
 }
 ```
 
+5. **\[picker\]** Implement `Pickable` for `Option<T>`  
+
+Added `impl<T: Pickable<Output = T> + Default> Pickable for Option<T>`, allowing optional values to be directly parsed via `Pickable` without manually handling the `Option` wrapping logic.
+
 #### **BREAKING CHANGES** (API CHANGES):
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled
 2. **\[core\]** `modify_res` signature changed: now returns `Return` instead of `()`

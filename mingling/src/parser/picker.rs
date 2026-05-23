@@ -14,6 +14,7 @@ pub mod path;
 ///
 /// The `Picker` struct holds parsed arguments and provides a fluent interface
 /// to extract values associated with specific flags.
+#[derive(Default)]
 pub struct Picker {
     /// The parsed command-line arguments.
     pub args: Argument,

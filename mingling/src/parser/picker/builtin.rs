@@ -60,6 +60,7 @@ impl Pickable for bool {
     }
 }
 
+/// Special: parses a size string (e.g. "10MB") into a `usize` representing the number of bytes.
 impl Pickable for usize {
     type Output = usize;
 
@@ -73,6 +74,7 @@ impl Pickable for usize {
     }
 }
 
+/// Special: parses a comma-separated list of size strings (e.g. "10MB,20KB") into a `Vec<usize>`.
 impl Pickable for Vec<usize> {
     type Output = Vec<usize>;
 
@@ -90,6 +92,7 @@ impl Pickable for Vec<usize> {
     }
 }
 
+/// Special: dumps the remaining arguments into an `Argument` struct.
 impl Pickable for Argument {
     type Output = Argument;
 
@@ -98,5 +101,15 @@ impl Pickable for Argument {
         _flag: mingling_core::Flag,
     ) -> Option<Self::Output> {
         Some(args.dump_remains().into())
+    }
+}
+
+/// Special: parses a single value of type `T` using the `Pickable` implementation for `T`, and wraps it in an `Option`.
+impl<T: Pickable<Output = T> + Default> Pickable for Option<T> {
+    type Output = Option<T>;
+
+    fn pick(args: &mut Argument, flag: mingling_core::Flag) -> Option<Self::Output> {
+        let r = T::pick(args, flag);
+        Some(r)
     }
 }
