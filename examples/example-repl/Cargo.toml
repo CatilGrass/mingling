@@ -1,8 +1,0 @@
-[package]
-name = "example-repl"
-version = "0.0.1"
-edition = "2024"
-
-[dependencies]
-mingling = { path = "../../mingling", features = ["repl", "parser"] }
-just_fmt = "0.1.2"

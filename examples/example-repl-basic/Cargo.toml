@@ -1,0 +1,11 @@
+[package]
+name = "example-repl-basic"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies.mingling]
+path = "../../mingling"
+features = ["repl", "parser"]
+
+[dependencies]
+just_fmt = "0.1.2"

@@ -1,17 +1,112 @@
-[[test.example-async]]
-command = "hello World"
+[[test.example-basic]]
+command = "greet"
 expect.exit-code = 0
 expect.result = "Hello, World!"
 
 [[test.example-basic]]
-command = "hello World"
+command = "greet Alice"
 expect.exit-code = 0
-expect.result = "Hello, World!"
+expect.result = "Hello, Alice!"
 
-[[test.example-exit-code]]
-command = "error"
+[[test.example-exitcode]]
+command = "hello Alice"
+expect.exit-code = 0
+expect.result = "Hello, Alice"
+
+[[test.example-exitcode]]
+command = "hello"
 expect.exit-code = 1
-expect.result = "Exit with exit code: 1"
+expect.result = "No name provided (with exit code 1)"
+
+[[test.example-error-handling]]
+command = "hello"
+expect.exit-code = 0
+expect.result = "No name provided"
+
+[[test.example-error-handling]]
+command = "hello MyBestFriendAlice"
+expect.exit-code = 0
+expect.result = "Name too long: 17 > 10"
+
+[[test.example-error-handling]]
+command = "hello Alice"
+expect.exit-code = 0
+expect.result = "Name not available"
+
+[[test.example-error-handling]]
+command = "hello Peter"
+expect.exit-code = 0
+expect.result = "Hello, Peter"
+
+[[test.example-error-handling]]
+command = "hallo"
+expect.exit-code = 0
+expect.result = "Command not found: \"hallo\""
+
+[[test.example-argument-parse]]
+command = "transfer"
+expect.exit-code = 0
+expect.result = "file:  (1048576)"
+
+[[test.example-argument-parse]]
+command = "transfer --dir src"
+expect.exit-code = 0
+expect.result = "dir: src (1048576)"
+
+[[test.example-argument-parse]]
+command = "transfer --size 500 myfile.txt"
+expect.exit-code = 0
+expect.result = "file: myfile.txt (500)"
+
+[[test.example-argument-parse]]
+command = "strict-transfer README.md"
+expect.exit-code = 0
+expect.result = "file: README.md (1048576)"
+
+[[test.example-argument-parse]]
+command = "strict-transfer"
+expect.exit-code = 0
+expect.result = "Error: name is not provided"
+
+[[test.example-async-support]]
+command = "download readme.txt"
+expect.exit-code = 0
+expect.result = "\"readme.txt\" downloaded."
+
+[[test.example-custom-pickable]]
+command = "connect 192.168.1.1:8080"
+expect.exit-code = 0
+expect.result = "Connected to \"192.168.1.1:8080\""
+
+[[test.example-custom-pickable]]
+command = "connect"
+expect.exit-code = 0
+expect.result = "Failed to parse address"
+
+[[test.example-custom-pickable]]
+command = "connect invalid"
+expect.exit-code = 0
+expect.result = "Failed to parse address"
+
+[[test.example-dispatch-tree]]
+command = "cmd5"
+expect.exit-code = 0
+expect.result = "It's works!"
+
+[[test.example-enum-tag]]
+command = "lang-select"
+expect.exit-code = 0
+expect.result = "Selected: Rust"
+
+[[test.example-enum-tag]]
+command = "lang-select Python"
+expect.exit-code = 0
+expect.result = "Selected: Python"
+
+[[test.example-enum-tag]]
+command = "lang-select OCaml"
+expect.exit-code = 0
+expect.result = "Selected: OCaml"
 
 [[test.example-general-renderer]]
 command = "render Bob 22"
@@ -23,32 +118,67 @@ command = "render Bob 22 --json"
 expect.exit-code = 0
 expect.result = "{\"member_name\":\"Bob\",\"member_age\":22}"
 
-[[test.example-general-renderer]]
-command = "render Bob 22 --yaml"
+[[test.example-help]]
+command = "greet"
 expect.exit-code = 0
-expect.result = "member_name: Bob\nmember_age: 22"
+expect.result = ""
 
-[[test.example-picker]]
-command = "pick Bob"
+[[test.example-help]]
+command = "greet --help"
 expect.exit-code = 0
-expect.result = "Picked: name = Bob, age = 20"
+expect.result = "Usage: greet <NAME>"
 
-[[test.example-picker]]
-command = "pick Bob --age -15"
+[[test.example-hook]]
+command = "greet"
 expect.exit-code = 0
-expect.result = "Picked: name = Bob, age = 0"
+expect.result = "Hello, World!"
 
-[[test.example-picker]]
-command = "pick --age 99"
+[[test.example-hook]]
+command = "greet Alice"
 expect.exit-code = 0
-expect.result = "No name provided."
+expect.result = "Hello, Alice!"
 
-[[test.example-picker]]
-command = "pick"
+[[test.example-panic-unwind]]
+command = "panic"
 expect.exit-code = 0
-expect.result = "No name provided."
+expect.result = "Program not panic"
 
-[[test.example-picker]]
-command = "pick --age 150"
+[[test.example-panic-unwind]]
+command = "panic something_went_wrong"
 expect.exit-code = 0
-expect.result = "No name provided."
+expect.result = "Program panic: something_went_wrong"
+
+[[test.example-resources]]
+command = "current"
+expect.exit-code = 0
+expect.result = "Current directory:"
+
+[[test.example-setup]]
+command = "1"
+expect.exit-code = 0
+expect.result = ""
+
+[[test.example-setup]]
+command = "2"
+expect.exit-code = 0
+expect.result = ""
+
+[[test.example-setup]]
+command = "3"
+expect.exit-code = 0
+expect.result = ""
+
+[[test.example-setup]]
+command = "4"
+expect.exit-code = 0
+expect.result = ""
+
+[[test.example-setup]]
+command = "5"
+expect.exit-code = 0
+expect.result = ""
+
+[[test.example-completion]]
+command = "greet World --repeat 1"
+expect.exit-code = 0
+expect.result = "Hello, World!"

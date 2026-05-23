@@ -1,0 +1,56 @@
+//! Example Panic Unwind
+//!
+//! > This example introduces how to catch Panic in the Mingling program loop
+//!
+//! Run:
+//! ```bash
+//! cargo run --manifest-path examples/example-panic-unwind/Cargo.toml --quiet -- panic
+//! cargo run --manifest-path examples/example-panic-unwind/Cargo.toml --quiet -- panic OhMyGod
+//! ```
+//!
+//! Output:
+//! ```plaintext
+//! Program not panic
+//! Program panic: OhMyGod
+//! OhMyGod
+//! ```
+
+use mingling::{hook::ProgramHook, prelude::*};
+
+dispatcher!("panic", CMDPanic => EntryPanic);
+pack!(NotPanic = ());
+
+fn main() {
+    let mut program = ThisProgram::new();
+    program.with_dispatcher(CMDPanic);
+
+    // --------- IMPORTANT ---------
+    // Enable silence_panic to suppress automatic Panic output
+    program.stdout_setting.silence_panic = true;
+
+    // Define a hook to output &ProgramPanic when a Panic occurs
+    program
+        .with_hook(ProgramHook::empty().on_exec_panic(|info| println!("Program panic: {}", info)));
+    // --------- IMPORTANT ---------
+
+    program.exec();
+}
+
+#[chain]
+fn handle_panic(prev: EntryPanic) -> Next {
+    let panic_info = prev.pick::<Option<String>>(()).unpack();
+    match panic_info {
+        Some(s) => {
+            // Panic happens here, will be caught
+            panic!("{}", s)
+        }
+        None => NotPanic::default(),
+    }
+}
+
+#[renderer]
+fn render(_: NotPanic) {
+    r_println!("Program not panic");
+}
+
+gen_program!();

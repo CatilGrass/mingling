@@ -1,57 +1,64 @@
-//! `Mingling` Example - Global Resource Injection
+//! Example Resource Injection
 //!
-//! This example demonstrates how to use global resource injection in `#[chain]` functions.
-//! You can inject both immutable (`&T`) and mutable (`&mut T`) references to global resources.
+//! > This example demonstrates how to read and write the program's global state using Mingling's resource system
 //!
-//! # How to Run
+//! Run:
 //! ```bash
-//! cargo run --manifest-path ./examples/example-resources/Cargo.toml -- setup
+//! cargo run --manifest-path examples/example-resources/Cargo.toml --quiet current
+//! cargo run --manifest-path examples/example-resources/Cargo.toml --quiet modify-current src
+//! ```
+//!
+//! Output:
+//! ```plaintext
+//! Current directory: /home/alice/mingling
+//! Current directory: /home/alice/mingling/src
 //! ```
 
-use mingling::prelude::*;
-use std::{env::current_dir, path::PathBuf};
+use std::path::PathBuf;
 
-// Define a resource for storing global state
+use mingling::prelude::*;
+
+// Create resource
+//        ______________ Resource needs to
+//       /        /        implement the following two traits
+//       vvvvvvv  vvvvv
 #[derive(Default, Clone)]
-pub struct MyResource {
+struct ResCurrentDir {
     current_dir: PathBuf,
 }
 
 fn main() {
     let mut program = ThisProgram::new();
 
-    // Add the resource to the program
-    program.with_resource(MyResource::default());
+    // --------- IMPORTANT ---------
+    // Use `with_resource` to inject a singleton into the program
+    program.with_resource(ResCurrentDir {
+        current_dir: std::env::current_dir().unwrap(),
+    });
+    // --------- IMPORTANT ---------
 
-    program.with_dispatcher(SetupCommand);
+    program.with_dispatchers((CMDCurrent, CMDModifyCurrent));
     program.exec_and_exit();
 }
 
-dispatcher!("setup", SetupCommand => SetupEntry);
-pack!(StateRead = ());
-pack!(ResultCurrentDir = PathBuf);
+dispatcher!("current", CMDCurrent => EntryCurrent);
+dispatcher!("modify-current", CMDModifyCurrent => EntryModifyCurrent);
 
-#[chain]
-fn setup(
-    _prev: SetupEntry,
-    resource: &mut MyResource, // Import the resource into `setup`
-) -> Next {
-    // Set the global resource
-    resource.current_dir = current_dir().unwrap();
-
-    StateRead::default()
+// Define chain for modifying current directory                  _________________ Injected muttable resource
+//                                                              /
+#[chain] //                                                     vvvvvvvvvvvvvvvvvv
+fn render_modify_current(args: EntryModifyCurrent, current_dir: &mut ResCurrentDir) -> Next {
+    current_dir.current_dir = current_dir
+        .current_dir
+        .join(args.pick::<String>(()).unpack());
+    EntryCurrent::default()
 }
 
-#[chain]
-fn read(_prev: StateRead, resource: &MyResource) -> Next {
-    // Read the global resource
-    let current_dir = resource.current_dir.clone();
-    ResultCurrentDir::new(current_dir).to_render()
-}
-
-#[renderer]
-fn render_current_dir(dir: ResultCurrentDir) {
-    r_println!("Current dir: {}", dir.to_string_lossy())
+// Define renderer for output current path       _____________ Injected resource
+//                                              /
+#[renderer] //                                  vvvvvvvvvvvvvv
+fn render_current(_: EntryCurrent, current_dir: &ResCurrentDir) {
+    r_println!("Current directory: {}", current_dir.current_dir.display());
 }
 
 gen_program!();

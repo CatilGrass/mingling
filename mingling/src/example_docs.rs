@@ -1,83 +1,228 @@
 // Auto generated
 
-/// `Mingling` Example - Async
+/// Example Argument Parse
 ///
-///  After enabling the `async` feature:
-///  1. The `chain!` macro will support using **async** functions,
-///  2. The `exec` function of `Program` will return a `Future` for you to use with an async runtime
+///  > This example demonstrates how to use the `parser` feature to parse user input
 ///
-///  ## Enable Feature
-///  Enable the `async` feature for mingling in `Cargo.toml`
-///  ```toml
-///  [dependencies]
-///  mingling = { version = "...", features = ["async"] }
+///  Run:
+///  ```bash
+///  cargo run --manifest-path examples/example-argument-parse/Cargo.toml --quiet -- transfer README.md --size 32kib
+///  cargo run --manifest-path examples/example-argument-parse/Cargo.toml --quiet -- transfer src/ --dir
+///  cargo run --manifest-path examples/example-argument-parse/Cargo.toml --quiet -- strict-transfer README.md
+///  cargo run --manifest-path examples/example-argument-parse/Cargo.toml --quiet -- strict-transfer --dir
 ///  ```
 ///
-///  # How to Run
-///  ```bash
-///  cargo run --manifest-path ./examples/example-async/Cargo.toml -- hello World
+///  Output:
+///  ```plaintext
+///  file: README.md (32768)
+///  dir: src/ (1048576)
+///  file: README.md (1048576)
+///  Error: name is not provided
 ///  ```
 ///
 /// Cargo.toml
 /// ```ignore
 /// [package]
-/// name = "example-async"
-/// version = "0.0.1"
+/// name = "example-argument-parse"
+/// version = "0.1.0"
 /// edition = "2024"
 ///
-/// [dependencies]
-/// tokio = { version = "1", features = ["full"] }
-/// mingling = { path = "../../mingling", features = ["async"] }
+/// [dependencies.mingling]
+/// path = "../../mingling"
+///
+/// # Enable `parser` features
+/// features = ["parser"]
 /// ```
 ///
 /// main.rs
 /// ```ignore
-/// use mingling::prelude::*;
+/// use mingling::{macros::route, prelude::*};
 ///
-/// dispatcher!("hello", HelloCommand => HelloEntry);
+/// dispatcher!("transfer", CMDTransfer => EntryTransfer);
+/// dispatcher!("strict-transfer", CMDStrictTransfer => EntryStrictTransfer);
 ///
-/// // Use Tokio async runtime
-/// #[tokio::main]
-/// async fn main() {
-///     let mut program = ThisProgram::new();
-///     program.with_dispatcher(HelloCommand);
-///
-///     // Run program
-///     program.exec().await;
-/// }
-///
-/// pack!(Hello = String);
-///
-/// // You can freely use async / non-async functions to declare your Chain
+/// pack!(ResultFile = (bool, usize, String)); // (IsDir, Size, Name)
 ///
 /// #[chain]
-/// // fn parse_name(prev: HelloEntry) -> Next {
-/// async fn parse_name(prev: HelloEntry) -> Next {
-///     let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
-///     Hello::new(name).to_render()
+/// fn handle_transfer_parse(args: EntryTransfer) -> Next {
+///     // --------- IMPORTANT ---------
+///     // First parse flag arguments (like --dir/-D), then positional arguments
+///     let result: ResultFile = args
+///         // Name --dir --size 20mib
+///         //            ^^^^^^^^^^^^_ first
+///         .pick::<bool>(["--dir", "-D"])
+///         // Name --dir
+///         //      ^^^^^_ second (or `-D`)
+///         .pick_or::<usize>("--size", 1024 * 1024_usize)
+///         // Name
+///         // ^^^^_ finally, pick positional arg
+///         .pick::<String>(())
+///         .after(|str| str.trim().replace(" ", ""))
+///         // Unpack to tuple (is_dir, size, name)
+///         .unpack()
+///         // Convert into ResultFile
+///         .into();
+///     // --------- IMPORTANT ---------
+///     result
 /// }
 ///
-/// // For renderers, you can still only use synchronous functions
+/// pack!(ErrorNoNameProvided = ());
+///
+/// #[chain]
+/// fn handle_strict_transfer_parse(args: EntryStrictTransfer) -> Next {
+///     // --------- IMPORTANT ---------
+///     // Strict parsing: error immediately if the name is not provided
+///     let result: ResultFile = route! { // Use `route!` to wrap a Picker that contains `or_route`
+///         args
+///             .pick::<bool>(["--dir", "-D"])
+///             .pick_or::<usize>("--size", 1024 * 1024_usize)
+///             // Finally parse the positional argument; if not found, route to `ErrorNoNameProvided`
+///             .pick_or_route::<String, _>((), ErrorNoNameProvided::default().to_chain())
+///             .after(|str| str.trim().replace(" ", ""))
+///             .unpack()
+///     }
+///     // Convert into ResultFile
+///     .into();
+///     // --------- IMPORTANT ---------
+///     result.to_chain()
+/// }
+///
 /// #[renderer]
-/// fn render_hello_who(prev: Hello) {
-///     r_println!("Hello, {}!", *prev);
+/// fn render_result_file(result: ResultFile) {
+///     let (is_dir, size, name) = result.into();
+///     r_println!(
+///         "{}: {} ({})",
+///         if is_dir { "dir" } else { "file" },
+///         name,
+///         size
+///     )
+/// }
+///
+/// #[renderer]
+/// fn render_error_no_name_provided(_: ErrorNoNameProvided) {
+///     r_println!("Error: name is not provided")
 /// }
 ///
 /// gen_program!();
-/// ```
-pub mod example_async {}
-/// `Mingling` Example - Basic
 ///
-///  # How to Run
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///     program.with_dispatcher(CMDTransfer);
+///     program.with_dispatcher(CMDStrictTransfer);
+///     program.exec_and_exit();
+/// }
+/// ```
+pub mod example_argument_parse {}
+/// Example Async Runtime Support
+///
+///  > This example shows how to drive an async runtime using the `async` feature
+///
+///  ## Note
+///
+///  When the `async` feature is enabled, **Mingling** provides a different framework implementation,
+///  allowing you to use the `async` keyword directly within `#[chain]`.
+///
+///  However, you will lose some capabilities:
+///
+///  1. `&mut` resource injection is not available in async chain functions
+///  2. The program will not be able to use panic unwind functionality
+///
+///  Run:
 ///  ```bash
-///  cargo run --manifest-path ./examples/example-basic/Cargo.toml -- hello World
+///  cargo run --manifest-path examples/example-async-support/Cargo.toml --quiet -- download README.md
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  Download begin
+///  # (Will pause for 1 second here)
+///  "README.md" downloaded.
+///  ```
+///
+/// Cargo.toml
+/// ```ignore
+/// [package]
+/// name = "example-async-support"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies.mingling]
+/// path = "../../mingling"
+///
+/// # Enable `parser` features
+/// features = ["async", "parser"]
+///
+/// # Import any async runtime, e.g. Tokio
+/// [dependencies.tokio]
+/// version = "1.52.3"
+/// features = ["macros", "rt", "rt-multi-thread", "time"]
+/// ```
+///
+/// main.rs
+/// ```ignore
+/// use mingling::{hook::ProgramHook, prelude::*};
+///
+/// #[tokio::main]
+/// async fn main() {
+///     let mut program = ThisProgram::new();
+///
+///     program.with_dispatcher(CMDDownload);
+///
+///     // Add a hook to display when the download begins
+///     program.with_hook(ProgramHook::empty().on_begin(|| println!("Download begin")));
+///
+///     // --------- IMPORTANT ---------
+///     // The return values of `exec_*()` related functions have been replaced with Futures
+///     program.exec_and_exit().await;
+///     // --------- IMPORTANT ---------
+/// }
+///
+/// dispatcher!("download", CMDDownload => EntryDownload);
+///
+/// pack!(ResultDownloaded = String);
+///
+/// // --------- IMPORTANT ---------
+/// #[chain]
+/// //  vvvvv_ `async` keyword can be used directly here
+/// pub async fn handle_download(args: EntryDownload) -> Next {
+///     let file_name = args.pick(()).unpack();
+///     fake_download(file_name).await
+/// }
+///
+/// #[renderer]
+/// // But renderers cannot use the `async` keyword
+/// pub fn render_downloaded(result: ResultDownloaded) {
+///     r_println!("\"{}\" downloaded.", *result);
+/// }
+/// // --------- IMPORTANT ---------
+///
+/// gen_program!();
+///
+/// async fn fake_download(file_name: String) -> ResultDownloaded {
+///     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+///     ResultDownloaded::new(file_name)
+/// }
+/// ```
+pub mod example_async_support {}
+/// Example The Basic Usage of Mingling
+///
+///  Run:
+///  ```base
+///  cargo run --manifest-path examples/example-basic/Cargo.toml --quiet -- greet
+///  cargo run --manifest-path examples/example-basic/Cargo.toml --quiet -- greet Alice
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  Hello, World!
+///  Hello, Alice!
 ///  ```
 ///
 /// Cargo.toml
 /// ```ignore
 /// [package]
 /// name = "example-basic"
-/// version = "0.0.1"
+/// version = "0.1.0"
 /// edition = "2024"
 ///
 /// [dependencies]
@@ -86,215 +231,389 @@ pub mod example_async {}
 ///
 /// main.rs
 /// ```ignore
+/// // Import commonly used Mingling modules
 /// use mingling::prelude::*;
 ///
-/// // Define dispatcher `HelloCommand`, directing subcommand "hello" to `HelloEntry`
-/// dispatcher!("hello", HelloCommand => HelloEntry);
+/// // Define the `greet` subcommand
+/// //            _____________________________ subcmd name, can be nested (e.g. "remote.add" "remote.rm")
+/// //           /        _____________________ dispatcher name
+/// //           |       /            _________ entry, records raw arguments
+/// //           |       |           /                         ^^^^^^^^^^^^^
+/// //           vvvvv   vvvvvvvv    vvvvvvvvvv                \_ equivalent to pack!(EntryGreet = Vec<String>)
+/// dispatcher!("greet", CMDGreet => EntryGreet);
 ///
 /// fn main() {
-///     // Create program
+///     // Create a new ThisProgram
 ///     let mut program = ThisProgram::new();
 ///
-///     // Add dispatcher `HelloCommand`
-///     program.with_dispatcher(HelloCommand);
+///     // Add the CMDGreet dispatcher
+///     program.with_dispatcher(CMDGreet);
 ///
-///     // Run program
-///     program.exec();
+///     // Run the program, then exit the process
+///     program.exec_and_exit();
 /// }
 ///
-/// // Register wrapper type `Hello`, setting inner to `String`
-/// pack!(Hello = String);
+/// // Quickly wrap a type into a type recognizable by the current program
+/// //     ____________________ Wrapped type name
+/// //    /             _______ Wrapped type inner value
+/// //    |            /
+/// //    vvvvvvvvvv   vvvvvv
+/// pack!(ResultName = String);
 ///
-/// // Register chain to `ThisProgram`, handling logic from `HelloEntry`
-/// #[chain]
-/// fn parse_name(prev: HelloEntry) -> Next {
-///     // Extract string from `HelloEntry` as argument
-///     let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
-///
-///     // Build `Hello` type and route to renderer
-///     Hello::new(name).to_render()
+/// // Define the `handle_greet` chain for parsing input text
+/// //                     ____________________ Previous type:
+/// //                    /                       Mingling deduces types at runtime and routes them to this function
+/// //                    |               _____ will be expanded to:
+/// //                    |              /        impl Into<mingling::ChainProcess<ThisProgram>>
+/// #[chain] //           vvvvvvvvvv     vvvv
+/// fn handle_greet(args: EntryGreet) -> Next {
+///     let name: ResultName = args
+///         .inner
+///         .first()
+///         .cloned()
+///         .unwrap_or_else(|| "World".to_string())
+///         .into();
+///     name
 /// }
 ///
-/// // Register renderer to `ThisProgram`, handling rendering of `Hello`
+/// // Define renderer `render_name`, used to render `ResultName`
 /// #[renderer]
-/// fn render_hello_who(prev: Hello) {
-///     // Print message
-///     r_println!("Hello, {}!", *prev);
-///
-///     // Program ends here
+/// fn render_name(name: ResultName) {
+///     r_println!("Hello, {}!", *name);
 /// }
 ///
-/// // Generate program, default is `ThisProgram`
+/// // Note: This macro generates the program entry point.
+/// // It must be placed at the end of the root module of the crate (>= mingling@0.1.8).
+/// //                          ^^^^^^     ^^^^^^^^^^^
+/// // For example: lib.rs, main.rs
 /// gen_program!();
 /// ```
 pub mod example_basic {}
-/// `Mingling` Example - Completion
+/// Example Completion
 ///
-///  # How to Deploy
-///  1. Enable the `comp` feature
-///  ```toml
-///  [dependencies]
-///  mingling = { version = "...", features = [
-///      "comp",  // Enable this feature
-///      "parser"
-///  ] }
-///  ```
+///  > This example demonstrates how to use **Mingling** to create fully dynamic command-line completions
 ///
-///  2. Add `mingling` as a build dependency, enabling the `builds` and `comp` features
-///  ```toml
-///  [build-dependencies]
-///  mingling = { version = "...", features = [
-///      "builds", // Enable this feature for build scripts
-///      "comp"
-///  ] }
-///  ```
+///  ## About Completion Scripts
 ///
-///  3. Write `build.rs` to generate completion scripts at compile time
-///  ```ignore
-///  use mingling::build::{build_comp_scripts, build_comp_scripts_with_bin_name};
+///  To make your completions work, you need to generate a completion script using Mingling's tools
+///
+///  1. Enable features
+///     You need to enable the `builds` and `comp` features for `mingling` in `[build-dependencies]`
+///
+///  2. Write `build.rs`
+///     Write the following in `build.rs`
+///
+///  ```rust,ignore
 ///  fn main() {
-///      // Generate completion scripts for the current program, using the Cargo package name as the binary filename
-///      build_comp_scripts(env!("CARGO_PKG_NAME")).unwrap();
+///      build_scripts();
+///  }
 ///
-///      // Or, explicitly specify the binary filename
-///      // build_comp_scripts("your_bin").unwrap();
+///  /// Generate completion scripts
+///  fn build_scripts() {
+///      // `env!("CARGO_PKG_NAME")` equals the crate name, which matches the binary name.
+///      // If your binary name differs from the crate name, specify it explicitly.
+///      mingling::build::build_comp_scripts(
+///          // Your binary name:
+///          env!("CARGO_PKG_NAME"),
+///      )
+///      .unwrap();
 ///  }
 ///  ```
 ///
-///  4. Write `main.rs`, adding completion logic for your command entry point
-///  5. Execute `cargo install --path ./`, then run the corresponding completion script in your shell
+///  3. Verify
+///     Build your project with `cargo build --release`. The completion scripts will be generated in `target/release/`
+///
+///     Execute the script or have it be automatically sourced by your Shell
+///
+///  Run:
+///  ```bash
+///  cargo run --manifest-path examples/example-completion/Cargo.toml --quiet -- greet Alice --repeat 3
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  Hello, Alice, Alice, Alice!
+///  ```
 ///
 /// Cargo.toml
 /// ```ignore
 /// [package]
 /// name = "example-completion"
-/// version = "0.0.1"
+/// version = "0.1.0"
 /// edition = "2024"
 ///
-/// [dependencies]
-/// mingling = { path = "../../mingling", features = ["comp", "parser"] }
+/// [dependencies.mingling]
+/// path = "../../mingling"
+///
+/// features = [
+///     # Enable `comp` features
+///     "comp",
+///     "parser",
+/// ]
+///
+/// [build-dependencies.mingling]
+/// path = "../../mingling"
+///
+/// features = [
+///     # Enable `comp` features
+///     "comp",
+///
+///     # If you want to build completion scripts,
+///     # enable `builds` features
+///     "builds",
+/// ]
 /// ```
 ///
 /// main.rs
 /// ```ignore
-/// use mingling::prelude::*;
-/// use mingling::{
-///     macros::{suggest, suggest_enum},
-///     parser::{PickableEnum, Picker},
-///     EnumTag, Groupped, ShellContext, Suggest,
-/// };
-///
-/// // Define dispatcher `FruitCommand`, directing subcommand "fruit" to `FruitEntry`
-/// dispatcher!("fruit", FruitCommand => FruitEntry);
-///
-/// #[completion(FruitEntry)]
-/// fn comp_fruit_command(ctx: &ShellContext) -> Suggest {
-///     if ctx.filling_argument_first("--name") {
-///         return suggest!();
-///     }
-///     if ctx.filling_argument_first("--type") {
-///         return suggest_enum!(FruitType);
-///     }
-///     if ctx.typing_argument() {
-///         return suggest! {
-///             "--name": "Fruit name",
-///             "--type": "Fruit type"
-///         }
-///         .strip_typed_argument(ctx);
-///     }
-///     return suggest!();
-/// }
+/// use mingling::{macros::suggest, prelude::*, ShellContext, Suggest};
 ///
 /// fn main() {
 ///     let mut program = ThisProgram::new();
-///     program.with_dispatcher(CompletionDispatcher);
-///     program.with_dispatcher(FruitCommand);
-///     program.exec();
+///
+///     program.with_dispatcher(CMDGreet);
+///
+///     // --------- IMPORTANT ---------
+///     // The `comp` feature makes `gen_program!()` generate a CompletionDispatcher automatically
+///     // It adds a hidden `__comp` subcommand for communication with the completion script
+///     program.with_dispatcher(crate::CompletionDispatcher);
+///     // --------- IMPORTANT ---------
+///
+///     // TIP: Note that the completion script reads stdout,
+///     // so make sure no output is produced before the CompletionDispatcher is dispatched.
+///     program.exec_and_exit();
 /// }
 ///
-/// #[derive(Groupped)]
-/// struct FruitInfo {
-///     name: String,
-///     fruit_type: FruitType,
+/// // --------- IMPORTANT ---------
+/// //            __________________________________________ Entry point bound to completion behavior
+/// //           /                 _________________________ Shell context for obtaining user input state
+/// //           |                /                 ________ Suggest, used to return completion results
+/// //           vvvvvvvvvv       |                /
+/// #[completion(EntryGreet)] //  vvvvvvvvvvvv     vvvvvvv
+/// fn complete_greet_entry(ctx: &ShellContext) -> Suggest {
+///     // When the previous word is `greet` (the current command being typed)
+///     if ctx.previous_word == "greet" {
+///         // Return suggestions
+///         return suggest! {
+///             "Bob": "Likes to pass messages",
+///             "Alice": "Likes to receive messages",
+///             "Hacker": "YOU",
+///             "World"
+///         };
+///     }
+///
+///     // When the user is typing `--repeat`
+///     if ctx.filling_argument(["-r", "--repeat"]) {
+///         return suggest! {}; // Don't suggest anything
+///     }
+///
+///     // When the user is typing `-`
+///     if ctx.typing_argument() {
+///         return suggest! {
+///             "-r": "Number of repetitions",
+///             "--repeat": "Number of repetitions",
+///         }
+///         // Remove arguments that have already been typed by the user
+///         .strip_typed_argument(ctx);
+///     }
+///
+///     // Otherwise, suggest nothing
+///     suggest!()
+///     // // You can also enable file completions using the following code,
+///     // // which will invoke the Shell's default behavior
+///     // Suggest::file_comp()
 /// }
+/// // --------- IMPORTANT ---------
 ///
-/// #[derive(Default, Debug, EnumTag)]
-/// enum FruitType {
-///     #[enum_desc("It's Apple")]
-///     #[enum_rename("apple")]
-///     FruitApple,
-///
-///     #[enum_desc("It's Banana")]
-///     #[enum_rename("banana")]
-///     FruitBanana,
-///
-///     #[enum_desc("It's Cherry")]
-///     #[enum_rename("cherry")]
-///     FruitCherry,
-///
-///     #[enum_desc("It's Date")]
-///     #[enum_rename("date")]
-///     FruitDate,
-///
-///     #[enum_desc("It's Elderberry")]
-///     #[enum_rename("elderberry")]
-///     FruitElderberry,
-///
-///     #[default]
-///     #[enum_rename("unknown")]
-///     Unknown,
-/// }
-///
-/// impl PickableEnum for FruitType {}
+/// dispatcher!("greet", CMDGreet => EntryGreet);
+/// pack!(ResultName = (u8, String));
 ///
 /// #[chain]
-/// fn parse_fruit_info(prev: FruitEntry) -> Next {
-///     let picker = Picker::from(prev.inner);
-///     let (fruit_name, fruit_type) = picker.pick("--name").pick("--type").unpack();
-///     let info = FruitInfo {
-///         name: fruit_name,
-///         fruit_type,
-///     };
-///     info.to_render()
+/// fn handle_greet(args: EntryGreet) -> Next {
+///     let result: ResultName = args
+///         .pick(["-r", "--repeat"])
+///         .pick_or((), "World")
+///         .unpack()
+///         .into();
+///     result
 /// }
 ///
 /// #[renderer]
-/// fn render_fruit(prev: FruitInfo) {
-///     match (prev.name.is_empty(), prev.fruit_type) {
-///         (true, FruitType::Unknown) => {
-///             r_println!("Fruit name is empty and type is unknown");
-///         }
-///         (true, fruit_type) => {
-///             r_println!("Fruit name is empty, Type: {:?}", fruit_type);
-///         }
-///         (false, FruitType::Unknown) => {
-///             r_println!("Fruit name: {}, Type is unknown", prev.name);
-///         }
-///         (false, fruit_type) => {
-///             r_println!("Fruit name: {}, Type: {:?}", prev.name, fruit_type);
-///         }
+/// fn render_name(result: ResultName) {
+///     let (repeat, name) = result.inner;
+///     let mut parts = Vec::with_capacity(repeat as usize);
+///     for _ in 0..repeat {
+///         parts.push(name.clone());
 ///     }
+///     r_println!("Hello, {}!", parts.join(", "));
 /// }
 ///
 /// gen_program!();
 /// ```
 pub mod example_completion {}
-/// `Mingling` Example - Dispatch Tree
+/// Example Custom Pickable
 ///
-///  # How to Deploy
-///  1. Enable the `dispatch_tree` feature (`comp` is optional)
-///  ```toml
-///  mingling = { version = "...", features = [
-///      "dispatch_tree",  // Enable this feature
-///      "comp" // optional
-///  ] }
+///  > This example demonstrates how to use the Pickable trait to add parsing for your types
+///
+///  Run:
+///  ```bash
+///  cargo run --manifest-path examples/example-custom-pickable/Cargo.toml --quiet -- connect 127.0.0.1:5012
+///  cargo run --manifest-path examples/example-custom-pickable/Cargo.toml --quiet -- connect 127.0.0.1
 ///  ```
 ///
-///  2. Using `cargo expand`:
+///  Output:
+///  ```plaintext
+///  Connected to "127.0.0.1:5012"
+///  Failed to parse address
+///  ```
 ///
+/// Cargo.toml
+/// ```ignore
+/// [package]
+/// name = "example-custom-pickable"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies.mingling]
+/// path = "../../mingling"
+///
+/// features = [
+///     "parser",
+/// ]
+/// ```
+///
+/// main.rs
+/// ```ignore
+/// use mingling::{Groupped, macros::route, parser::Pickable, prelude::*};
+///
+/// // Define types that can be recognized by Mingling
+/// //               ________________________ `Pickable` trait needs to implement Default
+/// //              /                ________ The Groupped derive macro registers an ID for this type
+/// //              |               /           Mingling uses this ID to identify the type
+/// //              vvvvvvv         vvvvvvvv
+/// #[derive(Debug, Default, Clone, Groupped)]
+/// pub struct Address {
+///     pub ip: [u8; 4],
+///     pub port: u16,
+/// }
+///
+/// // --------- IMPORTANT ---------
+/// impl Pickable for Address {
+///     type Output = Address;
+///     fn pick(args: &mut mingling::parser::Argument, flag: mingling::Flag) -> Option<Self::Output> {
+///         // Extract the raw string from Argument using the Flag
+///         let raw: String = args.pick_argument(flag)?.to_string();
+///
+///         // Use TryFrom to parse the address
+///         Address::try_from(raw).ok()
+///     }
+/// }
+/// // --------- IMPORTANT ---------
+///
+/// dispatcher!("connect", CMDConnect => EntryConnect);
+/// pack!(ErrorParseAddressFailed = ());
+///
+/// #[chain]
+/// fn handle_connect(prev: EntryConnect) -> Next {
+///     let connect: Address =
+///         route! { prev.pick_or_route((), ErrorParseAddressFailed::default().to_chain()).unpack() };
+///     connect.to_chain()
+/// }
+///
+/// #[renderer]
+/// fn render_address(addr: Address) {
+///     r_println!("Connected to \"{}\"", addr.to_string());
+/// }
+///
+/// #[renderer]
+/// fn render_error_parse_address_failed(_: ErrorParseAddressFailed) {
+///     r_println!("Failed to parse address");
+/// }
+///
+/// gen_program!();
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///     program.with_dispatcher(CMDConnect);
+///     program.exec_and_exit();
+/// }
+///
+/// // Address conversion
+///
+/// impl TryFrom<String> for Address {
+///     type Error = String;
+///
+///     fn try_from(raw: String) -> Result<Self, Self::Error> {
+///         // Expected format: "192.168.1.1:8080"
+///         let parts: Vec<&str> = raw.split(':').collect();
+///         if parts.len() != 2 {
+///             return Err("Invalid format: expected 'IP:PORT'".to_string());
+///         }
+///
+///         let ip_str = parts[0];
+///         let port_str = parts[1];
+///
+///         // Parse IP address (4 octets separated by dots)
+///         let ip_parts: Vec<&str> = ip_str.split('.').collect();
+///         if ip_parts.len() != 4 {
+///             return Err("Invalid IP address format".to_string());
+///         }
+///
+///         let mut ip = [0u8; 4];
+///         for (i, part) in ip_parts.iter().enumerate() {
+///             ip[i] = part
+///                 .parse::<u8>()
+///                 .map_err(|_| format!("Invalid IP octet: {}", part))?;
+///         }
+///
+///         // Parse port
+///         let port = port_str
+///             .parse::<u16>()
+///             .map_err(|_| format!("Invalid port: {}", port_str))?;
+///
+///         Ok(Address { ip, port })
+///     }
+/// }
+///
+/// impl From<Address> for String {
+///     fn from(addr: Address) -> String {
+///         format!(
+///             "{}.{}.{}.{}:{}",
+///             addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3], addr.port
+///         )
+///     }
+/// }
+///
+/// impl std::fmt::Display for Address {
+///     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+///         write!(
+///             f,
+///             "{}.{}.{}.{}:{}",
+///             self.ip[0], self.ip[1], self.ip[2], self.ip[3], self.port
+///         )
+///     }
+/// }
+/// ```
+pub mod example_custom_pickable {}
+/// Example Dispatch Tree
+///
+///  > This example will introduce how to use `dispatch_tree`
+///  > to optimize your command line lookup efficiency
+///
+///  When the number of commands in your project increases, you can use `dispatch_tree` to complete command registration at compile time.
+///  It will generate a trie for quickly finding related commands by prefix.
+///
+///  Therefore, after enabling this feature,
+///  `Program` will no longer store a Dispatcher list internally, and the `with_dispatcher` function will not be compiled.
+///
+///  Run:
 ///  ```bash
-///  cargo expand --manifest-path examples/example-dispatch-tree/Cargo.toml > expanded.rs
-///  cat expanded.rs
+///  cargo run --manifest-path examples/example-dispatch-tree/Cargo.toml --quiet -- cmd5
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  It's works!
 ///  ```
 ///
 /// Cargo.toml
@@ -304,60 +623,203 @@ pub mod example_completion {}
 /// version = "0.1.0"
 /// edition = "2024"
 ///
-/// [dependencies]
-/// mingling = { path = "../../mingling", features = ["dispatch_tree", "comp"] }
+/// [dependencies.mingling]
+/// path = "../../mingling"
+///
+/// features = [
+///     "dispatch_tree",
+/// ]
 /// ```
 ///
 /// main.rs
 /// ```ignore
-/// #![allow(unused_mut)]
-///
 /// use mingling::prelude::*;
 ///
+/// // --------- IMPORTANT ---------
+/// // You have a large number of subcommands
+/// dispatcher!("cmd1",         CMD1 => Entry1);
+/// dispatcher!("cmd2.sub1",   CMD2Sub1 => Entry2Sub1);
+/// dispatcher!("cmd2.sub2",   CMD2Sub2 => Entry2Sub2);
+/// dispatcher!("cmd3.sub1.leaf1", CMD3Sub1Leaf1 => Entry3Sub1Leaf1);
+/// dispatcher!("cmd3.sub1.leaf2", CMD3Sub1Leaf2 => Entry3Sub1Leaf2);
+/// dispatcher!("cmd3.sub2",   CMD3Sub2 => Entry3Sub2);
+/// dispatcher!("cmd4.sub1.subsub1.deep", CMD4Deep => Entry4Deep);
+/// dispatcher!("cmd4.sub1.subsub2",      CMD4SubSub2 => Entry4SubSub2);
+/// dispatcher!("cmd5",        CMD5 => Entry5);
+/// dispatcher!("cmd5.extra",  CMD5Extra => Entry5Extra);
+/// dispatcher!("nested.a.b.c", CMDA => EntryA);
+/// dispatcher!("nested.a.b.d", CMDB => EntryB);
+/// dispatcher!("nested.a.e",   CMDC => EntryC);
+/// dispatcher!("nested.f",     CMDD => EntryD);
+/// // --------- IMPORTANT ---------
+///
 /// fn main() {
-///     let mut program = ThisProgram::new();
+///     let program = ThisProgram::new();
 ///
-///     // // After enabling `dispatch_tree`, this method will no longer exist
-///     // program.with_dispatcher(CommandGreet);
-///     //
-///     // // The `CompletionDispatcher` automatically generated by `comp` will also be imported automatically
-///     // program.with_dispatcher(CompletionDispatcher);
+///     // --------- IMPORTANT ---------
+///     // // You no longer need to use `with_dispatcher` anymore;
+///     // // it'll be collected automatically once the `dispatch_tree` feature is enabled
+///     // program.with_dispatcher(...);
 ///
-///     program.exec();
+///     program.exec_and_exit()
 /// }
 ///
-/// dispatcher!("greet", CommandGreet => EntryGreet);
-/// dispatcher!("help", CommandHelp => EntryHelp);
-/// dispatcher!("quit", CommandQuit => EntryQuit);
-/// dispatcher!("list", CommandList => EntryList);
-/// dispatcher!("status", CommandStatus => EntryStatus);
-/// dispatcher!("save", CommandSave => EntrySave);
-/// dispatcher!("load", CommandLoad => EntryLoad);
-/// dispatcher!("config", CommandConfig => EntryConfig);
-/// dispatcher!("run", CommandRun => EntryRun);
-/// dispatcher!("debug", CommandDebug => EntryDebug);
-/// dispatcher!("version", CommandVersion => EntryVersion);
+/// #[renderer]
+/// fn render_cmd5(_: Entry5) {
+///     r_println!("It's works!");
+/// }
 ///
 /// gen_program!();
 /// ```
 pub mod example_dispatch_tree {}
-/// `Mingling` Example - Exit Code
+/// Example Enum Tag
 ///
-///  This example demonstrates how to modify the program's exit code using `ExitCodeSetup`.
-///  By default, the program exits with code 0. This example shows:
-///  1. Using `dispatcher!` to define an error command,
-///  2. Using `chain!` to handle errors and set a custom exit code via `ProgramExitCode`,
-///  3. Using `renderer!` to print an error message.
+///  > This example demonstrates how to use the `EnumTag` derive macro to tag enum variants with metadata,
+///  > which can be used for autocompletion and parsing
 ///
-///  # How to Run
+///  Run:
 ///  ```bash
-///  cargo run --manifest-path ./examples/example-exit-code/Cargo.toml -- error
+///  cargo run --manifest-path examples/example-enum-tag/Cargo.toml --quiet -- lang-select OCaml
+///  cargo run --manifest-path examples/example-enum-tag/Cargo.toml --quiet -- lang-select
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  Selected: OCaml (A representative functional programming language with strong type inference)
+///  Selected: Rust (A systems programming language focused on performance, safety, and concurrency)
 ///  ```
 ///
 /// Cargo.toml
 /// ```ignore
 /// [package]
-/// name = "example-exit-code"
+/// name = "example-enum-tag"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies.mingling]
+/// path = "../../mingling"
+///
+/// features = [
+///     "comp",
+///     "parser"
+/// ]
+/// ```
+///
+/// main.rs
+/// ```ignore
+/// use mingling::{
+///     EnumTag, Groupped, ShellContext, Suggest, macros::suggest_enum, parser::PickableEnum,
+///     prelude::*,
+/// };
+///
+/// // Define the enum and derive the EnumTag trait
+/// //                        ________ adds metadata to the enum, enabling it to:
+/// //                       /         1. Be used by the `suggest_enum!(Enum)` macro under the `comp` feature for autocompletion
+/// //                       vvvvvvv   2. Implement the `PickableEnum` trait
+/// #[derive(Debug, Default, EnumTag, Groupped)]
+/// pub enum ProgrammingLanguages {
+///     #[enum_desc("An efficient and flexible compiled language widely used for system programming")]
+///     C,
+///
+///     #[enum_rename("C++")]
+///     #[enum_desc("A high-performance language extending C with object-oriented features")]
+///     CPlusPlus,
+///
+///     #[enum_rename("C#")]
+///     #[enum_desc("Microsoft's object-oriented programming language running on the .NET platform")]
+///     Csharp,
+///
+///     #[enum_desc(
+///         "A cross-platform object-oriented language widely used for enterprise application development"
+///     )]
+///     Java,
+///
+///     #[enum_desc(
+///         "A dynamic scripting language for web development, supporting prototype chain inheritance"
+///     )]
+///     JavaScript,
+///
+///     #[enum_desc("A modern statically typed language running on the JVM, concise and safe")]
+///     Kotlin,
+///
+///     #[enum_desc("A representative functional programming language with strong type inference")]
+///     OCaml,
+///
+///     #[enum_desc("A general-purpose programming language with clean syntax, known for readability")]
+///     Python,
+///
+///     #[enum_desc("An object-oriented scripting language, famous for its concise and elegant syntax")]
+///     Ruby,
+///
+///     #[default]
+///     #[enum_desc("A systems programming language focused on performance, safety, and concurrency")]
+///     Rust,
+/// }
+///
+/// // --------- IMPORTANT ---------
+/// // Implement the PickableEnum trait for ProgrammingLanguages,
+/// // so that `Picker` can parse this enum
+/// impl PickableEnum for ProgrammingLanguages {}
+/// // --------- IMPORTANT ---------
+///
+/// dispatcher!("lang-select", CMDLanguageSelection => EntryLanguageSelection);
+///
+/// #[chain]
+/// fn handle_language_selection(args: EntryLanguageSelection) -> Next {
+///     // You can use Picker to directly parse ProgrammingLanguages
+///     let lang: ProgrammingLanguages = args.pick(()).unpack();
+///     lang
+/// }
+///
+/// #[renderer]
+/// fn render_programming_language(lang: ProgrammingLanguages) {
+///     // You can use `enum_info()` to get the name and description of the current enum
+///     let (name, desc) = lang.enum_info();
+///     r_println!("Selected: {} ({})", name, desc)
+/// }
+///
+/// #[completion(EntryLanguageSelection)]
+/// fn complete_language_selection(_: &ShellContext) -> Suggest {
+///     // Use `suggest_enum!` directly to generate enum suggestions
+///     suggest_enum!(ProgrammingLanguages)
+/// }
+///
+/// gen_program!();
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///     program.with_dispatcher(CompletionDispatcher);
+///     program.with_dispatcher(CMDLanguageSelection);
+///     program.exec_and_exit();
+/// }
+/// ```
+pub mod example_enum_tag {}
+/// Example Error Handling
+///
+///  > This example demonstrates how to handle errors in Mingling, including custom error types and error rendering.
+///
+///  Run:
+///  ```bash
+///  cargo run --manifest-path examples/example-error-handling/Cargo.toml --quiet -- hallo
+///  cargo run --manifest-path examples/example-error-handling/Cargo.toml --quiet -- hello
+///  cargo run --manifest-path examples/example-error-handling/Cargo.toml --quiet -- hello Alice
+///  cargo run --manifest-path examples/example-error-handling/Cargo.toml --quiet -- hello MyBestFriendAlice
+///  cargo run --manifest-path examples/example-error-handling/Cargo.toml --quiet -- hello Peter
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  Command not found: "hallo"
+///  No name provided
+///  Name not available
+///  Name too long: 17 > 10
+///  Hello, Peter
+///  ```
+///
+/// Cargo.toml
+/// ```ignore
+/// [package]
+/// name = "example-error-handling"
 /// version = "0.1.0"
 /// edition = "2024"
 ///
@@ -368,59 +830,171 @@ pub mod example_dispatch_tree {}
 /// main.rs
 /// ```ignore
 /// use mingling::prelude::*;
-/// use mingling::{res::ExitCode, setup::ExitCodeSetup};
 ///
-/// fn main() {
-///     let mut program = ThisProgram::new();
-///     program.with_dispatcher(ErrorCommand);
-///     program.with_setup(ExitCodeSetup::<ThisProgram>::default());
-///     program.exec_and_exit();
-/// }
+/// // In Mingling, instead of using ? to propagate errors upward,
+/// // errors are treated as branches that continue execution.
 ///
-/// dispatcher!("error", ErrorCommand => ErrorEntry);
-/// pack!(ResultError = ());
+/// dispatcher!("hello", CMDHello => EntryHello);
+///
+/// // Define error types
+/// pack!(ErrorNoNameProvided = ());
+/// pack!(ErrorNameTooLong = u16);
+/// pack!(ErrorNameNotAvailable = ());
+///
+/// // Define success type
+/// pack!(ResultName = String);
+///
+/// // Pre-registered names
+/// static VEC_REGISTERED_NAMES: &[&str] = &["Alice", "Bob", "Charlie", "David", "Eve"];
 ///
 /// #[chain]
-/// fn handle_error_entry(_prev: ErrorEntry, ec: &mut ExitCode) -> Next {
-///     ec.exit_code = 1;
-///     return ResultError::default();
+/// fn handle_hello(args: EntryHello) -> Next {
+///     let Some(name) = args.inner.first().cloned() else {
+///         // If no name is provided, pass ErrorNoNameProvided
+///         return ErrorNoNameProvided::default().to_render();
+///     };
+///
+///     if name.len() > 10 {
+///         // If the name is too long, pass ErrorNameTooLong
+///         return ErrorNameTooLong::new(name.len() as u16).to_render();
+///     }
+///
+///     if VEC_REGISTERED_NAMES.contains(&name.as_str()) {
+///         // If the name already exists, pass ErrorNameNotAvailable
+///         return ErrorNameNotAvailable::default().to_render();
+///     }
+///
+///     // If the name is valid, pass ResultName
+///     ResultName::new(name).to_render()
 /// }
 ///
 /// #[renderer]
-/// fn render_error(_prev: ResultError, ec: &ExitCode) {
-///     r_println!("Exit with exit code: {}", ec.exit_code);
+/// fn render_result_name(name: ResultName) {
+///     r_println!("Hello, {}", *name);
+/// }
+///
+/// #[renderer]
+/// fn render_error_no_name_provided(_: ErrorNoNameProvided) {
+///     // Prompt when no name is provided
+///     r_println!("No name provided");
+/// }
+///
+/// #[renderer]
+/// fn render_error_name_not_available(_: ErrorNameNotAvailable) {
+///     // Prompt when name is already taken
+///     r_println!("Name not available");
+/// }
+///
+/// #[renderer]
+/// fn render_error_name_too_long(len: ErrorNameTooLong) {
+///     // Prompt when name is too long, showing actual length
+///     r_println!("Name too long: {} > 10", *len);
+/// }
+///
+/// #[renderer]
+/// fn render_dispatcher_not_found(err: DispatcherNotFound) {
+///     // Prompt when command is not found, showing the input command
+///     r_println!("Command not found: \"{}\"", err.inner.join(" "));
+/// }
+///
+/// gen_program!();
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///     program.with_dispatcher(CMDHello);
+///     program.exec_and_exit();
+/// }
+/// ```
+pub mod example_error_handling {}
+/// Example Error Handling
+///
+///  > This example demonstrates how to handle errors in Mingling, including custom error types and error rendering.
+///
+///  Run:
+///  ```bash
+///  cargo run --manifest-path examples/example-exitcode/Cargo.toml --quiet -- hello Alice
+///  cargo run --manifest-path examples/example-exitcode/Cargo.toml --quiet -- hello
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  Hello, Alice
+///  No name provided (with exit code 1)
+///  ```
+///
+/// Cargo.toml
+/// ```ignore
+/// [package]
+/// name = "example-exitcode"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies]
+/// mingling = { path = "../../mingling" }
+/// ```
+///
+/// main.rs
+/// ```ignore
+/// use mingling::{prelude::*, res::ExitCode, setup::ExitCodeSetup};
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///
+///     // --------- IMPORTANT ---------
+///     // Register `ExitCodeSetup` for the program to enable exit codes
+///     program.with_setup(ExitCodeSetup::default());
+///     // --------- IMPORTANT ---------
+///
+///     program.with_dispatcher(CMDHello);
+///     program.exec_and_exit();
+/// }
+///
+/// dispatcher!("hello", CMDHello => EntryHello);
+///
+/// pack!(ErrorNoNameProvided = ());
+/// pack!(ResultName = String);
+///
+/// #[chain]
+/// fn handle_hello(args: EntryHello) -> Next {
+///     let Some(name) = args.inner.first().cloned() else {
+///         // If no name is provided, pass ErrorNoNameProvided
+///         return ErrorNoNameProvided::default().to_render();
+///     };
+///
+///     // If the name is valid, pass ResultName
+///     ResultName::new(name).to_render()
+/// }
+///
+/// #[renderer]
+/// fn render_result_name(name: ResultName) {
+///     r_println!("Hello, {}", *name);
+/// }
+///
+/// // Define renderer, render error message                      _____________ Inject exit code resource
+/// //                                                           /
+/// #[renderer] //                                               vvvvvvvvvvvvv
+/// fn render_error_no_name_provided(_: ErrorNoNameProvided, ec: &mut ExitCode) {
+///     ec.exit_code = 1;
+///
+///     // Prompt when no name is provided
+///     r_println!("No name provided (with exit code 1)");
 /// }
 ///
 /// gen_program!();
 /// ```
-pub mod example_exit_code {}
-/// `Mingling` Example - General Renderer
+pub mod example_exitcode {}
+/// Example General Renderer
 ///
-///  ## Step1 - Enable Feature
-///  Enable the `general_renderer` feature for mingling in `Cargo.toml`
-///  ```toml
-///  [dependencies]
-///  mingling = { version = "...", features = ["general_renderer", "parser"] }
-///  ```
+///  > This example demonstrates how to use the `general_renderer` feature to render data into structures such as json / yaml
 ///
-///  ## Step2 - Add Dependencies
-///  Add `serde` dependency to `Cargo.toml` for serialization support
-///  ```toml
-///  [dependencies]
-///  serde = { version = "1", features = ["derive"] }
-///  ```
-///
-///  ## Step3 - Write Code
-///  Write the following content into `main.rs`
-///
-///  ## Step4 - Build and Run
+///  Run
 ///  ```bash
-///  cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22
-///  cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22 --json
-///  cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22 --yaml
+///  cargo run --manifest-path examples/example-general-renderer/Cargo.toml --quiet -- render Bob 22
+///  cargo run --manifest-path examples/example-general-renderer/Cargo.toml --quiet -- render Bob 22 --json
+///  cargo run --manifest-path examples/example-general-renderer/Cargo.toml --quiet -- render Bob 22 --yaml
 ///  ```
 ///
-///  Will print:
+///  Output:
 ///  ```plain
 ///  Bob is 22 years old
 ///  {"member_name":"Bob","member_age":22}
@@ -432,23 +1006,24 @@ pub mod example_exit_code {}
 /// ```ignore
 /// [package]
 /// name = "example-general-renderer"
-/// version = "0.0.1"
+/// version = "0.1.0"
 /// edition = "2024"
 ///
 /// [dependencies]
-/// mingling = { path = "../../mingling", features = [
-///     "parser",
+/// serde = { version = "1.0.228", features = ["derive"] }
+///
+/// [dependencies.mingling]
+/// path = "../../mingling"
+/// features = [
 ///     "general_renderer",
-///     "json_serde_fmt",
-///     "yaml_serde_fmt",
-/// ] }
-/// serde = { version = "1", features = ["derive"] }
+///     "parser",
+/// ]
 /// ```
 ///
 /// main.rs
 /// ```ignore
 /// use mingling::prelude::*;
-/// use mingling::{parser::Picker, setup::GeneralRendererSetup, Groupped};
+/// use mingling::{Groupped, parser::Picker, setup::GeneralRendererSetup};
 /// use serde::Serialize;
 ///
 /// dispatcher!("render", RenderCommand => RenderCommandEntry);
@@ -461,7 +1036,13 @@ pub mod example_exit_code {}
 ///     program.exec();
 /// }
 ///
-/// // Manually implement Info struct
+/// // --------- IMPORTANT ---------
+/// // For beautiful output structure, do not use `pack!` to wrap the types that need to be output.
+/// // Instead, manually implement
+/// //        ____________________ Implement serde::Serialize
+/// //       /           _________ Implement mingling::Groupped
+/// //       |          /            to ensure Mingling can recognize the type
+/// //       vvvvvvvvv  vvvvvvvv
 /// #[derive(Serialize, Groupped)]
 /// struct Info {
 ///     #[serde(rename = "member_name")]
@@ -469,6 +1050,12 @@ pub mod example_exit_code {}
 ///     #[serde(rename = "member_age")]
 ///     age: i32,
 /// }
+/// // This will output: {"member_name":"name","member_age":32} structure
+///
+/// // If using pack!(Info = (String, i32));
+/// // Output: {"inner":["name", 32]}
+///
+/// // --------- IMPORTANT ---------
 ///
 /// #[chain]
 /// fn parse_render(prev: RenderCommandEntry) -> Next {
@@ -488,93 +1075,249 @@ pub mod example_exit_code {}
 /// gen_program!();
 /// ```
 pub mod example_general_renderer {}
-/// `Mingling` Example - Picker
+/// Example Help
 ///
-///  ## Step1 - Enable Feature
-///  Enable the `parser` feature for mingling in `Cargo.toml`
-///  ```toml
-///  [dependencies]
-///  mingling = { version = "...", features = ["parser"] }
+///  > This example demonstrates how to use the `#[help]` macro to generate help information,
+///  > enabling `--help` to work
+///
+///  Run
+///  ```bash
+///  cargo run --manifest-path examples/example-help/Cargo.toml --quiet -- greet --help
 ///  ```
 ///
-///  ## Step2 - Write Code
-///  Write the following content into `main.rs`
-///
-///  ## Step3 - Build and Run
-///  ```bash
-///  cargo run --manifest-path ./examples/example-picker/Cargo.toml -- pick Bob
-///  cargo run --manifest-path ./examples/example-picker/Cargo.toml -- pick Bob --age -15
-///  cargo run --manifest-path ./examples/example-picker/Cargo.toml -- pick --age 99
+///  Output:
+///  ```plain
+///  Usage: greet <NAME>
 ///  ```
 ///
 /// Cargo.toml
 /// ```ignore
 /// [package]
-/// name = "example-picker"
-/// version = "0.0.1"
+/// name = "example-help"
+/// version = "0.1.0"
 /// edition = "2024"
 ///
 /// [dependencies]
-/// mingling = { path = "../../mingling", features = ["parser"] }
-/// tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+/// mingling = { path = "../../mingling" }
 /// ```
 ///
 /// main.rs
 /// ```ignore
-/// use mingling::prelude::*;
+/// use mingling::{macros::help, prelude::*, setup::BasicProgramSetup};
 ///
-/// dispatcher!("pick", PickCommand => PickEntry);
+/// dispatcher!("greet", CMDGreet => EntryGreet);
+///
+/// // Define help        _________ When `program.user_context.help` is `true`
+/// //                   /            the command will not enter `#[chain]` / `#[renderer]`
+/// #[help] //           vvvvvvvvvv   but instead enter this `#[help]` function
+/// fn help_greet(_prev: EntryGreet) {
+///     r_println!("Usage: greet <NAME>");
+/// }
 ///
 /// fn main() {
 ///     let mut program = ThisProgram::new();
-///     program.with_dispatcher(PickCommand);
-///     program.exec();
-/// }
 ///
-/// pack!(NoNameProvided = ());
-/// pack!(ParsedPickInput = (i32, String));
+///     // --------- IMPORTANT ---------
+///     // Add `BasicProgramSetup` to the program
+///     // to enable `--help`, `--quiet`, and other built-in features
+///     program.with_setup(BasicProgramSetup);
+///     // --------- IMPORTANT ---------
 ///
-/// #[chain]
-/// fn parse(prev: PickEntry) -> Next {
-///     let picked = prev
-///         // First extract the named argument
-///         .pick_or("--age", 20)
-///         .after(|n: i32| n.clamp(0, 100))
-///         // Then sequentially extract the remaining arguments
-///         .pick_or_route((), NoNameProvided::default().to_render())
-///         .unpack();
+///     program.with_dispatcher(CMDGreet);
 ///
-///     match picked {
-///         Ok(value) => ParsedPickInput::new(value).to_render(),
-///         Err(e) => e,
-///     }
-/// }
-///
-/// #[renderer]
-/// fn render_parsed_pick_input(prev: ParsedPickInput) {
-///     let (age, name) = prev.inner;
-///     r_println!("Picked: name = {}, age = {}", name, age);
-/// }
-///
-/// #[renderer]
-/// fn render_no_name_input(_prev: NoNameProvided) {
-///     r_println!("No name provided.");
+///     program.exec_and_exit();
 /// }
 ///
 /// gen_program!();
 /// ```
-pub mod example_picker {}
-
+pub mod example_help {}
+/// Example Hook
+///
+///  > This example demonstrates how to use Mingling's hook system to obtain debugging information during program execution
+///
+///  Run:
+///  ```base
+///  cargo run --manifest-path examples/example-hook/Cargo.toml --quiet -- greet Alice
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  [DEBUG] Program is begin
+///  [DEBUG] Pre dispatch: ["greet", "Alice"]
+///  [DEBUG] Post dispatch: EntryGreet
+///  [DEBUG] Pre chain: EntryGreet
+///  [DEBUG] Post chain: ResultName
+///  [DEBUG] Pre render: ResultName
+///  [DEBUG] Post render
+///  [DEBUG] Program end
+///  Hello, Alice!
+///  ```
 ///
 /// Cargo.toml
 /// ```ignore
 /// [package]
-/// name = "example-repl"
-/// version = "0.0.1"
+/// name = "example-hook"
+/// version = "0.1.0"
 /// edition = "2024"
 ///
 /// [dependencies]
-/// mingling = { path = "../../mingling", features = ["repl", "parser"] }
+/// mingling = { path = "../../mingling" }
+/// ```
+///
+/// main.rs
+/// ```ignore
+/// use mingling::{hook::ProgramHook, prelude::*};
+///
+/// dispatcher!("greet", CMDGreet => EntryGreet);
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///
+///     // --------- IMPORTANT ---------
+///     program.with_hook(
+///         ProgramHook::<ThisProgram>::empty()
+///             .on_begin(|| println!("[DEBUG] Program is begin"))
+///             .on_pre_dispatch(|args| println!("[DEBUG] Pre dispatch: {:?}", args))
+///             .on_post_dispatch(|c: &_| println!("[DEBUG] Post dispatch: {:?}", c))
+///             .on_pre_chain(|c: &_, _| {
+///                 println!("[DEBUG] Pre chain: {}", c);
+///             })
+///             .on_post_chain(|any_output| println!("[DEBUG] Post chain: {}", any_output.member_id))
+///             .on_finish(|| {
+///                 println!("[DEBUG] Loop end");
+///                 0 // Override exit code
+///             })
+///             .on_pre_render(|c: &_, _| println!("[DEBUG] Pre render: {}", c))
+///             .on_post_render(|_| println!("[DEBUG] Post render")),
+///     );
+///     // --------- IMPORTANT ---------
+///
+///     program.with_dispatcher(CMDGreet);
+///     program.exec_and_exit();
+/// }
+///
+/// pack!(ResultName = String);
+///
+/// #[chain]
+/// fn handle_greet(args: EntryGreet) -> Next {
+///     let name: ResultName = args
+///         .inner
+///         .first()
+///         .cloned()
+///         .unwrap_or_else(|| "World".to_string())
+///         .into();
+///     name
+/// }
+///
+/// #[renderer]
+/// fn render_name(name: ResultName) {
+///     r_println!("Hello, {}!", *name);
+/// }
+///
+/// gen_program!();
+/// ```
+pub mod example_hook {}
+/// Example Panic Unwind
+///
+///  > This example introduces how to catch Panic in the Mingling program loop
+///
+///  Run:
+///  ```bash
+///  cargo run --manifest-path examples/example-panic-unwind/Cargo.toml --quiet -- panic
+///  cargo run --manifest-path examples/example-panic-unwind/Cargo.toml --quiet -- panic OhMyGod
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  Program not panic
+///  Program panic: OhMyGod
+///  OhMyGod
+///  ```
+///
+/// Cargo.toml
+/// ```ignore
+/// [package]
+/// name = "example-panic-unwind"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies.mingling]
+/// path = "../../mingling"
+/// features = ["parser"]
+///
+/// # Enable panic unwinding in release builds
+/// [profile.release]
+/// panic = "unwind"
+///
+/// # Enable panic unwinding in dev builds
+/// [profile.dev]
+/// panic = "unwind"
+/// ```
+///
+/// main.rs
+/// ```ignore
+/// use mingling::{hook::ProgramHook, prelude::*};
+///
+/// dispatcher!("panic", CMDPanic => EntryPanic);
+/// pack!(NotPanic = ());
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///     program.with_dispatcher(CMDPanic);
+///
+///     // --------- IMPORTANT ---------
+///     // Enable silence_panic to suppress automatic Panic output
+///     program.stdout_setting.silence_panic = true;
+///
+///     // Define a hook to output &ProgramPanic when a Panic occurs
+///     program
+///         .with_hook(ProgramHook::empty().on_exec_panic(|info| println!("Program panic: {}", info)));
+///     // --------- IMPORTANT ---------
+///
+///     program.exec();
+/// }
+///
+/// #[chain]
+/// fn handle_panic(prev: EntryPanic) -> Next {
+///     let panic_info = prev.pick::<Option<String>>(()).unpack();
+///     match panic_info {
+///         Some(s) => {
+///             // Panic happens here, will be caught
+///             panic!("{}", s)
+///         }
+///         None => NotPanic::default(),
+///     }
+/// }
+///
+/// #[renderer]
+/// fn render(_: NotPanic) {
+///     r_println!("Program not panic");
+/// }
+///
+/// gen_program!();
+/// ```
+pub mod example_panic_unwind {}
+/// Example REPL Basic
+///
+///  > This example demonstrates how to develop a REPL program using the `repl` feature
+///
+///  Run:
+///  ```bash
+///  cargo run --manifest-path examples/example-repl-basic/Cargo.toml --quiet
+///  ```
+///
+/// Cargo.toml
+/// ```ignore
+/// [package]
+/// name = "example-repl-basic"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies.mingling]
+/// path = "../../mingling"
+/// features = ["repl", "parser"]
+///
+/// [dependencies]
 /// just_fmt = "0.1.2"
 /// ```
 ///
@@ -591,11 +1334,11 @@ pub mod example_picker {}
 ///
 /// // Resource to store the current directory
 /// #[derive(Clone)]
-/// struct CurrentDir {
+/// struct ResCurrentDir {
 ///     dir: PathBuf,
 /// }
 ///
-/// impl Default for CurrentDir {
+/// impl Default for ResCurrentDir {
 ///     fn default() -> Self {
 ///         Self {
 ///             dir: current_dir().unwrap(),
@@ -606,20 +1349,26 @@ pub mod example_picker {}
 /// fn main() {
 ///     let mut program = ThisProgram::new();
 ///
-///     // Add resource
-///     program.with_resource(CurrentDir::default());
+///     // Resource
+///     program.with_resource(ResCurrentDir::default());
 ///
-///     // Add dispatchers
+///     // Dispatchers
 ///     program.with_dispatcher(ChangeDirectoryCommand);
 ///     program.with_dispatcher(ListCommand);
 ///     program.with_dispatcher(ExitCommand);
 ///     program.with_dispatcher(ClearCommand);
 ///
-///     // Add setups
+///     // Setups
+///     // Enable basic std::io::stdin().read_line(&mut input)
 ///     program.with_setup(BasicREPLReadlineSetup);
+///
+///     // Enable basic output, using println! after Renderer finishes drawing
 ///     program.with_setup(BasicREPLOutputSetup);
+///
+///     // Enable basic Prompt display, with custom display logic
 ///     program.with_setup(BasicREPLPromptSetup::func(|| {
-///         let res = this::<ThisProgram>().res::<CurrentDir>().unwrap();
+///         // Get the ResCurrentDir resource from the program
+///         let res = this::<ThisProgram>().res::<ResCurrentDir>().unwrap();
 ///         let dir_str: String = res.dir.to_string_lossy().into();
 ///         let prompt = format!(
 ///             "{}> ",
@@ -665,9 +1414,11 @@ pub mod example_picker {}
 ///
 /// // Execute directory change
 /// #[chain]
-/// fn handle_cd(prev: StateChangeDirectory, current_dir: &mut CurrentDir) -> Next {
+/// fn handle_cd(prev: StateChangeDirectory, current_dir: &mut ResCurrentDir) -> Next {
+///     use just_fmt::fmt_path::fmt_path;
+///
 ///     let join = prev.inner;
-///     let new_dir = just_fmt::fmt_path::fmt_path(current_dir.dir.join(join)).unwrap_or_default();
+///     let new_dir = fmt_path(current_dir.dir.join(join)).unwrap_or_default();
 ///
 ///     // If the path is not found, route to error handling
 ///     if !new_dir.exists() {
@@ -680,7 +1431,7 @@ pub mod example_picker {}
 ///
 /// // Get directory contents via the CurrentDir resource
 /// #[chain]
-/// fn handle_ls(_prev: ListEntry, current_dir: &CurrentDir) -> Next {
+/// fn handle_ls(_prev: ListEntry, current_dir: &ResCurrentDir) -> Next {
 ///     let dir = &current_dir.dir;
 ///     let entries: Vec<String> = std::fs::read_dir(dir)
 ///         .into_iter()
@@ -738,76 +1489,269 @@ pub mod example_picker {}
 ///
 /// gen_program!();
 /// ```
-pub mod example_repl {}
-/// `Mingling` Example - Global Resource Injection
+pub mod example_repl_basic {}
+/// Example Resource Injection
 ///
-///  This example demonstrates how to use global resource injection in `#[chain]` functions.
-///  You can inject both immutable (`&T`) and mutable (`&mut T`) references to global resources.
+///  > This example demonstrates how to read and write the program's global state using Mingling's resource system
 ///
-///  # How to Run
+///  Run:
 ///  ```bash
-///  cargo run --manifest-path ./examples/example-resources/Cargo.toml -- setup
+///  cargo run --manifest-path examples/example-resources/Cargo.toml --quiet current
+///  cargo run --manifest-path examples/example-resources/Cargo.toml --quiet modify-current src
+///  ```
+///
+///  Output:
+///  ```plaintext
+///  Current directory: /home/alice/mingling
+///  Current directory: /home/alice/mingling/src
 ///  ```
 ///
 /// Cargo.toml
 /// ```ignore
 /// [package]
 /// name = "example-resources"
-/// version = "0.0.1"
+/// version = "0.1.0"
 /// edition = "2024"
 ///
-/// [dependencies]
-/// mingling = { path = "../../mingling", features = ["parser"] }
+/// [dependencies.mingling]
+/// path = "../../mingling"
+/// features = ["parser"]
 /// ```
 ///
 /// main.rs
 /// ```ignore
-/// use mingling::prelude::*;
-/// use std::{env::current_dir, path::PathBuf};
+/// use std::path::PathBuf;
 ///
-/// // Define a resource for storing global state
+/// use mingling::prelude::*;
+///
+/// // Create resource
+/// //        ______________ Resource needs to
+/// //       /        /        implement the following two traits
+/// //       vvvvvvv  vvvvv
 /// #[derive(Default, Clone)]
-/// pub struct MyResource {
+/// struct ResCurrentDir {
 ///     current_dir: PathBuf,
 /// }
 ///
 /// fn main() {
 ///     let mut program = ThisProgram::new();
 ///
-///     // Add the resource to the program
-///     program.with_resource(MyResource::default());
+///     // --------- IMPORTANT ---------
+///     // Use `with_resource` to inject a singleton into the program
+///     program.with_resource(ResCurrentDir {
+///         current_dir: std::env::current_dir().unwrap(),
+///     });
+///     // --------- IMPORTANT ---------
 ///
-///     program.with_dispatcher(SetupCommand);
+///     program.with_dispatchers((CMDCurrent, CMDModifyCurrent));
 ///     program.exec_and_exit();
 /// }
 ///
-/// dispatcher!("setup", SetupCommand => SetupEntry);
-/// pack!(StateRead = ());
-/// pack!(ResultCurrentDir = PathBuf);
+/// dispatcher!("current", CMDCurrent => EntryCurrent);
+/// dispatcher!("modify-current", CMDModifyCurrent => EntryModifyCurrent);
 ///
-/// #[chain]
-/// fn setup(
-///     _prev: SetupEntry,
-///     resource: &mut MyResource, // Import the resource into `setup`
-/// ) -> Next {
-///     // Set the global resource
-///     resource.current_dir = current_dir().unwrap();
-///
-///     StateRead::default()
+/// // Define chain for modifying current directory                  _________________ Injected muttable resource
+/// //                                                              /
+/// #[chain] //                                                     vvvvvvvvvvvvvvvvvv
+/// fn render_modify_current(args: EntryModifyCurrent, current_dir: &mut ResCurrentDir) -> Next {
+///     current_dir.current_dir = current_dir
+///         .current_dir
+///         .join(args.pick::<String>(()).unpack());
+///     EntryCurrent::default()
 /// }
 ///
-/// #[chain]
-/// fn read(_prev: StateRead, resource: &MyResource) -> Next {
-///     // Read the global resource
-///     let current_dir = resource.current_dir.clone();
-///     ResultCurrentDir::new(current_dir).to_render()
-/// }
-///
-/// #[renderer]
-/// fn render_current_dir(dir: ResultCurrentDir) {
-///     r_println!("Current dir: {}", dir.to_string_lossy())
+/// // Define renderer for output current path       _____________ Injected resource
+/// //                                              /
+/// #[renderer] //                                  vvvvvvvvvvvvvv
+/// fn render_current(_: EntryCurrent, current_dir: &ResCurrentDir) {
+///     r_println!("Current directory: {}", current_dir.current_dir.display());
 /// }
 ///
 /// gen_program!();
 /// ```
 pub mod example_resources {}
+/// Example Setup
+///
+///  > This example demonstrates how to build a custom Setup for modular management of project components
+///
+/// Cargo.toml
+/// ```ignore
+/// [package]
+/// name = "example-setup"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies]
+/// mingling = { path = "../../mingling" }
+/// ```
+///
+/// main.rs
+/// ```ignore
+/// use mingling::{Program, macros::program_setup, prelude::*};
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///
+///     // --------- IMPORTANT ---------
+///     // Introduce `CustomSetup` generated by `custom_setup`
+///     program.with_setup(CustomSetup);
+///     // --------- IMPORTANT ---------
+///
+///     program.exec_and_exit();
+/// }
+///
+/// // --------- IMPORTANT ---------
+/// // Define `CustomSetup` (inferred from `custom_setup`)
+/// // Package part of the program construction logic into this type for modular management
+/// #[program_setup]
+/// fn custom_setup(program: &mut Program<ThisProgram>) {
+///     program.with_dispatchers((CMD1, CMD2, CMD3, CMD4, CMD5));
+/// }
+/// // --------- IMPORTANT ---------
+///
+/// dispatcher!("1", CMD1 => Entry1);
+/// dispatcher!("2", CMD2 => Entry2);
+/// dispatcher!("3", CMD3 => Entry3);
+/// dispatcher!("4", CMD4 => Entry4);
+/// dispatcher!("5", CMD5 => Entry5);
+///
+/// gen_program!();
+/// ```
+pub mod example_setup {}
+/// Example Unit Test
+///
+///  > This example shows how to write unit tests for Chain and Renderer in Mingling
+///
+///  ```bash
+///  cargo test --manifest-path examples/example-unit-test/Cargo.toml
+///  ```
+///
+/// Cargo.toml
+/// ```ignore
+/// [package]
+/// name = "example-unit-test"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies]
+/// mingling = { path = "../../mingling" }
+/// ```
+///
+/// main.rs
+/// ```ignore
+/// use mingling::prelude::*;
+///
+/// #[cfg(test)]
+/// mod tests {
+///     use super::*;
+///     use mingling::{assert_member_id, assert_render_result};
+///
+///     // --------- IMPORTANT ---------
+///     #[test]
+///     fn test_handle_hello() {
+///         let hello_without_args = handle_hello(entry!()).into();
+///         assert_render_result!(hello_without_args);
+///         assert_member_id!(hello_without_args, ThisProgram::ErrorNoNameProvided);
+///
+///         let hello_with_registered_name = handle_hello(entry!("Alice")).into();
+///         assert_render_result!(hello_with_registered_name);
+///         assert_member_id!(
+///             hello_with_registered_name,
+///             ThisProgram::ErrorNameNotAvailable
+///         );
+///
+///         let hello_with_long_name = handle_hello(entry!("It's a VeryLongName")).into();
+///         assert_render_result!(hello_with_long_name);
+///         assert_member_id!(hello_with_long_name, ThisProgram::ErrorNameTooLong);
+///
+///         let hello_with_valid_name = handle_hello(entry!("Peter")).into();
+///         assert_render_result!(hello_with_valid_name);
+///     }
+///
+///     #[test]
+///     fn test_render_result_name() {
+///         let r = render_result_name(ResultName::new("Peter".into()));
+///         assert_eq!(r, "Hello, Peter!\n")
+///     }
+///
+///     #[test]
+///     fn test_render_error_no_name_provided() {
+///         let r = render_error_no_name_provided(ErrorNoNameProvided::default());
+///         assert_eq!(r, "No name provided\n")
+///     }
+///
+///     #[test]
+///     fn test_render_error_name_not_available() {
+///         let r = render_error_name_not_available(ErrorNameNotAvailable::default());
+///         assert_eq!(r, "Name not available\n")
+///     }
+///
+///     #[test]
+///     fn test_render_error_name_too_long() {
+///         let r = render_error_name_too_long(ErrorNameTooLong::new(17));
+///         assert_eq!(r, "Name too long: 17 > 10\n")
+///     }
+///     // --------- IMPORTANT ---------
+/// }
+///
+/// dispatcher!("hello", CMDHello => EntryHello);
+///
+/// pack!(ErrorNoNameProvided = ());
+/// pack!(ErrorNameTooLong = u16);
+/// pack!(ErrorNameNotAvailable = ());
+///
+/// pack!(ResultName = String);
+///
+/// static VEC_REGISTERED_NAMES: &[&str] = &["Alice", "Bob", "Charlie", "David", "Eve"];
+///
+/// #[chain]
+/// fn handle_hello(args: EntryHello) -> Next {
+///     let Some(name) = args.inner.first().cloned() else {
+///         return ErrorNoNameProvided::default().to_render();
+///     };
+///
+///     if name.len() > 10 {
+///         return ErrorNameTooLong::new(name.len() as u16).to_render();
+///     }
+///
+///     if VEC_REGISTERED_NAMES.contains(&name.as_str()) {
+///         return ErrorNameNotAvailable::default().to_render();
+///     }
+///
+///     ResultName::new(name).to_render()
+/// }
+///
+/// #[renderer]
+/// fn render_result_name(name: ResultName) -> String {
+///     r_println!("Hello, {}!", *name);
+/// }
+///
+/// #[renderer]
+/// fn render_error_no_name_provided(_: ErrorNoNameProvided) -> String {
+///     r_println!("No name provided");
+/// }
+///
+/// #[renderer]
+/// fn render_error_name_not_available(_: ErrorNameNotAvailable) -> String {
+///     r_println!("Name not available");
+/// }
+///
+/// #[renderer]
+/// fn render_error_name_too_long(len: ErrorNameTooLong) -> String {
+///     r_println!("Name too long: {} > 10", *len);
+/// }
+///
+/// #[renderer]
+/// fn render_dispatcher_not_found(err: DispatcherNotFound) {
+///     r_println!("Command not found: \"{}\"", err.inner.join(" "));
+/// }
+///
+/// gen_program!();
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///     program.with_dispatcher(CMDHello);
+///     program.exec_and_exit();
+/// }
+/// ```
+pub mod example_unit_test {}

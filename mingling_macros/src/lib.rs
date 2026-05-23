@@ -33,6 +33,7 @@ mod dispatch_tree_gen;
 mod dispatcher;
 #[cfg(feature = "clap")]
 mod dispatcher_clap;
+mod entry;
 mod enum_tag;
 mod groupped;
 mod help;
@@ -774,6 +775,27 @@ pub fn program_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn dispatcher_clap(attr: TokenStream, item: TokenStream) -> TokenStream {
     dispatcher_clap::dispatcher_clap_attr(attr, item)
+}
+
+/// Creates a packed entry value from a list of string literals.
+///
+/// # Syntax
+///
+/// Two forms:
+///
+/// ```rust,ignore
+/// // With explicit type — expands to MyEntry::new(vec!["a".to_string(), ...])
+/// entry!(MyEntry, ["a", "b", "c"])
+///
+/// // Without type — use bracket syntax, expands to vec!["a".to_string(), ...].into()
+/// entry!["a", "b", "c"]
+/// ```
+///
+/// This is a convenience macro for constructing entry wrapper types (created
+/// via `pack!` or `dispatcher!`) with test data.
+#[proc_macro]
+pub fn entry(input: TokenStream) -> TokenStream {
+    entry::entry(input)
 }
 
 /// Registers a help request mapping between an entry type and a help struct.

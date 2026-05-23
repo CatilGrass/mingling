@@ -2,15 +2,23 @@
 resolver = "2"
 members = ["mingling", "mingling_core", "mingling_macros", "mling"]
 exclude = [
-    "examples/example-async",
+    "examples/example-argument-parse",
+    "examples/example-async-support",
     "examples/example-basic",
     "examples/example-completion",
+    "examples/example-custom-pickable",
     "examples/example-dispatch-tree",
-    "examples/example-exit-code",
+    "examples/example-enum-tag",
+    "examples/example-error-handling",
+    "examples/example-exitcode",
     "examples/example-general-renderer",
-    "examples/example-picker",
-    "examples/example-repl",
+    "examples/example-help",
+    "examples/example-hook",
+    "examples/example-panic-unwind",
+    "examples/example-repl-basic",
     "examples/example-resources",
+    "examples/example-setup",
+    "examples/example-unit-test",
     "dev_tools",
 ]
 

@@ -1,0 +1,15 @@
+[package]
+name = "example-async-support"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies.mingling]
+path = "../../mingling"
+
+# Enable `parser` features
+features = ["async", "parser"]
+
+# Import any async runtime, e.g. Tokio
+[dependencies.tokio]
+version = "1.52.3"
+features = ["macros", "rt", "rt-multi-thread", "time"]

@@ -1,47 +1,70 @@
-//! `Mingling` Example - Basic
+//! Example The Basic Usage of Mingling
 //!
-//! # How to Run
-//! ```bash
-//! cargo run --manifest-path ./examples/example-basic/Cargo.toml -- hello World
+//! Run:
+//! ```base
+//! cargo run --manifest-path examples/example-basic/Cargo.toml --quiet -- greet
+//! cargo run --manifest-path examples/example-basic/Cargo.toml --quiet -- greet Alice
+//! ```
+//!
+//! Output:
+//! ```plaintext
+//! Hello, World!
+//! Hello, Alice!
 //! ```
 
+// Import commonly used Mingling modules
 use mingling::prelude::*;
 
-// Define dispatcher `HelloCommand`, directing subcommand "hello" to `HelloEntry`
-dispatcher!("hello", HelloCommand => HelloEntry);
+// Define the `greet` subcommand
+//            _____________________________ subcmd name, can be nested (e.g. "remote.add" "remote.rm")
+//           /        _____________________ dispatcher name
+//           |       /            _________ entry, records raw arguments
+//           |       |           /                         ^^^^^^^^^^^^^
+//           vvvvv   vvvvvvvv    vvvvvvvvvv                \_ equivalent to pack!(EntryGreet = Vec<String>)
+dispatcher!("greet", CMDGreet => EntryGreet);
 
 fn main() {
-    // Create program
+    // Create a new ThisProgram
     let mut program = ThisProgram::new();
 
-    // Add dispatcher `HelloCommand`
-    program.with_dispatcher(HelloCommand);
+    // Add the CMDGreet dispatcher
+    program.with_dispatcher(CMDGreet);
 
-    // Run program
-    program.exec();
+    // Run the program, then exit the process
+    program.exec_and_exit();
 }
 
-// Register wrapper type `Hello`, setting inner to `String`
-pack!(Hello = String);
+// Quickly wrap a type into a type recognizable by the current program
+//     ____________________ Wrapped type name
+//    /             _______ Wrapped type inner value
+//    |            /
+//    vvvvvvvvvv   vvvvvv
+pack!(ResultName = String);
 
-// Register chain to `ThisProgram`, handling logic from `HelloEntry`
-#[chain]
-fn parse_name(prev: HelloEntry) -> Next {
-    // Extract string from `HelloEntry` as argument
-    let name = prev.first().cloned().unwrap_or_else(|| "World".to_string());
-
-    // Build `Hello` type and route to renderer
-    Hello::new(name).to_render()
+// Define the `handle_greet` chain for parsing input text
+//                     ____________________ Previous type:
+//                    /                       Mingling deduces types at runtime and routes them to this function
+//                    |               _____ will be expanded to:
+//                    |              /        impl Into<mingling::ChainProcess<ThisProgram>>
+#[chain] //           vvvvvvvvvv     vvvv
+fn handle_greet(args: EntryGreet) -> Next {
+    let name: ResultName = args
+        .inner
+        .first()
+        .cloned()
+        .unwrap_or_else(|| "World".to_string())
+        .into();
+    name
 }
 
-// Register renderer to `ThisProgram`, handling rendering of `Hello`
+// Define renderer `render_name`, used to render `ResultName`
 #[renderer]
-fn render_hello_who(prev: Hello) {
-    // Print message
-    r_println!("Hello, {}!", *prev);
-
-    // Program ends here
+fn render_name(name: ResultName) {
+    r_println!("Hello, {}!", *name);
 }
 
-// Generate program, default is `ThisProgram`
+// Note: This macro generates the program entry point.
+// It must be placed at the end of the root module of the crate (>= mingling@0.1.8).
+//                          ^^^^^^     ^^^^^^^^^^^
+// For example: lib.rs, main.rs
 gen_program!();

@@ -1,0 +1,16 @@
+[package]
+name = "example-panic-unwind"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies.mingling]
+path = "../../mingling"
+features = ["parser"]
+
+# Enable panic unwinding in release builds
+[profile.release]
+panic = "unwind"
+
+# Enable panic unwinding in dev builds
+[profile.dev]
+panic = "unwind"

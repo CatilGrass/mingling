@@ -1,30 +1,15 @@
-//! `Mingling` Example - General Renderer
+//! Example General Renderer
 //!
-//! ## Step1 - Enable Feature
-//! Enable the `general_renderer` feature for mingling in `Cargo.toml`
-//! ```toml
-//! [dependencies]
-//! mingling = { version = "...", features = ["general_renderer", "parser"] }
-//! ```
+//! > This example demonstrates how to use the `general_renderer` feature to render data into structures such as json / yaml
 //!
-//! ## Step2 - Add Dependencies
-//! Add `serde` dependency to `Cargo.toml` for serialization support
-//! ```toml
-//! [dependencies]
-//! serde = { version = "1", features = ["derive"] }
-//! ```
-//!
-//! ## Step3 - Write Code
-//! Write the following content into `main.rs`
-//!
-//! ## Step4 - Build and Run
+//! Run
 //! ```bash
-//! cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22
-//! cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22 --json
-//! cargo run --manifest-path ./examples/example-general-renderer/Cargo.toml -- render Bob 22 --yaml
+//! cargo run --manifest-path examples/example-general-renderer/Cargo.toml --quiet -- render Bob 22
+//! cargo run --manifest-path examples/example-general-renderer/Cargo.toml --quiet -- render Bob 22 --json
+//! cargo run --manifest-path examples/example-general-renderer/Cargo.toml --quiet -- render Bob 22 --yaml
 //! ```
 //!
-//! Will print:
+//! Output:
 //! ```plain
 //! Bob is 22 years old
 //! {"member_name":"Bob","member_age":22}
@@ -33,7 +18,7 @@
 //! ```
 
 use mingling::prelude::*;
-use mingling::{parser::Picker, setup::GeneralRendererSetup, Groupped};
+use mingling::{Groupped, parser::Picker, setup::GeneralRendererSetup};
 use serde::Serialize;
 
 dispatcher!("render", RenderCommand => RenderCommandEntry);
@@ -46,7 +31,13 @@ fn main() {
     program.exec();
 }
 
-// Manually implement Info struct
+// --------- IMPORTANT ---------
+// For beautiful output structure, do not use `pack!` to wrap the types that need to be output.
+// Instead, manually implement
+//        ____________________ Implement serde::Serialize
+//       /           _________ Implement mingling::Groupped
+//       |          /            to ensure Mingling can recognize the type
+//       vvvvvvvvv  vvvvvvvv
 #[derive(Serialize, Groupped)]
 struct Info {
     #[serde(rename = "member_name")]
@@ -54,6 +45,12 @@ struct Info {
     #[serde(rename = "member_age")]
     age: i32,
 }
+// This will output: {"member_name":"name","member_age":32} structure
+
+// If using pack!(Info = (String, i32));
+// Output: {"inner":["name", 32]}
+
+// --------- IMPORTANT ---------
 
 #[chain]
 fn parse_render(prev: RenderCommandEntry) -> Next {

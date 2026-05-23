@@ -1,13 +1,14 @@
 [package]
 name = "example-general-renderer"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-mingling = { path = "../../mingling", features = [
-    "parser",
+serde = { version = "1.0.228", features = ["derive"] }
+
+[dependencies.mingling]
+path = "../../mingling"
+features = [
     "general_renderer",
-    "json_serde_fmt",
-    "yaml_serde_fmt",
-] }
-serde = { version = "1", features = ["derive"] }
+    "parser",
+]

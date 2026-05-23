@@ -1,8 +1,0 @@
-[package]
-name = "example-picker"
-version = "0.0.1"
-edition = "2024"
-
-[dependencies]
-mingling = { path = "../../mingling", features = ["parser"] }
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
