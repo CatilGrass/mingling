@@ -3,12 +3,15 @@
 ### Release 0.1.9
 
 ### Fixes:
+
 None
 
 ### Optimizings:
+
 1. **\[macros\]** Removed dependency `once_cell`, replaced with `std::sync::OnceLock`
 
 #### Features:
+
 1. **\[macros\]** Added the `empty_result!()` macro for early return from a chain function. This macro is a shorthand for constructing an `EmptyResult` and converting it into a `ChainProcess`, signaling to the pipeline that there is no meaningful output to continue processing.
 
 ```rust
@@ -41,12 +44,11 @@ fn handle_path_pick(prev: PathPick) {
 ```
 
 3. **\[macros\]** Extended the `#[renderer]` attribute to support custom return types. Previously, `#[renderer]` functions could only return `()`, and the generated helper function always returned `RenderResult`. Now:
-
    - **`fn foo(x: T)` / `fn foo(x: T) -> ()`** → The generated helper function returns `()`. If the internal `RenderResult` (`dummy_r`) is non-empty, it is automatically printed to stdout.
    - **`fn foo(x: T) -> U`** → The generated helper function returns `U`. The internal `RenderResult` is converted via `dummy_r.into()`, and no automatic printing occurs.
 
 4. **\[macros\]** Resource injection is now shared between `#[chain]` and `#[renderer]`.  
-Extracted the common resource injection infrastructure (`ResourceInjection`, `extract_args_info`, `generate_immut_resource_bindings`, `wrap_body_with_mut_resources`) from `chain.rs` into a new `res_injection.rs` module. Both `#[chain]` and `#[renderer]` now reuse the same logic.
+   Extracted the common resource injection infrastructure (`ResourceInjection`, `extract_args_info`, `generate_immut_resource_bindings`, `wrap_body_with_mut_resources`) from `chain.rs` into a new `res_injection.rs` module. Both `#[chain]` and `#[renderer]` now reuse the same logic.
 
 The `#[renderer]` attribute now supports resource injection parameters (just like `#[chain]`):
 
@@ -57,11 +59,24 @@ fn render_greeting(prev: Greeting, res: &MyRes) {
 }
 ```
 
-5. **\[picker\]** Implement `Pickable` for `Option<T>`  
+5. **\[picker\]** Implement `Pickable` for `Option<T>`
 
 Added `impl<T: Pickable<Output = T> + Default> Pickable for Option<T>`, allowing optional values to be directly parsed via `Pickable` without manually handling the `Option` wrapping logic.
 
+6. **\[macros\]** Added `entry!` macro
+
+The `entry!` macro provides a convenient way to construct packed entry wrapper types (created via `dispatcher!`) with test data. Two syntax forms are available:
+
+```rust
+// With explicit type — expands to MyEntry::new(vec!["a".to_string(), ...])
+entry!(MyEntry, ["a", "b", "c"])
+
+// Without type — uses bracket syntax, expands to vec!["a".to_string(), ...].into()
+entry!["a", "b", "c"]
+```
+
 #### **BREAKING CHANGES** (API CHANGES):
+
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled
 2. **\[core\]** `modify_res` signature changed: now returns `Return` instead of `()`
 3. **\[core\]** Renamed internal method `__modify_res_and_return_any` to `__modify_res_and_return_route`
@@ -81,14 +96,16 @@ fn render(prev: Previous) { // Implicitly introduces `__renderer_inner_result`
 }
 ```
 
---- 
+---
 
 ### Release 0.1.8 (2026-05-18)
 
 #### Fixes:
+
 None
 
 #### Optimizings:
+
 1. **\[core\]** The core library no longer depends on `thiserror`
 
 2. **\[mingling\]** Split the monolithic `general_renderer` feature into separate format-specific features:
@@ -109,7 +126,7 @@ fn process(prev: HelloEntry, age: &Age, name: &Name) -> Next {
 }
 ```
 
-Will expand: 
+Will expand:
 
 ```rust
 fn proc(prev: HelloEntry) -> ChainProcess<ThisProgram> {
@@ -191,7 +208,7 @@ this::<ThisProgram>().modify_res::<ExitCode>(|code| {
 });
 ```
 
-12. **\[core\]** Added panic catch for program execution. 
+12. **\[core\]** Added panic catch for program execution.
 13. **\[core\]** Added the `stdout_setting.silence_panic` option, which is disabled by default. When enabled, `Program`'s `panic!` will not output to the console
 
 14. **\[macros\]** `#[chain]` now supports a no-return-value mode, which will automatically return `crate::EmptyResult::new(()).to_chain()`
@@ -240,7 +257,7 @@ fn your_chain(_prev: Prev) -> Next {
 
 ```
 
---- 
+---
 
 ### Release 0.1.7 (2026-05-04)
 
@@ -266,7 +283,7 @@ fn your_chain(_prev: Prev) -> Next {
 struct YourCommandEntry {
     #[arg(long, short)]
     str_param: String,
-    
+
     #[arg(long, short)]
     path_param: PathBuf,
 }
@@ -387,17 +404,16 @@ fn parse_sth(prev: SomeEntry) -> NextProcess {
 5. **\[core\]** Removed `mingling::marker::NextProcess` and moved its creation process to `gen_program!()`
 
 ```rust
-use mingling::marker::NextProcess; // Remove this 
+use mingling::marker::NextProcess; // Remove this
 
 // NextProcess generated here
 gen_program!();
 ```
 
 6. **\[picker\]** Simplified `Picker` logic:
+   - `Picker` no longer requires the generic parameter `<G>` by default; it only needs it when using `pick_or_route` or `after_or_route`
 
-     - `Picker` no longer requires the generic parameter `<G>` by default; it only needs it when using `pick_or_route` or `after_or_route`
-
-     - Additionally, if no `or_route` operations are used, the `unpack_directly` function is no longer available; `unpack` will directly extract the inner value
+   - Additionally, if no `or_route` operations are used, the `unpack_directly` function is no longer available; `unpack` will directly extract the inner value
 
 ```rust
 // Before
@@ -410,7 +426,7 @@ let (name, age) = Picker::<()>::new(prev.inner) // had to specify an arbitrary t
 let (name, age) = Picker::new(prev.inner) // no longer need to specify an unused route type
     .pick::<String>(())
     .pick::<i32>(())
-    .unpack(); // no longer need to use `unpack_directly` 
+    .unpack(); // no longer need to use `unpack_directly`
 
 // But ...
 let (name, age) = Picker::new(prev.inner)
@@ -451,6 +467,7 @@ let (name, age) = Picker::new(prev.inner)
 #### **BREAKING CHANGES**:
 
 1. **\[macros\]** The `chain!` macro no longer requires explicit type conversion when routing a type to `Chain`.
+
 ```rust
 // Before
 #[chain]
@@ -484,6 +501,7 @@ fn proc(_prev: SomeType) -> NextProcess {
 ### Release 0.1.5 (2026-04-12)
 
 #### Fixes:
+
 None
 
 #### Features:
@@ -503,6 +521,7 @@ None
 ### Release 0.1.4 (2026-04-06)
 
 #### Fixes:
+
 None
 
 #### Features:
@@ -515,6 +534,7 @@ None
 6. **\[macros\]** Simplified attribute parsing in macros
 
 #### BREAKING CHANGES:
+
 None
 
 ---
@@ -541,6 +561,7 @@ None
 ### Release 0.1.2 (2026-03-31)
 
 #### Fixes:
+
 None
 
 #### Features:
@@ -550,6 +571,7 @@ None
 3. **\[core\]** Added `From<()>` implementation for `Flag`
 
 #### BREAKING CHANGES:
+
 None
 
 ---
@@ -557,6 +579,7 @@ None
 ### Release 0.1.1 (2026-03-29)
 
 #### Fixes:
+
 None
 
 #### Features:
