@@ -24,12 +24,12 @@ pub enum BasicREPLPromptSetup {
 }
 
 impl BasicREPLPromptSetup {
-    /// Creates a new [`BasicREPLPrompt`] with the given prompt string.
+    /// Creates a new [`BasicREPLPromptSetup`] with the given prompt string.
     pub fn simple(prompt: impl Into<String>) -> Self {
         Self::Prompt(prompt.into())
     }
 
-    /// Creates a new [`BasicREPLPrompt`] with the given function.
+    /// Creates a new [`BasicREPLPromptSetup`] with the given function.
     pub fn func(func: fn() -> String) -> Self {
         Self::Func(func)
     }

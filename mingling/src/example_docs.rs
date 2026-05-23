@@ -20,8 +20,8 @@
 ///  Error: name is not provided
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-argument-parse"
 /// version = "0.1.0"
@@ -34,7 +34,7 @@
 /// features = ["parser"]
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{macros::route, prelude::*};
 ///
@@ -139,8 +139,8 @@ pub mod example_argument_parse {}
 ///  "README.md" downloaded.
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-async-support"
 /// version = "0.1.0"
@@ -158,7 +158,7 @@ pub mod example_argument_parse {}
 /// features = ["macros", "rt", "rt-multi-thread", "time"]
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{hook::ProgramHook, prelude::*};
 ///
@@ -218,8 +218,8 @@ pub mod example_async_support {}
 ///  Hello, Alice!
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-basic"
 /// version = "0.1.0"
@@ -229,7 +229,7 @@ pub mod example_async_support {}
 /// mingling = { path = "../../mingling" }
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// // Import commonly used Mingling modules
 /// use mingling::prelude::*;
@@ -335,8 +335,8 @@ pub mod example_basic {}
 ///  Hello, Alice, Alice, Alice!
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-completion"
 /// version = "0.1.0"
@@ -364,7 +364,7 @@ pub mod example_basic {}
 /// ]
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{macros::suggest, prelude::*, ShellContext, Suggest};
 ///
@@ -467,8 +467,8 @@ pub mod example_completion {}
 ///  Failed to parse address
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-custom-pickable"
 /// version = "0.1.0"
@@ -482,7 +482,7 @@ pub mod example_completion {}
 /// ]
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{Groupped, macros::route, parser::Pickable, prelude::*};
 ///
@@ -616,8 +616,8 @@ pub mod example_custom_pickable {}
 ///  It's works!
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-dispatch-tree"
 /// version = "0.1.0"
@@ -631,7 +631,7 @@ pub mod example_custom_pickable {}
 /// ]
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::prelude::*;
 ///
@@ -689,8 +689,8 @@ pub mod example_dispatch_tree {}
 ///  Selected: Rust (A systems programming language focused on performance, safety, and concurrency)
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-enum-tag"
 /// version = "0.1.0"
@@ -705,7 +705,7 @@ pub mod example_dispatch_tree {}
 /// ]
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{
 ///     EnumTag, Groupped, ShellContext, Suggest, macros::suggest_enum, parser::PickableEnum,
@@ -816,8 +816,8 @@ pub mod example_enum_tag {}
 ///  Hello, Peter
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-error-handling"
 /// version = "0.1.0"
@@ -827,7 +827,7 @@ pub mod example_enum_tag {}
 /// mingling = { path = "../../mingling" }
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::prelude::*;
 ///
@@ -922,8 +922,8 @@ pub mod example_error_handling {}
 ///  No name provided (with exit code 1)
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-exitcode"
 /// version = "0.1.0"
@@ -933,7 +933,7 @@ pub mod example_error_handling {}
 /// mingling = { path = "../../mingling" }
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{prelude::*, res::ExitCode, setup::ExitCodeSetup};
 ///
@@ -1002,8 +1002,8 @@ pub mod example_exitcode {}
 ///  member_age: 22
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-general-renderer"
 /// version = "0.1.0"
@@ -1020,7 +1020,7 @@ pub mod example_exitcode {}
 /// ]
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::prelude::*;
 /// use mingling::{Groupped, parser::Picker, setup::GeneralRendererSetup};
@@ -1090,8 +1090,8 @@ pub mod example_general_renderer {}
 ///  Usage: greet <NAME>
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-help"
 /// version = "0.1.0"
@@ -1101,7 +1101,7 @@ pub mod example_general_renderer {}
 /// mingling = { path = "../../mingling" }
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{macros::help, prelude::*, setup::BasicProgramSetup};
 ///
@@ -1153,8 +1153,8 @@ pub mod example_help {}
 ///  Hello, Alice!
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-hook"
 /// version = "0.1.0"
@@ -1164,7 +1164,7 @@ pub mod example_help {}
 /// mingling = { path = "../../mingling" }
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{hook::ProgramHook, prelude::*};
 ///
@@ -1234,8 +1234,8 @@ pub mod example_hook {}
 ///  OhMyGod
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-panic-unwind"
 /// version = "0.1.0"
@@ -1254,7 +1254,7 @@ pub mod example_hook {}
 /// panic = "unwind"
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{hook::ProgramHook, prelude::*};
 ///
@@ -1306,8 +1306,8 @@ pub mod example_panic_unwind {}
 ///  cargo run --manifest-path examples/example-repl-basic/Cargo.toml --quiet
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-repl-basic"
 /// version = "0.1.0"
@@ -1321,7 +1321,7 @@ pub mod example_panic_unwind {}
 /// just_fmt = "0.1.2"
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{
 ///     REPL,
@@ -1506,8 +1506,8 @@ pub mod example_repl_basic {}
 ///  Current directory: /home/alice/mingling/src
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-resources"
 /// version = "0.1.0"
@@ -1518,7 +1518,7 @@ pub mod example_repl_basic {}
 /// features = ["parser"]
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use std::path::PathBuf;
 ///
@@ -1574,8 +1574,8 @@ pub mod example_resources {}
 ///
 ///  > This example demonstrates how to build a custom Setup for modular management of project components
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-setup"
 /// version = "0.1.0"
@@ -1585,7 +1585,7 @@ pub mod example_resources {}
 /// mingling = { path = "../../mingling" }
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{Program, macros::program_setup, prelude::*};
 ///
@@ -1626,8 +1626,8 @@ pub mod example_setup {}
 ///  cargo test --manifest-path examples/example-unit-test/Cargo.toml
 ///  ```
 ///
-/// Cargo.toml
-/// ```ignore
+/// Source code (./Cargo.toml)
+/// ```toml
 /// [package]
 /// name = "example-unit-test"
 /// version = "0.1.0"
@@ -1637,7 +1637,7 @@ pub mod example_setup {}
 /// mingling = { path = "../../mingling" }
 /// ```
 ///
-/// main.rs
+/// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::prelude::*;
 ///
