@@ -192,6 +192,7 @@ mod setups;
 /// Setups provided by Mingling, which can extend command-line programs.
 pub mod setup {
     pub use crate::setups::*;
+    pub use mingling_core::setup::*;
 }
 
 /// Mutable global resources provided within Mingling
