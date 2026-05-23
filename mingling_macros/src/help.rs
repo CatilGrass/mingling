@@ -128,7 +128,7 @@ pub fn help_attr(item: TokenStream) -> TokenStream {
                 }
 
                 // Call the wrapper function
-                help_wrapper(#prev_param, r);
+                help_wrapper(#prev_param, __renderer_inner_result);
             }
         }
 
@@ -154,7 +154,7 @@ fn build_help_entry(struct_name: &Ident, entry_type: &TypePath) -> proc_macro2::
             // SAFETY: The member_id check ensures that `any` contains a value of type `#entry_type`,
             // so downcasting to `#entry_type` is safe.
             let value = unsafe { any.downcast::<#entry_type>().unwrap_unchecked() };
-            <#struct_name as ::mingling::HelpRequest>::render_help(value, r);
+            <#struct_name as ::mingling::HelpRequest>::render_help(value, __renderer_inner_result);
         }
     }
 }
