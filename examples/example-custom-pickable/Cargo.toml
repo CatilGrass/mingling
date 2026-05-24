@@ -6,6 +6,4 @@ edition = "2024"
 [dependencies.mingling]
 path = "../../mingling"
 
-features = [
-    "parser",
-]
+features = ["parser", "extra_macros"]

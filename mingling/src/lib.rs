@@ -86,6 +86,7 @@ pub mod macros {
     /// Used to create an empty result value for early return from a chain function
     pub use mingling_macros::empty_result;
     /// Creates a packed entry value from a list of string literals
+    #[cfg(feature = "extra_macros")]
     pub use mingling_macros::entry;
     /// Used to collect data and create a command-line context
     pub use mingling_macros::gen_program;
@@ -103,6 +104,7 @@ pub mod macros {
     /// Internal macro for 'gen_program' used to finally generate the program
     pub use mingling_macros::program_final_gen;
     /// Used to generate program setup
+    #[cfg(feature = "extra_macros")]
     pub use mingling_macros::program_setup;
     /// Used to print content within a `Renderer` context
     pub use mingling_macros::r_print;
@@ -121,6 +123,7 @@ pub mod macros {
     /// Used to generate a struct implementing the `Renderer` trait via a method
     pub use mingling_macros::renderer;
     /// Used to generate a route that either returns a successful result or early returns an error.
+    #[cfg(feature = "extra_macros")]
     pub use mingling_macros::route;
     #[cfg(feature = "comp")]
     /// Used to generate suggestions
@@ -218,8 +221,6 @@ pub mod prelude {
     pub use crate::macros::dispatcher;
     /// Re-export of the `empty_result` macro for creating an empty result value for early return.
     pub use crate::macros::empty_result;
-    /// Re-export of the `entry` macro for creating packed entry values from string literals.
-    pub use crate::macros::entry;
     /// Re-export of the `gen_program` macro for generating the program entry point.
     pub use crate::macros::gen_program;
     /// Re-export of the `pack` macro for creating wrapper types.

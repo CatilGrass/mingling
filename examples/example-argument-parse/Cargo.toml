@@ -7,4 +7,4 @@ edition = "2024"
 path = "../../mingling"
 
 # Enable `parser` features
-features = ["parser"]
+features = ["parser", "extra_macros"]

@@ -11,6 +11,7 @@ use mingling::prelude::*;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mingling::macros::entry;
     use mingling::{assert_member_id, assert_render_result};
 
     // --------- IMPORTANT ---------

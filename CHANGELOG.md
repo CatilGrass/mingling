@@ -96,6 +96,8 @@ fn render(prev: Previous) { // Implicitly introduces `__renderer_inner_result`
 }
 ```
 
+5. **\[macros\]** Moved the `entry!`, `route!`, `#[program_setup]` macros into the `extra_macros` feature
+
 ---
 
 ### Release 0.1.8 (2026-05-18)

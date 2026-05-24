@@ -31,7 +31,7 @@
 /// path = "../../mingling"
 ///
 /// # Enable `parser` features
-/// features = ["parser"]
+/// features = ["parser", "extra_macros"]
 /// ```
 ///
 /// Source code (./src/main.rs)
@@ -477,9 +477,7 @@ pub mod example_completion {}
 /// [dependencies.mingling]
 /// path = "../../mingling"
 ///
-/// features = [
-///     "parser",
-/// ]
+/// features = ["parser", "extra_macros"]
 /// ```
 ///
 /// Source code (./src/main.rs)
@@ -1582,7 +1580,7 @@ pub mod example_resources {}
 /// edition = "2024"
 ///
 /// [dependencies]
-/// mingling = { path = "../../mingling" }
+/// mingling = { path = "../../mingling", features = ["extra_macros"] }
 /// ```
 ///
 /// Source code (./src/main.rs)
@@ -1634,7 +1632,7 @@ pub mod example_setup {}
 /// edition = "2024"
 ///
 /// [dependencies]
-/// mingling = { path = "../../mingling" }
+/// mingling = { path = "../../mingling", features = ["extra_macros"] }
 /// ```
 ///
 /// Source code (./src/main.rs)
@@ -1644,6 +1642,7 @@ pub mod example_setup {}
 /// #[cfg(test)]
 /// mod tests {
 ///     use super::*;
+///     use mingling::macros::entry;
 ///     use mingling::{assert_member_id, assert_render_result};
 ///
 ///     // --------- IMPORTANT ---------
