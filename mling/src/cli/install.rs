@@ -4,7 +4,7 @@ use mingling::{
     parser::Picker,
 };
 
-use crate::project_installer::install_all;
+use crate::{Next, project_installer::install_all};
 
 dispatcher!("install", InstallCommand => InstallEntry);
 

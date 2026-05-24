@@ -183,7 +183,13 @@ fn generate_original_fn(
             }
         }
     } else {
-        quote! { #fn_body }
+        quote! {
+            {
+                let _: crate::Next;
+                let _: Next;
+                #fn_body
+            }
+        }
     };
 
     #[cfg(feature = "async")]
