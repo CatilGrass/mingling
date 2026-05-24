@@ -21,7 +21,14 @@ mingling = { path = ".", features = [
 ] }
 
 [package.metadata.docs.rs]
-features = ["builds", "general_renderer", "repl", "comp", "parser"]
+features = [
+    "builds",
+    "general_renderer",
+    "repl",
+    "comp",
+    "parser",
+    "extra_macros",
+]
 
 [features]
 nightly = ["mingling_core/nightly", "mingling_macros/nightly"]
@@ -68,6 +75,8 @@ json_serde_fmt = ["mingling_core/json_serde_fmt"]
 yaml_serde_fmt = ["mingling_core/yaml_serde_fmt"]
 toml_serde_fmt = ["mingling_core/toml_serde_fmt"]
 ron_serde_fmt = ["mingling_core/ron_serde_fmt"]
+
+extra_macros = ["mingling_macros/extra_macros"]
 
 [dependencies]
 mingling_core = { path = "../mingling_core", default-features = false }

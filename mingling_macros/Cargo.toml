@@ -20,6 +20,8 @@ dispatch_tree = []
 general_renderer = []
 repl = []
 
+extra_macros = []
+
 [dependencies]
 syn.workspace = true
 quote.workspace = true
