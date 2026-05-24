@@ -1024,13 +1024,13 @@ pub mod example_exitcode {}
 /// use mingling::{Groupped, parser::Picker, setup::GeneralRendererSetup};
 /// use serde::Serialize;
 ///
-/// dispatcher!("render", RenderCommand => RenderCommandEntry);
+/// dispatcher!("render", CMDRender => EntryRender);
 ///
 /// fn main() {
 ///     let mut program = ThisProgram::new();
 ///     // Add `GeneralRendererSetup` to receive user input `--json` `--yaml` parameters
 ///     program.with_setup(GeneralRendererSetup);
-///     program.with_dispatcher(RenderCommand);
+///     program.with_dispatcher(CMDRender);
 ///     program.exec();
 /// }
 ///
@@ -1056,7 +1056,7 @@ pub mod example_exitcode {}
 /// // --------- IMPORTANT ---------
 ///
 /// #[chain]
-/// fn parse_render(prev: RenderCommandEntry) -> Next {
+/// fn parse_render(prev: EntryRender) -> Next {
 ///     let (name, age) = Picker::new(prev.inner)
 ///         .pick::<String>(())
 ///         .pick::<i32>(())
@@ -1215,6 +1215,45 @@ pub mod example_help {}
 /// gen_program!();
 /// ```
 pub mod example_hook {}
+/// Example Implicit Dispatcher
+///
+///  > This example demonstrates how to use the implicit `dispatcher!` definition syntax enabled by `extra_macros`
+///
+/// Source code (./Cargo.toml)
+/// ```toml
+/// [package]
+/// name = "example-implicit-dispatcher"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies.mingling]
+/// path = "../../mingling"
+/// features = ["extra_macros"]
+/// ```
+///
+/// Source code (./src/main.rs)
+/// ```ignore
+/// use mingling::prelude::*;
+///
+/// // When using implicit syntax, the entry and dispatcher names will be automatically derived
+/// dispatcher!("remote.add" /*, CMDRemoteAdd    => EntryRemoteAdd */);
+/// dispatcher!("remote.remove", CMDRemoteRemove => EntryRemoteRemove);
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///
+///     // --------- IMPORTANT ---------
+///     program.with_dispatcher(CMDRemoteAdd);
+///     //                      ^^^^^^^^^^^^\_ CMDRemoteAdd is implicitly created
+///     // --------- IMPORTANT ---------
+///
+///     program.with_dispatcher(CMDRemoteRemove);
+///     program.exec_and_exit();
+/// }
+///
+/// gen_program!();
+/// ```
+pub mod example_implicit_dispatcher {}
 /// Example Panic Unwind
 ///
 ///  > This example introduces how to catch Panic in the Mingling program loop
@@ -1322,11 +1361,10 @@ pub mod example_panic_unwind {}
 /// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{
-///     REPL,
 ///     hook::ProgramHook,
 ///     prelude::*,
 ///     setup::{BasicREPLOutputSetup, BasicREPLPromptSetup, BasicREPLReadlineSetup},
-///     this,
+///     this, REPL,
 /// };
 /// use std::{env::current_dir, path::PathBuf};
 ///
@@ -1351,10 +1389,10 @@ pub mod example_panic_unwind {}
 ///     program.with_resource(ResCurrentDir::default());
 ///
 ///     // Dispatchers
-///     program.with_dispatcher(ChangeDirectoryCommand);
-///     program.with_dispatcher(ListCommand);
-///     program.with_dispatcher(ExitCommand);
-///     program.with_dispatcher(ClearCommand);
+///     program.with_dispatcher(CMDCd);
+///     program.with_dispatcher(CMDLs);
+///     program.with_dispatcher(CMDExit);
+///     program.with_dispatcher(CMDClear);
 ///
 ///     // Setups
 ///     // Enable basic std::io::stdin().read_line(&mut input)
@@ -1392,10 +1430,10 @@ pub mod example_panic_unwind {}
 /// pack!(ErrorDirectoryNotExist = PathBuf);
 ///
 /// // Create commands: cd ls exit
-/// dispatcher!("cd", ChangeDirectoryCommand => ChangeDirectoryEntry);
-/// dispatcher!("ls", ListCommand => ListEntry);
-/// dispatcher!("exit", ExitCommand => ExitEntry);
-/// dispatcher!("clear", ClearCommand => ClearEntry);
+/// dispatcher!("cd", CMDCd => EntryCd);
+/// dispatcher!("ls", CMDLs => EntryLs);
+/// dispatcher!("exit", CMDExit => EntryExit);
+/// dispatcher!("clear", CMDClear => EntryClear);
 ///
 /// // Define data needed for the cd command's execution phase
 /// pack!(StateChangeDirectory = String);
@@ -1405,7 +1443,7 @@ pub mod example_panic_unwind {}
 ///
 /// // Parse cd command arguments
 /// #[chain]
-/// fn parse_cd_args(prev: ChangeDirectoryEntry) -> Next {
+/// fn parse_cd_args(prev: EntryCd) -> Next {
 ///     let join = prev.pick(()).unpack();
 ///     StateChangeDirectory::new(join)
 /// }
@@ -1429,7 +1467,7 @@ pub mod example_panic_unwind {}
 ///
 /// // Get directory contents via the CurrentDir resource
 /// #[chain]
-/// fn handle_ls(_prev: ListEntry, current_dir: &ResCurrentDir) -> Next {
+/// fn handle_ls(_prev: EntryLs, current_dir: &ResCurrentDir) -> Next {
 ///     let dir = &current_dir.dir;
 ///     let entries: Vec<String> = std::fs::read_dir(dir)
 ///         .into_iter()
@@ -1459,7 +1497,7 @@ pub mod example_panic_unwind {}
 /// // Handle exit command event
 /// #[chain]
 /// fn handle_exit(
-///     _prev: ExitEntry,
+///     _prev: EntryExit,
 ///     repl: &mut REPL, // Import REPL resource, registered in `exec_repl`, usable directly
 /// ) {
 ///     // Set the REPL exit flag; REPL will exit after this loop iteration
@@ -1468,7 +1506,7 @@ pub mod example_panic_unwind {}
 ///
 /// // Handle clear command event
 /// #[chain]
-/// fn handle_clear(_prev: ClearEntry) {
+/// fn handle_clear(_prev: EntryClear) {
 ///     // Clear the terminal screen
 ///     print!("\x1B[2J\x1B[1;1H");
 /// }

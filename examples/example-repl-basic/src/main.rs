@@ -8,11 +8,10 @@
 //! ```
 
 use mingling::{
-    REPL,
     hook::ProgramHook,
     prelude::*,
     setup::{BasicREPLOutputSetup, BasicREPLPromptSetup, BasicREPLReadlineSetup},
-    this,
+    this, REPL,
 };
 use std::{env::current_dir, path::PathBuf};
 
@@ -37,10 +36,10 @@ fn main() {
     program.with_resource(ResCurrentDir::default());
 
     // Dispatchers
-    program.with_dispatcher(ChangeDirectoryCommand);
-    program.with_dispatcher(ListCommand);
-    program.with_dispatcher(ExitCommand);
-    program.with_dispatcher(ClearCommand);
+    program.with_dispatcher(CMDCd);
+    program.with_dispatcher(CMDLs);
+    program.with_dispatcher(CMDExit);
+    program.with_dispatcher(CMDClear);
 
     // Setups
     // Enable basic std::io::stdin().read_line(&mut input)
@@ -78,10 +77,10 @@ fn main() {
 pack!(ErrorDirectoryNotExist = PathBuf);
 
 // Create commands: cd ls exit
-dispatcher!("cd", ChangeDirectoryCommand => ChangeDirectoryEntry);
-dispatcher!("ls", ListCommand => ListEntry);
-dispatcher!("exit", ExitCommand => ExitEntry);
-dispatcher!("clear", ClearCommand => ClearEntry);
+dispatcher!("cd", CMDCd => EntryCd);
+dispatcher!("ls", CMDLs => EntryLs);
+dispatcher!("exit", CMDExit => EntryExit);
+dispatcher!("clear", CMDClear => EntryClear);
 
 // Define data needed for the cd command's execution phase
 pack!(StateChangeDirectory = String);
@@ -91,7 +90,7 @@ pack!(ResultList = Vec<String>);
 
 // Parse cd command arguments
 #[chain]
-fn parse_cd_args(prev: ChangeDirectoryEntry) -> Next {
+fn parse_cd_args(prev: EntryCd) -> Next {
     let join = prev.pick(()).unpack();
     StateChangeDirectory::new(join)
 }
@@ -115,7 +114,7 @@ fn handle_cd(prev: StateChangeDirectory, current_dir: &mut ResCurrentDir) -> Nex
 
 // Get directory contents via the CurrentDir resource
 #[chain]
-fn handle_ls(_prev: ListEntry, current_dir: &ResCurrentDir) -> Next {
+fn handle_ls(_prev: EntryLs, current_dir: &ResCurrentDir) -> Next {
     let dir = &current_dir.dir;
     let entries: Vec<String> = std::fs::read_dir(dir)
         .into_iter()
@@ -145,7 +144,7 @@ fn render_list(list: ResultList) {
 // Handle exit command event
 #[chain]
 fn handle_exit(
-    _prev: ExitEntry,
+    _prev: EntryExit,
     repl: &mut REPL, // Import REPL resource, registered in `exec_repl`, usable directly
 ) {
     // Set the REPL exit flag; REPL will exit after this loop iteration
@@ -154,7 +153,7 @@ fn handle_exit(
 
 // Handle clear command event
 #[chain]
-fn handle_clear(_prev: ClearEntry) {
+fn handle_clear(_prev: EntryClear) {
     // Clear the terminal screen
     print!("\x1B[2J\x1B[1;1H");
 }

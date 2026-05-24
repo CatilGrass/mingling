@@ -75,6 +75,16 @@ entry!(MyEntry, ["a", "b", "c"])
 entry!["a", "b", "c"]
 ```
 
+7. **\[macros\]** Added `dispatcher!` macro with implicit entry/dispatcher name derivation
+
+```rust
+// implicit
+dispatcher!("remote.add" /*, CMDRemoteAdd => EntryRemoteAdd */);
+
+// explicit
+dispatcher!("remote.remove", CMDRemoteRemove => EntryRemoteRemove);
+```
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled

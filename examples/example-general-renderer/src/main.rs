@@ -21,13 +21,13 @@ use mingling::prelude::*;
 use mingling::{Groupped, parser::Picker, setup::GeneralRendererSetup};
 use serde::Serialize;
 
-dispatcher!("render", RenderCommand => RenderCommandEntry);
+dispatcher!("render", CMDRender => EntryRender);
 
 fn main() {
     let mut program = ThisProgram::new();
     // Add `GeneralRendererSetup` to receive user input `--json` `--yaml` parameters
     program.with_setup(GeneralRendererSetup);
-    program.with_dispatcher(RenderCommand);
+    program.with_dispatcher(CMDRender);
     program.exec();
 }
 
@@ -53,7 +53,7 @@ struct Info {
 // --------- IMPORTANT ---------
 
 #[chain]
-fn parse_render(prev: RenderCommandEntry) -> Next {
+fn parse_render(prev: EntryRender) -> Next {
     let (name, age) = Picker::new(prev.inner)
         .pick::<String>(())
         .pick::<i32>(())

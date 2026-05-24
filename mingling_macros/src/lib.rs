@@ -297,6 +297,25 @@ pub fn empty_result(_input: TokenStream) -> TokenStream {
 /// dispatcher!(MyProgram, "command.path", CommandStruct => EntryStruct);
 /// ```
 ///
+/// ## Abbreviated syntax (requires `extra_macros` feature)
+///
+/// When the `extra_macros` feature is enabled, the `CommandStruct => EntryStruct`
+/// portion can be omitted. The struct names are auto-derived from the command path
+/// using PascalCase conversion:
+///
+/// ```rust,ignore
+/// // Auto-derives: "remote.add" → CMDRemoteAdd ⇒ EntryRemoteAdd
+/// dispatcher!("remote.add");
+///
+/// // Auto-derives: "cmd.sub.leaf" → CMDCmdSubLeaf ⇒ EntryCmdSubLeaf
+/// dispatcher!("cmd.sub.leaf");
+/// ```
+///
+/// The generated code is equivalent to writing:
+/// ```rust,ignore
+/// dispatcher!("remote.add", CMDRemoteAdd => EntryRemoteAdd);
+/// ```
+///
 /// # Example
 ///
 /// ```rust,ignore
@@ -310,6 +329,9 @@ pub fn empty_result(_input: TokenStream) -> TokenStream {
 ///
 /// // With explicit program:
 /// dispatcher!(MyApp, "status", StatusCommand => StatusEntry);
+///
+/// // Abbreviated form (requires extra_macros):
+/// // dispatcher!("remote.add");
 /// ```
 ///
 /// The generated `HelloCommand` implements `Dispatcher<ThisProgram>`:

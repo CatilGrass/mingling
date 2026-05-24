@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::{Ident, Result as SynResult, Token};
+use syn::{Ident, LitStr, Result as SynResult, Token};
 
 #[cfg(feature = "dispatch_tree")]
 use crate::COMPILE_TIME_DISPATCHERS;
@@ -19,6 +19,8 @@ enum DispatcherChainInput {
         command_struct: Ident,
         pack: Ident,
     },
+    #[cfg(feature = "extra_macros")]
+    Auto { command_name: syn::LitStr },
 }
 
 impl Parse for DispatcherChainInput {
@@ -41,8 +43,25 @@ impl Parse for DispatcherChainInput {
                 pack,
             })
         } else if input.peek(syn::LitStr) {
+            // Parse the command name string first
+            let command_name: LitStr = input.parse()?;
+
+            // Check if this is the abbreviated form: just "command_name" without ", CMD => Entry"
+            if input.is_empty() {
+                #[cfg(feature = "extra_macros")]
+                {
+                    return Ok(DispatcherChainInput::Auto { command_name });
+                }
+                #[cfg(not(feature = "extra_macros"))]
+                {
+                    return Err(syn::Error::new(
+                        command_name.span(),
+                        "expected `, CommandStruct => EntryStruct` after command name",
+                    ));
+                }
+            }
+
             // Default format: "command_name", CommandStruct => ChainStruct
-            let command_name = input.parse()?;
             input.parse::<Token![,]>()?;
             let command_struct = input.parse()?;
             input.parse::<Token![=>]>()?;
@@ -70,7 +89,7 @@ pub fn dispatcher(input: TokenStream) -> TokenStream {
     // Parse the input
     let dispatcher_input = syn::parse_macro_input!(input as DispatcherChainInput);
 
-    // Determine if we're using default or explicit group
+    #[cfg(not(feature = "extra_macros"))]
     let (command_name, command_struct, pack, _use_default, group_path) = match dispatcher_input {
         DispatcherChainInput::Explicit {
             group_name,
@@ -95,6 +114,46 @@ pub fn dispatcher(input: TokenStream) -> TokenStream {
             true,
             crate::default_program_path(),
         ),
+    };
+
+    #[cfg(feature = "extra_macros")]
+    let (command_name, command_struct, pack, _use_default, group_path) = match dispatcher_input {
+        DispatcherChainInput::Explicit {
+            group_name,
+            command_name,
+            command_struct,
+            pack,
+        } => (
+            command_name,
+            command_struct,
+            pack,
+            false,
+            quote! { #group_name },
+        ),
+        DispatcherChainInput::Default {
+            command_name,
+            command_struct,
+            pack,
+        } => (
+            command_name,
+            command_struct,
+            pack,
+            true,
+            crate::default_program_path(),
+        ),
+        DispatcherChainInput::Auto { command_name } => {
+            let command_name_str = command_name.value();
+            let pascal = dotted_to_pascal_case(&command_name_str);
+            let command_struct = Ident::new(&format!("CMD{pascal}"), command_name.span());
+            let pack = Ident::new(&format!("Entry{pascal}"), command_name.span());
+            (
+                command_name,
+                command_struct,
+                pack,
+                true,
+                crate::default_program_path(),
+            )
+        }
     };
 
     let command_name_str = command_name.value();
@@ -228,4 +287,22 @@ pub fn register_dispatcher(input: TokenStream) -> TokenStream {
 #[cfg(not(feature = "dispatch_tree"))]
 pub fn register_dispatcher(_input: TokenStream) -> TokenStream {
     quote! {}.into()
+}
+
+/// Converts a dotted command name (e.g. "remote.add") to PascalCase (e.g. "RemoteAdd").
+///
+/// Each segment is split by `.`, the first character of each segment is uppercased,
+/// and the segments are joined. This is used by the abbreviated `dispatcher!` syntax
+/// (when `Command => Entry` is omitted) to auto-derive struct names.
+#[cfg(feature = "extra_macros")]
+fn dotted_to_pascal_case(s: &str) -> String {
+    s.split('.')
+        .map(|segment| {
+            let mut chars = segment.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(c) => c.to_uppercase().to_string() + chars.as_str(),
+            }
+        })
+        .collect()
 }

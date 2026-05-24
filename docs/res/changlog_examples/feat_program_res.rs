@@ -20,12 +20,12 @@ fn main() {
     program.exec();
 }
 
-dispatcher!("modify", ResModifyCommand => ResModifyEntry);
+dispatcher!("modify", CMDModify => EntryModify);
 
 pack!(DisplayGlobal = ());
 
 #[chain]
-fn modify(prev: ResModifyEntry) {
+fn modify(prev: EntryModify) {
     let (name, age) = Picker::<()>::new(prev.inner)
         .pick::<String>("--name")
         .pick::<i32>("--age")
