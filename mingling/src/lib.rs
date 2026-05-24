@@ -84,6 +84,7 @@ pub mod macros {
     #[cfg(feature = "clap")]
     pub use mingling_macros::dispatcher_clap;
     /// Used to create an empty result value for early return from a chain function
+    #[cfg(feature = "extra_macros")]
     pub use mingling_macros::empty_result;
     /// Creates a packed entry value from a list of string literals
     #[cfg(feature = "extra_macros")]
@@ -220,6 +221,7 @@ pub mod prelude {
     /// Re-export of the `dispatcher` macro for routing commands.
     pub use crate::macros::dispatcher;
     /// Re-export of the `empty_result` macro for creating an empty result value for early return.
+    #[cfg(feature = "extra_macros")]
     pub use crate::macros::empty_result;
     /// Re-export of the `gen_program` macro for generating the program entry point.
     pub use crate::macros::gen_program;

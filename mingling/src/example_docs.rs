@@ -1352,7 +1352,7 @@ pub mod example_panic_unwind {}
 ///
 /// [dependencies.mingling]
 /// path = "../../mingling"
-/// features = ["repl", "parser"]
+/// features = ["repl", "parser", "extra_macros"]
 ///
 /// [dependencies]
 /// just_fmt = "0.1.2"
