@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <!-- highlight.js -->
+        <link rel="stylesheet" href="../scripts/highlight/github.min.css" />
+        <link
+            id="hljs-light"
+            rel="stylesheet"
+            href="../scripts/highlight/github.min.css"
+        />
+        <link
+            id="hljs-dark"
+            rel="stylesheet"
+            href="../scripts/highlight/github-dark.min.css"
+            disabled
+        />
+        <script src="../scripts/highlight/highlight.min.js"></script>
+        <script src="../scripts/highlight/rust.min.js"></script>
+        <script src="../scripts/highlight/bash.min.js"></script>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <!-- Topbar -->
+        <div class="topbar">
+            <h1 class="topbar__title">
+                <span id="tutorialTitle">Title</span>
+            </h1>
+            <div style="display: flex; align-items: center; gap: 16px">
+                <span class="topbar__step">
+                    STEP <span id="stepNum">1</span> /
+                    <span id="totalSteps">0</span>
+                </span>
+                <button class="theme-toggle" id="themeToggle">🌙</button>
+            </div>
+        </div>
+
+        <!-- Main area -->
+        <div class="layout" id="layout">
+            <!-- Left: code panel -->
+            <div class="code-panel">
+                <pre id="codeDisplay"></pre>
+            </div>
+
+            <!-- Right: description -->
+            <div class="speech-panel">
+                <div class="speech-content" id="speechDisplay"></div>
+            </div>
+        </div>
+
+        <!-- Control bar -->
+        <div class="controls">
+            <button id="prevBtn" disabled>◀ PREV</button>
+            <button id="nextBtn" class="controls__btn--primary">NEXT ▶</button>
+
+            <div class="controls__progress">
+                <div
+                    class="controls__progress-fill"
+                    id="progressFill"
+                    style="width: 0%"
+                ></div>
+            </div>
+
+            <span class="controls__text" id="progressText">0%</span>
+        </div>
+
+        <script src="player.js"></script>
+        <script>
+            (function () {
+                var hljsDark = document.getElementById("hljs-dark");
+                var html = document.documentElement;
+                var btn = document.getElementById("themeToggle");
+
+                function resolveTheme() {
+                    var t = localStorage.getItem("theme");
+                    if (t === "dark" || t === "light") return t;
+                    return window.matchMedia &&
+                        window.matchMedia("(prefers-color-scheme: dark)")
+                            .matches
+                        ? "dark"
+                        : "light";
+                }
+
+                function applyTheme(t) {
+                    if (t === "dark") {
+                        hljsDark.disabled = false;
+                        html.setAttribute("data-theme", "dark");
+                        if (btn) btn.textContent = "☀️";
+                    } else {
+                        hljsDark.disabled = true;
+                        html.setAttribute("data-theme", "light");
+                        if (btn) btn.textContent = "🌙";
+                    }
+                }
+
+                applyTheme(resolveTheme());
+
+                window.addEventListener("storage", function (e) {
+                    if (e.key === "theme") applyTheme(resolveTheme());
+                });
+
+                setInterval(function () {
+                    var desired = resolveTheme();
+                    var current = html.getAttribute("data-theme") || "dark";
+                    if (desired !== current) applyTheme(desired);
+                }, 1000);
+
+                if (btn) {
+                    btn.addEventListener("click", function () {
+                        var current = resolveTheme();
+                        var next = current === "dark" ? "light" : "dark";
+                        localStorage.setItem("theme", next);
+                        applyTheme(next);
+                    });
+                }
+            })();
+        </script>
+    </body>
+</html>
+
+<!--
+  INCLUDE
+  <iframe
+      src="../play/play.html?tur=default.md&title=Title"
+      height="400px"/>
+-->

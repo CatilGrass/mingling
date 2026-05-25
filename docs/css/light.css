@@ -331,7 +331,7 @@ body.sticky .sidebar-toggle {
 }
 .markdown-section {
     margin: 0 auto;
-    max-width: 100%;
+    max-width: 80%;
     padding: 30px 45px 40px;
     position: relative;
 }
@@ -948,4 +948,12 @@ code .token {
     max-height: 300px;
     overflow-y: auto;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.markdown-section iframe {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin: 1em auto;
 }

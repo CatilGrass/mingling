@@ -1,6 +1,1 @@
 - [Welcome!](README)
-* [创建您的第一个程序](pages/1-creating-your-first-program)
-* [实现回退机制](pages/2-implementing-fallbacks)
-* [解析复杂参数](pages/3-parsing-complex-arguments)
-* [实现帮助文档显示](pages/4-implementing-help-display)
-* [实现命令行补全](pages/5-implementing-completion)
