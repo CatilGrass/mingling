@@ -306,7 +306,18 @@ body {
     height: 4px;
     background: var(--progress-bg);
     border-radius: 2px;
-    overflow: hidden;
+    overflow: visible;
+    cursor: pointer;
+    position: relative;
+}
+
+.controls__progress::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    bottom: -10px;
 }
 
 .controls__progress-fill {
@@ -314,6 +325,7 @@ body {
     background: var(--progress-fill);
     border-radius: 2px;
     transition: width 0.3s;
+    overflow: hidden;
 }
 
 .controls__text {

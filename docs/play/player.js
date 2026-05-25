@@ -124,6 +124,7 @@ const dom = {
   stepNum: document.getElementById("stepNum"),
   totalSteps: document.getElementById("totalSteps"),
   progress: document.getElementById("progressFill"),
+  progressTrack: document.querySelector(".controls__progress"),
   progressText: document.getElementById("progressText"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
@@ -157,6 +158,31 @@ function goToStep(index) {
 dom.prevBtn.addEventListener("click", () => goToStep(currentStep - 1));
 dom.nextBtn.addEventListener("click", () => {
   if (currentStep < steps.length - 1) goToStep(currentStep + 1);
+});
+
+function progressClick(e) {
+  if (steps.length < 2) return;
+  const rect = dom.progressTrack.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const pct = Math.max(0, Math.min(1, x / rect.width));
+  const idx = Math.round(pct * (steps.length - 1));
+  goToStep(idx);
+}
+
+dom.progressTrack.addEventListener("click", progressClick);
+
+dom.progressTrack.addEventListener("mousedown", function (e) {
+  e.preventDefault();
+  progressClick(e);
+  function onMove(ev) {
+    progressClick(ev);
+  }
+  function onUp() {
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+  }
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
 });
 
 document.addEventListener("keydown", (e) => {
