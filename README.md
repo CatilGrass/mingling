@@ -17,7 +17,7 @@
 	    <img src="https://img.shields.io/docsrs/mingling?style=for-the-badge">
 	</a>	
 	<a href="https://catilgrass.github.io/mingling/">
-	    <img src="https://img.shields.io/badge/helpdoc-latest-yellow?style=for-the-badge">
+	    <img src="https://img.shields.io/badge/helpdoc-rewriting-yellow?style=for-the-badge">
 	</a>
 </p>
 
