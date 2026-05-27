@@ -68,17 +68,16 @@ features = [""]
 
 <iframe
     src="../play/play.html?tur=zh_CN/2-writing3.md&amp;title=渲染 ResultFruits"
-    height="740px">
+    height="860px">
 </iframe>
 
 ### 💡 关于 `r_println!` 宏
 
 `r_println!` 宏并不是对 `println!` 的包装
 
-它是为 `#[renderer]` 宏中 **隐式注入** 的 `&mut RenderResult` 值提供。
+它是为 `#[renderer]` 宏中 **隐式注入** 的 `&mut RenderResult` 值提供的便捷访问方案。
 
 在 `r_println!` 调用时，不会立刻向 stdout 输出信息，而是会被累计到 `&mut RenderResult` 中，在程序结束时整体输出。
-
 
 ## 六、编译并运行
 
@@ -133,6 +132,7 @@ fn render_fruits(result: ResultFruits) {
 gen_program!();
  
 ```
+ 
 </details>
 
 <p align="center" style="font-size: 0.85em; color: gray;">
