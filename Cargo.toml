@@ -5,6 +5,7 @@ exclude = [
     "examples/example-argument-parse",
     "examples/example-async-support",
     "examples/example-basic",
+    "examples/example-clap-binding",
     "examples/example-completion",
     "examples/example-custom-pickable",
     "examples/example-dispatch-tree",

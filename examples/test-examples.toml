@@ -182,3 +182,18 @@ expect.result = ""
 command = "greet World --repeat 1"
 expect.exit-code = 0
 expect.result = "Hello, World!"
+
+[[test.example-clap-binding]]
+command = "greet"
+expect.exit-code = 0
+expect.result = "Hello, World!"
+
+[[test.example-clap-binding]]
+command = "greet Alice"
+expect.exit-code = 0
+expect.result = "Hello, Alice!"
+
+[[test.example-clap-binding]]
+command = "greet Alice -r 5"
+expect.exit-code = 0
+expect.result = "Hello, Alice, Alice, Alice, Alice, Alice!"
