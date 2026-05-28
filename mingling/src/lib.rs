@@ -1,60 +1,62 @@
 //! Mingling
 //!
 //! # Intro
-//! A Rust CLI framework for many subcmds & complex workflows, reduces boilerplate via proc macros, focus on biz logic
+//! [`Mingling`](https://github.com/catilgrass/mingling) is a **proc-macro and type system-based** Rust CLI framework, suitable for developing complex command-line programs with numerous subcommands.
 //!
 //! # Use
+//! Here is a basic project written using **Mingling**:
+//! - When the user types `greet`, the program outputs `Hello, World!`
+//! - When the user types `greet Alice`, the program outputs `Hello, Alice!`
 //!
 //! ```rust
-//! use mingling::macros::{dispatcher, gen_program, r_println, renderer};
+//! use mingling::prelude::*;
+//!
+//! dispatcher!("greet", CMDGreet => EntryGreet);
 //!
 //! fn main() {
 //!     let mut program = ThisProgram::new();
-//!     program.with_dispatcher(HelloCommand);
-//!
-//!     // Execute
-//!     program.exec();
+//!     program.with_dispatcher(CMDGreet);
+//!     program.exec_and_exit();
 //! }
 //!
-//! // Define command: "<bin> hello"
-//! dispatcher!("hello", HelloCommand => HelloEntry);
+//! pack!(ResultName = String);
 //!
-//! // Render HelloEntry
-//! #[renderer]
-//! fn render_hello_world(_prev: HelloEntry) {
-//!     r_println!("Hello, World!")
-//! }
-//!
-//! // Fallbacks
-//! #[renderer]
-//! fn fallback_dispatcher_not_found(prev: DispatcherNotFound) {
-//!     r_println!("Dispatcher not found for command `{}`", prev.join(", "))
+//! #[chain]
+//! fn handle_greet(args: EntryGreet) -> Next {
+//!     let name: ResultName = args
+//!         .inner
+//!         .first()
+//!         .cloned()
+//!         .unwrap_or_else(|| "World".to_string())
+//!         .into();
+//!     name
 //! }
 //!
 //! #[renderer]
-//! fn fallback_renderer_not_found(prev: RendererNotFound) {
-//!     r_println!("Renderer not found `{}`", *prev)
+//! fn render_name(name: ResultName) {
+//!     r_println!("Hello, {}!", *name);
 //! }
 //!
-//! // Collect renderers and chains to generate ThisProgram
+//! #[renderer]
+//! fn render_dispatcher_not_found(err: DispatcherNotFound) {
+//!     if err.len() > 0 {
+//!         r_println!("Command not found: [{}]", err.join(" "));
+//!     }
+//! }
+//!
 //! gen_program!();
 //! ```
 //!
 // Output:
 //!
 //! ```text
-//! > mycmd hello
+//! > mycmd greet
 //! Hello, World!
-//! > mycmd hallo
-//! Dispatcher not found for command `hallo`
+//! > mycmd greet Alice
+//! Hello, Alice!
+//! > mycmd great
+//! Command not found: [great]
 //! ```
-//!
-//! # Features
-//! - `async` enables async runtime support for command execution, see [example](_mingling_examples/example_async/index.html) for details
-//! - `comp` enables command completion functionality, see [example](_mingling_examples/example_completion/index.html) for details
-//! - `parser` enables the `mingling::parser` module, see [example](_mingling_examples/example_picker/index.html) for details
-//! - `general_renderer` adds support for serialized output formats such as JSON and YAML, see [example](_mingling_examples/example_general_renderer/index.html) for details
-//!
 //!
 //! # Examples
 //! `Mingling` provides detailed usage examples for your reference.
