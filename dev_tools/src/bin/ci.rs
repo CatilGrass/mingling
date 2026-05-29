@@ -102,6 +102,7 @@ fn docs_refresh() -> Result<(), i32> {
     run_cmd!("cargo run --manifest-path dev_tools/Cargo.toml --bin docs-code-box-fix")?;
     run_cmd!("cargo run --manifest-path dev_tools/Cargo.toml --bin docsify-sidebar-gen")?;
     run_cmd!("cargo run --manifest-path dev_tools/Cargo.toml --bin refresh-docs")?;
+    run_cmd!("cargo run --manifest-path dev_tools/Cargo.toml --bin refresh-feature-mod")?;
 
     Ok(())
 }

@@ -155,44 +155,7 @@ mod features;
 /// They can be used for conditional compilation or runtime branching based on
 /// feature availability.
 pub mod feature {
-    /// Whether the `async` feature is enabled
-    pub use crate::features::MINGLING_ASYNC;
-
-    /// Whether the `clap` feature is enabled
-    pub use crate::features::MINGLING_CLAP;
-
-    /// Whether the `comp` feature is enabled
-    pub use crate::features::MINGLING_COMP;
-
-    /// Whether the `debug` feature is enabled
-    pub use crate::features::MINGLING_DEBUG;
-
-    /// Whether the `dispatch_tree` feature is enabled
-    pub use crate::features::MINGLING_DISPATCH_TREE;
-
-    /// Whether the `general_renderer` feature is enabled
-    pub use crate::features::MINGLING_GENERAL_RENDERER;
-
-    /// Whether the `nightly` feature is enabled
-    pub use crate::features::MINGLING_NIGHTLY;
-
-    /// Whether the `parser` feature is enabled
-    pub use crate::features::MINGLING_PARSER;
-
-    /// Whether the `repl` feature is enabled
-    pub use crate::features::MINGLING_REPL;
-
-    /// Whether the `json_serde_fmt` feature is enabled
-    pub use crate::features::MINGLING_JSON_SERDE_FMT;
-
-    /// Whether the `ron_serde_fmt` feature is enabled
-    pub use crate::features::MINGLING_RON_SERDE_FMT;
-
-    /// Whether the `toml_serde_fmt` feature is enabled
-    pub use crate::features::MINGLING_TOML_SERDE_FMT;
-
-    /// Whether the `yaml_serde_fmt` feature is enabled
-    pub use crate::features::MINGLING_YAML_SERDE_FMT;
+    include!("./features.rs");
 }
 
 mod setups;

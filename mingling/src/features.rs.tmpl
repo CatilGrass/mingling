@@ -1,0 +1,15 @@
+>>>>>>>>>> features
+
+@@@ >>> features
+/// Whether the `<<<feat_name>>>` feature is enabled
+/// Current: `disabled`
+#[cfg(not(feature = "<<<feat_name>>>"))]
+#[allow(unused)]
+pub const MINGLING_<<<feat_const_name>>>: bool = false;
+
+/// Whether the `<<<feat_name>>>` feature is enabled
+/// Current: `enabled`
+#[cfg(feature = "<<<feat_name>>>")]
+#[allow(unused)]
+pub const MINGLING_<<<feat_const_name>>>: bool = true;
+@@@ <<<

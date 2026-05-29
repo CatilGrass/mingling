@@ -1473,6 +1473,30 @@ pub mod example_implicit_dispatcher {}
 /// gen_program!();
 /// ```
 pub mod example_panic_unwind {}
+
+///
+/// Source code (./Cargo.toml)
+/// ```toml
+/// [package]
+/// name = "example-repl-advanced"
+/// version = "0.1.0"
+/// edition = "2024"
+///
+/// [dependencies.mingling]
+/// path = "../../mingling"
+/// features = ["repl", "repl_extra", "parser", "extra_macros"]
+///
+/// [dependencies]
+/// just_fmt = "0.1.2"
+/// ```
+///
+/// Source code (./src/main.rs)
+/// ```ignore
+/// fn main() {
+///     println!("Hello, world!");
+/// }
+/// ```
+pub mod example_repl_advanced {}
 /// Example REPL Basic
 ///
 ///  > This example demonstrates how to develop a REPL program using the `repl` feature
