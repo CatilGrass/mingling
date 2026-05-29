@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::process::exit;
 
 use tools::{cargo_tomls, eprintln_cargo_style, println_cargo_style, run_cmd};
@@ -10,34 +11,51 @@ fn main() {
     let needs_commit_temp = !{ run_cmd!("git diff-index --quiet HEAD --").is_ok() };
 
     if needs_commit_temp {
-        run_cmd!("git add .").unwrap();
-        run_cmd!("git commit -m \"CI Temp\"").unwrap();
+        print!("Working tree is not clean, temporarily commit? [y/N]:");
+        std::io::stdout().flush().unwrap();
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+        if input == "y" || input == "Y" || input == "yes" || input == "Yes" {
+            run_cmd!("git add .").unwrap();
+            run_cmd!("git commit -m \"[DO NOT PUSH] CI TEMP [DO NOT PUSH]\"").unwrap();
+        } else {
+            eprintln_cargo_style!("Aborting.");
+            exit(2)
+        }
     }
 
     if let Err(exit_code) = ci() {
-        if needs_commit_temp {
-            run_cmd!("git restore .").unwrap();
-            run_cmd!("git reset --soft HEAD~1").unwrap();
-        }
+        restore_workspace().unwrap();
         exit(exit_code)
     }
 
-    println_cargo_style!("Done: All check passed!");
-
     let is_worktree_clean = run_cmd!("git diff-index --quiet HEAD --").is_ok();
     if !is_worktree_clean {
-        eprintln_cargo_style!("Documents needs refresh!");
+        eprintln_cargo_style!("The repository was contaminated during CI, failing!");
+
+        // Print git status
+        println!();
+        let _ = run_cmd!("git status");
+
         if needs_commit_temp {
-            run_cmd!("git restore .").unwrap();
-            run_cmd!("git reset --soft HEAD~1").unwrap();
+            restore_workspace().unwrap();
         }
         exit(1)
     }
 
+    println_cargo_style!("Done: All check passed!");
+
     if needs_commit_temp {
-        run_cmd!("git restore .").unwrap();
-        run_cmd!("git reset --soft HEAD~1").unwrap();
+        restore_workspace().unwrap();
     }
+}
+
+fn restore_workspace() -> Result<(), i32> {
+    run_cmd!("git reset --hard --quiet")?;
+    run_cmd!("git reset --soft HEAD~1 --quiet")?;
+    run_cmd!("git reset --quiet")?;
+    Ok(())
 }
 
 fn ci() -> Result<(), i32> {
