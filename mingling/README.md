@@ -122,7 +122,7 @@ You can read the following docs to learn more about the `Mingling` framework:
     🗺️ Roadmap 🗺️
 </h1>
 
-- [ ] Milestone.1 
+- [ ] Milestone.1 "MVP"
   - [x] \[[0.1.4](https://docs.rs/mingling/0.1.4/mingling/)\] \[`core`\] \[`general_renderer`\] **Mingling** can render data into serializable formats via `--json` and `--yaml` flags
   - [x] \[[0.1.5](https://docs.rs/mingling/0.1.5/mingling/)\] \[`core`\] \[`comp`\] **Mingling** can dynamically invoke itself to provide completions for shells like `bash`, `zsh`, `fish`, and `pwsh`
   - [x] \[[0.1.6](https://docs.rs/mingling/0.1.6/mingling/)\] \[`core`\] \[`comp`\] **Mingling** can gather more context for smarter completions
@@ -130,12 +130,18 @@ You can read the following docs to learn more about the `Mingling` framework:
   - [x] \[[0.1.7](https://docs.rs/mingling/0.1.7/mingling/)\] \[`core`\] **Mingling** can intercept `-h` or `--help` flags to display custom help text for each subcommand
   - [x] \[[0.1.7](https://docs.rs/mingling/0.1.7/mingling/)\] \[`mling`\] Provides a basic scaffolding tool (`mling`) for rapid development and debugging
   - [x] \[[0.1.8](https://docs.rs/mingling/0.1.8/mingling/)\] \[`core`\] \[`dispatch_tree`\] Converts the subcommand list into a prefix tree to improve command matching speed
-  - [ ] \[**0.1.9**\] \[`core`\] \[`dev_toolkits`\] Provides debugging interfaces for developers to capture invocation information when issues arise (`InvokeStackDisplay`)
-  - [ ] \[**0.1.9**\] \[`core`\] \[`repl`\] Provides REPL capability (`program.exec_repl();`)
+  - [X] \[[0.1.9](https://docs.rs/mingling/0.1.9/mingling/)\] \[`core`\] \[`dev_toolkits`\] Provides debugging interfaces for developers to capture invocation information when issues arise (`InvokeStackDisplay`) (indirectly implemented via `ProgramHook`)
+  - [X] \[[0.1.9](https://docs.rs/mingling/0.1.9/mingling/)\] \[`core`\] \[`repl`\] Provides REPL capability (`program.exec_repl();`)
+  - [ ] \[**0.2.0**\] Complete documentation, tests, and examples
 
-- [ ] Milestone.2
+- [ ] Milestone.2 "More Comfortable Dev and User Experience"
   - [ ] ...
   - [ ] \[**0.2.5**\] \[`mling`\] Helpdoc Maker
+  - [ ] ...
+  - [ ] \[**0.2.8**\] \[`picker`\] A more efficient and intelligent argument parser
+
+- [ ] Milestone.3 "Unplanned"
+  - [ ] ...
 
 <h1 align="center">
     🚫 Unplanned Features 🚫
