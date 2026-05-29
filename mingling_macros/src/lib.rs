@@ -1123,7 +1123,7 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
             match read_ctx {
                 Ok(ctx) => {
                     let suggest = ::mingling::CompletionHelper::exec_completion::<#name>(&ctx);
-                    CompletionSuggest::new((ctx, suggest)).to_render()
+                    crate::CompletionSuggest::new((ctx, suggest)).to_render()
                 }
                 Err(_) => std::process::exit(1),
             }
@@ -1139,12 +1139,20 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
             match read_ctx {
                 Ok(ctx) => {
                     let suggest = ::mingling::CompletionHelper::exec_completion::<#name>(&ctx);
-                    CompletionSuggest::new((ctx, suggest)).to_render()
+                    crate::CompletionSuggest::new((ctx, suggest)).to_render()
                 }
                 Err(_) => std::process::exit(1),
             }
         }
     };
+
+    #[cfg(feature = "dispatch_tree")]
+    let internal_dispatcher_comp = quote! {
+        use __internal_completion_mod::__internal_dispatcher___comp;
+    };
+
+    #[cfg(not(feature = "dispatch_tree"))]
+    let internal_dispatcher_comp = quote! {};
 
     let comp_dispatcher = quote! {
         #[doc(hidden)]
@@ -1156,6 +1164,7 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
                 CompletionSuggest = (::mingling::ShellContext, ::mingling::Suggest)
             );
         }
+        #internal_dispatcher_comp
         use __internal_completion_mod::CompletionContext;
         use __internal_completion_mod::CompletionSuggest;
         pub use __internal_completion_mod::CMDCompletion;

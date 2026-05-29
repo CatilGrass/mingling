@@ -1,53 +1,97 @@
+use std::collections::HashMap;
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as SynResult, Token, Type};
+
+/// Key-value attributes parsed from the macro input.
+///
+/// Currently supported attributes:
+/// - `doc_hidden`: adds `#[doc(hidden)]` to the generated struct.
+///
+/// # Extending
+/// Add a new field here, then handle it in `generate_struct_attrs`.
+#[derive(Default)]
+struct PackAttrs {
+    attr_map: HashMap<String, bool>,
+}
+
+impl PackAttrs {
+    fn doc_hidden(&self) -> bool {
+        self.attr_map.get("doc_hidden").copied().unwrap_or(false)
+    }
+}
+
+fn parse_attr_key_value(input: ParseStream) -> SynResult<(String, bool)> {
+    let key: Ident = input.parse()?;
+    input.parse::<Token![=]>()?;
+    let lit: syn::LitBool = input.parse()?;
+    Ok((key.to_string(), lit.value()))
+}
 
 enum PackInput {
     Explicit {
         group_name: syn::Path,
         type_name: Ident,
         inner_type: Type,
+        attrs: PackAttrs,
     },
     Default {
         type_name: Ident,
         inner_type: Type,
+        attrs: PackAttrs,
     },
 }
 
 impl Parse for PackInput {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        // Look ahead to determine format:
+        // Formats:
         //   - `Path, TypeName = InnerType`  → Explicit
         //   - `TypeName = InnerType`          → Default
         //
-        // Both start with an ident. We peek at the second token:
-        // if it's a `,` or `::`, it's explicit; if it's `=`, it's default.
+        // An optional trailing `, k = v, ...` is allowed after the inner type.
 
         if (input.peek(Ident) || input.peek(Token![crate]))
             && (input.peek2(Token![,]) || input.peek2(Token![::]))
         {
-            // Explicit format: Path, TypeName = InnerType
+            // Explicit format
             let group_name = input.parse::<syn::Path>()?;
             input.parse::<Token![,]>()?;
             let type_name = input.parse()?;
             input.parse::<Token![=]>()?;
             let inner_type = input.parse()?;
 
+            let attrs = if input.peek(Token![,]) {
+                input.parse::<Token![,]>()?;
+                parse_attrs(input)?
+            } else {
+                PackAttrs::default()
+            };
+
             Ok(PackInput::Explicit {
                 group_name,
                 type_name,
                 inner_type,
+                attrs,
             })
         } else if input.peek(Ident) && input.peek2(Token![=]) {
-            // Default format: TypeName = InnerType
+            // Default format
             let type_name = input.parse()?;
             input.parse::<Token![=]>()?;
             let inner_type = input.parse()?;
 
+            let attrs = if input.peek(Token![,]) {
+                input.parse::<Token![,]>()?;
+                parse_attrs(input)?
+            } else {
+                PackAttrs::default()
+            };
+
             Ok(PackInput::Default {
                 type_name,
                 inner_type,
+                attrs,
             })
         } else {
             Err(input.lookahead1().error())
@@ -55,26 +99,77 @@ impl Parse for PackInput {
     }
 }
 
+/// Parse comma-separated key = value pairs, e.g. `doc_hidden = true`
+fn parse_attrs(input: ParseStream) -> SynResult<PackAttrs> {
+    let mut attr_map = HashMap::new();
+
+    // Parse at least one attr
+    let (key, value) = parse_attr_key_value(input)?;
+    attr_map.insert(key, value);
+
+    // Parse remaining `, key = value` pairs
+    while input.peek(Token![,]) {
+        let lookahead = input.fork();
+        lookahead.parse::<Token![,]>()?;
+        if lookahead.peek(Ident) && lookahead.peek2(Token![=]) {
+            input.parse::<Token![,]>()?;
+            let (key, value) = parse_attr_key_value(input)?;
+            attr_map.insert(key, value);
+        } else {
+            break;
+        }
+    }
+
+    Ok(PackAttrs { attr_map })
+}
+
+/// Given a `PackAttrs`, produce any additional `#[...]` attributes to place
+/// before the struct definition.
+///
+/// # Extending
+/// Add a new match arm here when you add a new attribute to `PackAttrs`.
+fn generate_struct_attrs(attrs: &PackAttrs) -> Vec<proc_macro2::TokenStream> {
+    let mut result = Vec::new();
+
+    if attrs.doc_hidden() {
+        result.push(quote! { #[doc(hidden)] });
+    }
+
+    result
+}
+
 pub fn pack(input: TokenStream) -> TokenStream {
     // Parse the input
     let pack_input = syn::parse_macro_input!(input as PackInput);
 
-    // Determine if we're using default or explicit group
-    let (group_name, type_name, inner_type, use_default) = match pack_input {
+    // Extract common fields and determine if we're using default or explicit group
+    let (group_name, type_name, inner_type, attrs, use_default) = match pack_input {
         PackInput::Explicit {
             group_name,
             type_name,
             inner_type,
-        } => (quote! { #group_name }, type_name, inner_type, false),
+            attrs,
+        } => (quote! { #group_name }, type_name, inner_type, attrs, false),
         PackInput::Default {
             type_name,
             inner_type,
-        } => (crate::default_program_path(), type_name, inner_type, true),
+            attrs,
+        } => (
+            crate::default_program_path(),
+            type_name,
+            inner_type,
+            attrs,
+            true,
+        ),
     };
+
+    // Build attribute tokens that should appear before `pub struct`
+    let extra_attrs = generate_struct_attrs(&attrs);
 
     // Generate the struct definition
     #[cfg(not(feature = "general_renderer"))]
     let struct_def = quote! {
+        #(#extra_attrs)*
         pub struct #type_name {
             pub(crate) inner: #inner_type,
         }
@@ -82,6 +177,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
 
     #[cfg(feature = "general_renderer")]
     let struct_def = quote! {
+        #(#extra_attrs)*
         #[derive(serde::Serialize)]
         pub struct #type_name {
             pub(crate) inner: #inner_type,
