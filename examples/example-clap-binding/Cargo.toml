@@ -11,5 +11,9 @@ features = ["clap"]
 # Import `clap` to your project
 [dependencies.clap]
 version = "4.6.1"
-# Enable `derive` features
-features = ["derive"]
+features = [
+    # Enable `derive` feature to support `clap::Parser`
+    "derive",
+    # Enable `color` feature to support ANSI colors
+    "color",
+]

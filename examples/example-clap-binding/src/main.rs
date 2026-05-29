@@ -3,8 +3,8 @@
 //! > This example demonstrates how to bind clap_derive to Mingling
 //!
 //! **Note**:
-//! If the `error` parameter of the `dispatcher_clap!` macro is enabled, parameters will be parsed using `try_parse_from`
-//! This will cause clap's ColorChoice output to be plain text without ANSI colors
+//! If the `error` parameter of the `dispatcher_clap!` macro is enabled, arguments will be parsed using `try_parse_from`.
+//! If you need such output to support ANSI colors, enable the `color` feature of `clap`.
 //!
 //! Run:
 //! ```bash
@@ -38,21 +38,26 @@
 //! For more information, try '--help'.
 //! ```
 
-use mingling::{macros::dispatcher_clap, prelude::*, Groupped};
+use mingling::{macros::dispatcher_clap, prelude::*, setup::BasicProgramSetup, Groupped};
 
 fn main() {
     let mut program = ThisProgram::new();
 
+    // --------- IMPORTANT ---------
+    // Introduce BasicProgramSetup to support ["--help", "-h"] options
+    program.with_setup(BasicProgramSetup);
+
     // Set clap help output mode
     program.stdout_setting.clap_help_print_behaviour =
-        mingling::ClapHelpPrintBehaviour::PrintDirectly;
-    //  mingling::ClapHelpPrintBehaviour::WriteToRenderResult
+        mingling::ClapHelpPrintBehaviour::WriteToRenderResult;
+    //  mingling::ClapHelpPrintBehaviour::PrintDirectly
     //
     // PrintDirectly:
     //   Let Clap print help information directly to stdout
     //
     // WriteToRenderResult:
     //   Capture Clap's help information and write to RenderResult
+    // --------- IMPORTANT ---------
 
     program.with_dispatcher(CMDGreet);
     program.exec_and_exit();

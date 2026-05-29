@@ -173,7 +173,7 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
             match <#struct_name as ::clap::Parser>::try_parse_from(clap_args) {
                 Ok(parsed) => parsed.to_chain(),
                 Err(e) => {
-                    return #error_struct::new(e.to_string()).to_render()
+                    return #error_struct::new(format!("{}", e.render().ansi())).to_render()
                 },
             }
         }
@@ -205,15 +205,16 @@ pub fn dispatcher_clap_attr(attr: TokenStream, item: TokenStream) -> TokenStream
             #[allow(non_snake_case)]
             #[::mingling::macros::help]
             fn #help_fn_name(_prev: #struct_name) {
+                use std::io::Write;
                 use clap::ColorChoice;
 
                 let this = ::mingling::this::<#program_path>();
                 match this.stdout_setting.clap_help_print_behaviour {
                     ::mingling::ClapHelpPrintBehaviour::WriteToRenderResult => {
-                        <#struct_name as ::clap::CommandFactory>::command()
-                            .color(ColorChoice::Always)
-                            .write_help(__renderer_inner_result)
-                            .unwrap();
+                        let mut cmd = <#struct_name as ::clap::CommandFactory>::command()
+                            .color(ColorChoice::Always);
+                        let styled = cmd.render_help();
+                        write!(__renderer_inner_result, "{}", styled.ansi()).unwrap();
                     }
                     ::mingling::ClapHelpPrintBehaviour::PrintDirectly => {
                         let mut command = <#struct_name as ::clap::CommandFactory>::command();

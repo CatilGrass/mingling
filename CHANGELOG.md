@@ -4,7 +4,9 @@
 
 ### Fixes:
 
-None
+1. **\[macros:dispatcher_clap\]** Fixed the issue where clap error messages (`DisplayHelp` and parse errors from `try_parse_from`) could not output ANSI
+   - For error paths, use `e.render().ansi()` instead of `e.to_string()` to prevent ANSI codes from being stripped by `strip_str` in `StyledStr::Display`
+   - For help info paths, use with `BasicProgramSetup`, output ANSI-colored help content through the mingling framework's `render_help` flow
 
 ### Optimizings:
 
