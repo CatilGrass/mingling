@@ -124,6 +124,9 @@ fn handle_cmd(args: EntryCmd) -> Next {
 gen_program!();
 ```
 
+7. **\[macros:comp\]** Renamed `CompletionDispatcher` to `CMDCompletion`
+8. **\[macros:comp\]** Marked `CompletionContext` and `CompletionSuggest` as `#[doc(hidden)]`
+
 ---
 
 ### Release 0.1.8 (2026-05-18)

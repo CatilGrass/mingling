@@ -16,8 +16,8 @@
 //! ```
 
 use mingling::{
-    EnumTag, Groupped, ShellContext, Suggest, macros::suggest_enum, parser::PickableEnum,
-    prelude::*,
+    macros::suggest_enum, parser::PickableEnum, prelude::*, EnumTag, Groupped, ShellContext,
+    Suggest,
 };
 
 // Define the enum and derive the EnumTag trait
@@ -56,7 +56,9 @@ pub enum ProgrammingLanguages {
     #[enum_desc("A general-purpose programming language with clean syntax, known for readability")]
     Python,
 
-    #[enum_desc("An object-oriented scripting language, famous for its concise and elegant syntax")]
+    #[enum_desc(
+        "An object-oriented scripting language, famous for its concise and elegant syntax"
+    )]
     Ruby,
 
     #[default]
@@ -96,7 +98,7 @@ gen_program!();
 
 fn main() {
     let mut program = ThisProgram::new();
-    program.with_dispatcher(CompletionDispatcher);
+    program.with_dispatcher(CMDCompletion);
     program.with_dispatcher(CMDLanguageSelection);
     program.exec_and_exit();
 }

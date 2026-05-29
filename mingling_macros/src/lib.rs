@@ -1116,6 +1116,7 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
 
     #[cfg(feature = "async")]
     let fn_exec_comp = quote! {
+        #[doc(hidden)]
         #[::mingling::macros::chain(#name)]
         pub async fn __exec_completion(prev: CompletionContext) -> Next {
             let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
@@ -1131,6 +1132,7 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
 
     #[cfg(not(feature = "async"))]
     let fn_exec_comp = quote! {
+        #[doc(hidden)]
         #[::mingling::macros::chain(#name)]
         pub fn __exec_completion(prev: CompletionContext) -> Next {
             let read_ctx = ::mingling::ShellContext::try_from(prev.inner);
@@ -1145,17 +1147,25 @@ pub fn program_comp_gen(input: TokenStream) -> TokenStream {
     };
 
     let comp_dispatcher = quote! {
-        ::mingling::macros::dispatcher!(#name, "__comp", CompletionDispatcher => CompletionContext);
-        ::mingling::macros::pack!(
-            #name,
-            CompletionSuggest = (::mingling::ShellContext, ::mingling::Suggest)
-        );
+        #[doc(hidden)]
+        mod __internal_completion_mod {
+            use super::#name;
+            ::mingling::macros::dispatcher!(#name, "__comp", CMDCompletion => CompletionContext);
+            ::mingling::macros::pack!(
+                #name,
+                CompletionSuggest = (::mingling::ShellContext, ::mingling::Suggest)
+            );
+        }
+        use __internal_completion_mod::CompletionContext;
+        use __internal_completion_mod::CompletionSuggest;
+        pub use __internal_completion_mod::CMDCompletion;
 
         #fn_exec_comp
 
         ::mingling::macros::register_type!(CompletionContext);
 
         #[allow(unused)]
+        #[doc(hidden)]
         #[::mingling::macros::renderer(#name)]
         pub fn __render_completion(prev: CompletionSuggest) {
             let (ctx, suggest) = prev.inner;

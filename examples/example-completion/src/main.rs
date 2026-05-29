@@ -52,13 +52,13 @@ fn main() {
     program.with_dispatcher(CMDGreet);
 
     // --------- IMPORTANT ---------
-    // The `comp` feature makes `gen_program!()` generate a CompletionDispatcher automatically
+    // The `comp` feature makes `gen_program!()` generate a CMDCompletion automatically
     // It adds a hidden `__comp` subcommand for communication with the completion script
-    program.with_dispatcher(crate::CompletionDispatcher);
+    program.with_dispatcher(crate::CMDCompletion);
     // --------- IMPORTANT ---------
 
     // TIP: Note that the completion script reads stdout,
-    // so make sure no output is produced before the CompletionDispatcher is dispatched.
+    // so make sure no output is produced before the CMDCompletion is dispatched.
     program.exec_and_exit();
 }
 
@@ -109,7 +109,7 @@ pack!(ResultName = (u8, String));
 #[chain]
 fn handle_greet(args: EntryGreet) -> Next {
     let result: ResultName = args
-        .pick(["-r", "--repeat"])
+        .pick_or(["-r", "--repeat"], 1)
         .pick_or((), "World")
         .unpack()
         .into();

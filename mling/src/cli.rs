@@ -3,7 +3,7 @@ use mingling::{
     setup::{BasicProgramSetup, GeneralRendererSetup},
 };
 
-use crate::{CompletionDispatcher, DispatcherNotFound, ThisProgram, display::markdown};
+use crate::{CMDCompletion, DispatcherNotFound, ThisProgram, display::markdown};
 
 pub mod list;
 pub use list::*;
@@ -23,7 +23,7 @@ pub fn cli_entry() {
     // Plugins
     program.with_setup(BasicProgramSetup);
     program.with_setup(GeneralRendererSetup);
-    program.with_dispatcher(CompletionDispatcher);
+    program.with_dispatcher(CMDCompletion);
 
     if program.pick_global_flag(["-v", "--version"]) {
         println!("{}", include_str!("../res/version.txt").trim_end());

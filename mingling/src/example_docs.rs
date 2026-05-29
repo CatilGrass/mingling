@@ -511,13 +511,13 @@ pub mod example_clap_binding {}
 ///     program.with_dispatcher(CMDGreet);
 ///
 ///     // --------- IMPORTANT ---------
-///     // The `comp` feature makes `gen_program!()` generate a CompletionDispatcher automatically
+///     // The `comp` feature makes `gen_program!()` generate a CMDCompletion automatically
 ///     // It adds a hidden `__comp` subcommand for communication with the completion script
-///     program.with_dispatcher(crate::CompletionDispatcher);
+///     program.with_dispatcher(crate::CMDCompletion);
 ///     // --------- IMPORTANT ---------
 ///
 ///     // TIP: Note that the completion script reads stdout,
-///     // so make sure no output is produced before the CompletionDispatcher is dispatched.
+///     // so make sure no output is produced before the CMDCompletion is dispatched.
 ///     program.exec_and_exit();
 /// }
 ///
@@ -568,7 +568,7 @@ pub mod example_clap_binding {}
 /// #[chain]
 /// fn handle_greet(args: EntryGreet) -> Next {
 ///     let result: ResultName = args
-///         .pick(["-r", "--repeat"])
+///         .pick_or(["-r", "--repeat"], 1)
 ///         .pick_or((), "World")
 ///         .unpack()
 ///         .into();
@@ -843,8 +843,8 @@ pub mod example_dispatch_tree {}
 /// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::{
-///     EnumTag, Groupped, ShellContext, Suggest, macros::suggest_enum, parser::PickableEnum,
-///     prelude::*,
+///     macros::suggest_enum, parser::PickableEnum, prelude::*, EnumTag, Groupped, ShellContext,
+///     Suggest,
 /// };
 ///
 /// // Define the enum and derive the EnumTag trait
@@ -883,7 +883,9 @@ pub mod example_dispatch_tree {}
 ///     #[enum_desc("A general-purpose programming language with clean syntax, known for readability")]
 ///     Python,
 ///
-///     #[enum_desc("An object-oriented scripting language, famous for its concise and elegant syntax")]
+///     #[enum_desc(
+///         "An object-oriented scripting language, famous for its concise and elegant syntax"
+///     )]
 ///     Ruby,
 ///
 ///     #[default]
@@ -923,7 +925,7 @@ pub mod example_dispatch_tree {}
 ///
 /// fn main() {
 ///     let mut program = ThisProgram::new();
-///     program.with_dispatcher(CompletionDispatcher);
+///     program.with_dispatcher(CMDCompletion);
 ///     program.with_dispatcher(CMDLanguageSelection);
 ///     program.exec_and_exit();
 /// }
