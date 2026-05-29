@@ -64,21 +64,23 @@ pub(crate) fn get_global_set(lock: &OnceLock<Mutex<BTreeSet<String>>>) -> &Mutex
     lock.get_or_init(|| Mutex::new(BTreeSet::new()))
 }
 
+pub(crate) type Registry = OnceLock<Mutex<BTreeSet<String>>>;
+
 // Global variables
 #[cfg(feature = "general_renderer")]
-pub(crate) static GENERAL_RENDERERS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static GENERAL_RENDERERS: Registry = OnceLock::new();
 #[cfg(feature = "comp")]
-pub(crate) static COMPLETIONS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static COMPLETIONS: Registry = OnceLock::new();
 
 #[cfg(feature = "dispatch_tree")]
-pub(crate) static COMPILE_TIME_DISPATCHERS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static COMPILE_TIME_DISPATCHERS: Registry = OnceLock::new();
 
-pub(crate) static PACKED_TYPES: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
-pub(crate) static CHAINS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
-pub(crate) static RENDERERS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
-pub(crate) static CHAINS_EXIST: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
-pub(crate) static RENDERERS_EXIST: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
-pub(crate) static HELP_REQUESTS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
+pub(crate) static PACKED_TYPES: Registry = OnceLock::new();
+pub(crate) static CHAINS: Registry = OnceLock::new();
+pub(crate) static RENDERERS: Registry = OnceLock::new();
+pub(crate) static CHAINS_EXIST: Registry = OnceLock::new();
+pub(crate) static RENDERERS_EXIST: Registry = OnceLock::new();
+pub(crate) static HELP_REQUESTS: Registry = OnceLock::new();
 
 /// Checks that a TypePath is a simple single-segment identifier (no `::` in the path).
 ///
