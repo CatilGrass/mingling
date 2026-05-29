@@ -23,6 +23,11 @@ impl Parse for ClapOptions {
             // Parse leading comma
             input.parse::<Token![,]>()?;
 
+            // Allow trailing comma
+            if input.is_empty() {
+                break;
+            }
+
             let key: Ident = input.parse()?;
             input.parse::<Token![=]>()?;
 

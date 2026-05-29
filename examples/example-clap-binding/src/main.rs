@@ -71,9 +71,9 @@ fn main() {
 //       vvvvvvv  vvvvvvvvvvvv  vvvvvvvv
 #[derive(Default, clap::Parser, Groupped)]
 #[dispatcher_clap(
-    "greet", CMDGreet,       // Bind EntryGreet to "greet" command
-    help = true,             // Generate clap help for EntryGreet
-    error = ErrorGreetParsed // Generate and bind error type for parse failure
+    "greet", CMDGreet,        // Bind EntryGreet to "greet" command
+    help = true,              // Generate clap help for EntryGreet
+    error = ErrorGreetParsed, // Generate and bind error type for parse failure
 //  ^^^^^\__ Using `error` intercepts parse failure information into the specified type,
 //              which is then rendered by the renderer
 )]
