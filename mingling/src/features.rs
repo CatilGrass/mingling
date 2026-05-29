@@ -174,17 +174,6 @@ pub const MINGLING_REPL: bool = false;
 #[cfg(feature = "repl")]
 #[allow(unused)]
 pub const MINGLING_REPL: bool = true;
-/// Whether the `repl_extra` feature is enabled
-/// Current: `disabled`
-#[cfg(not(feature = "repl_extra"))]
-#[allow(unused)]
-pub const MINGLING_REPL_EXTRA: bool = false;
-
-/// Whether the `repl_extra` feature is enabled
-/// Current: `enabled`
-#[cfg(feature = "repl_extra")]
-#[allow(unused)]
-pub const MINGLING_REPL_EXTRA: bool = true;
 /// Whether the `ron_serde_fmt` feature is enabled
 /// Current: `disabled`
 #[cfg(not(feature = "ron_serde_fmt"))]

@@ -17,7 +17,6 @@ exclude = [
     "examples/example-hook",
     "examples/example-implicit-dispatcher",
     "examples/example-panic-unwind",
-    "examples/example-repl-advanced",
     "examples/example-repl-basic",
     "examples/example-resources",
     "examples/example-setup",

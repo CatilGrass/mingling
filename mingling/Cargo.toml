@@ -51,7 +51,6 @@ default = ["mingling_core/default", "mingling_macros/default"]
 clap = ["mingling_core/clap", "mingling_macros/clap"]
 dispatch_tree = ["mingling_core/dispatch_tree", "mingling_macros/dispatch_tree"]
 repl = ["mingling_core/repl", "mingling_macros/repl"]
-repl_extra = ["repl"]
 comp = ["mingling_core/comp", "mingling_macros/comp"]
 parser = ["dep:size"]
 
