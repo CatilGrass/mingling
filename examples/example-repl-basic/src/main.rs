@@ -166,7 +166,7 @@ fn render_error_directory_not_exist(err: ErrorDirectoryNotExist) {
 
 // Handle dispatcher not found event
 #[renderer]
-fn dispatcher_not_found(prev: DispatcherNotFound) {
+fn dispatcher_not_found(prev: ErrorDispatcherNotFound) {
     r_println!("Command not found: \"{}\"", prev.join(", "))
 }
 

@@ -3,7 +3,7 @@ use mingling::{
     setup::{BasicProgramSetup, GeneralRendererSetup},
 };
 
-use crate::{CMDCompletion, DispatcherNotFound, ThisProgram, display::markdown};
+use crate::{CMDCompletion, ErrorDispatcherNotFound, ThisProgram, display::markdown};
 
 pub mod list;
 pub use list::*;
@@ -66,7 +66,7 @@ pub fn cli_entry() {
 }
 
 #[renderer]
-pub(crate) fn fallback_disp(prev: DispatcherNotFound) {
+pub(crate) fn fallback_disp(prev: ErrorDispatcherNotFound) {
     r_println!("Error: command \"{}\" not found!", prev.join(" "));
     r_println!("Use \"mling --help\" for more information.");
 }

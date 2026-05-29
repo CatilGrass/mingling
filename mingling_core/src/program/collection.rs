@@ -18,9 +18,9 @@ use crate::{ShellContext, Suggest};
 pub trait ProgramCollect {
     /// Enum type representing internal IDs for the program
     type Enum;
-    type DispatcherNotFound: Groupped<Self::Enum>;
-    type RendererNotFound: Groupped<Self::Enum>;
-    type EmptyResult: Groupped<Self::Enum>;
+    type ErrorDispatcherNotFound: Groupped<Self::Enum>;
+    type ErrorRendererNotFound: Groupped<Self::Enum>;
+    type ResultEmpty: Groupped<Self::Enum>;
 
     /// Use a prefix tree to quickly match arguments and dispatch to an Entry
     #[cfg(feature = "dispatch_tree")]

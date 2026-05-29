@@ -82,7 +82,8 @@ impl CompletionHelper {
         let suggest = if let Ok(any) = P::dispatch_args_trie(&args) {
             trace!("entry type: {}", any.member_id);
 
-            let dispatcher_not_found = <P::DispatcherNotFound as crate::Groupped<P>>::member_id();
+            let dispatcher_not_found =
+                <P::ErrorDispatcherNotFound as crate::Groupped<P>>::member_id();
 
             if dispatcher_not_found == any.member_id {
                 trace!("begin not Ok");

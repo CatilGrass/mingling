@@ -38,7 +38,7 @@
 //! }
 //!
 //! #[renderer]
-//! fn render_dispatcher_not_found(err: DispatcherNotFound) {
+//! fn render_dispatcher_not_found(err: ErrorDispatcherNotFound) {
 //!     if err.len() > 0 {
 //!         r_println!("Command not found: [{}]", err.join(" "));
 //!     }

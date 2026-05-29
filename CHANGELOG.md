@@ -126,6 +126,9 @@ gen_program!();
 
 7. **\[macros:comp\]** Renamed `CompletionDispatcher` to `CMDCompletion`
 8. **\[macros:comp\]** Marked `CompletionContext` and `CompletionSuggest` as `#[doc(hidden)]`
+9. **\[macros\]** Renamed `DispatcherNotFound` to `ErrorDispatcherNotFound`
+10. **\[macros\]** Renamed `RendererNotFound` to `ErrorRendererNotFound`
+11. **\[macros\]** Renamed `EmptyResult` to `ResultEmpty`
 
 ---
 

@@ -83,7 +83,7 @@ fn render_error_name_too_long(len: ErrorNameTooLong) {
 }
 
 #[renderer]
-fn render_dispatcher_not_found(err: DispatcherNotFound) {
+fn render_dispatcher_not_found(err: ErrorDispatcherNotFound) {
     // Prompt when command is not found, showing the input command
     r_println!("Command not found: \"{}\"", err.inner.join(" "));
 }

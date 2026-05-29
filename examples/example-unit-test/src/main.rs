@@ -110,7 +110,7 @@ fn render_error_name_too_long(len: ErrorNameTooLong) -> String {
 }
 
 #[renderer]
-fn render_dispatcher_not_found(err: DispatcherNotFound) {
+fn render_dispatcher_not_found(err: ErrorDispatcherNotFound) {
     r_println!("Command not found: \"{}\"", err.inner.join(" "));
 }
 

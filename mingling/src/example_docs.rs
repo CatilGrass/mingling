@@ -1029,7 +1029,7 @@ pub mod example_enum_tag {}
 /// }
 ///
 /// #[renderer]
-/// fn render_dispatcher_not_found(err: DispatcherNotFound) {
+/// fn render_dispatcher_not_found(err: ErrorDispatcherNotFound) {
 ///     // Prompt when command is not found, showing the input command
 ///     r_println!("Command not found: \"{}\"", err.inner.join(" "));
 /// }
@@ -1658,7 +1658,7 @@ pub mod example_panic_unwind {}
 ///
 /// // Handle dispatcher not found event
 /// #[renderer]
-/// fn dispatcher_not_found(prev: DispatcherNotFound) {
+/// fn dispatcher_not_found(prev: ErrorDispatcherNotFound) {
 ///     r_println!("Command not found: \"{}\"", prev.join(", "))
 /// }
 ///
@@ -1918,7 +1918,7 @@ pub mod example_setup {}
 /// }
 ///
 /// #[renderer]
-/// fn render_dispatcher_not_found(err: DispatcherNotFound) {
+/// fn render_dispatcher_not_found(err: ErrorDispatcherNotFound) {
 ///     r_println!("Command not found: \"{}\"", err.inner.join(" "));
 /// }
 ///

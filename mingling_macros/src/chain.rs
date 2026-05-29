@@ -95,7 +95,7 @@ fn generate_proc_fn(
     let body_stmts: &[syn::Stmt] = if is_unit_return && has_resources {
         let mut stmts = fn_body_stmts.to_vec();
         stmts.push(syn::Stmt::Expr(
-            syn::parse_quote! { crate::EmptyResult::new(()).to_chain() },
+            syn::parse_quote! { crate::ResultEmpty::new(()).to_chain() },
             None,
         ));
         // Box::leak to get a &'static [syn::Stmt]
@@ -106,7 +106,7 @@ fn generate_proc_fn(
 
     let wrapped_body = wrap_body_with_mut_resources(body_stmts, &mut_resources, program_type);
 
-    // When the function returns `()`, wrap the result with EmptyResult
+    // When the function returns `()`, wrap the result with ResultEmpty
     let call_or_wrapped = if is_unit_return {
         if has_resources {
             quote! {
@@ -121,7 +121,7 @@ fn generate_proc_fn(
             };
             quote! {
                 #call
-                crate::EmptyResult::new(()).to_chain()
+                crate::ResultEmpty::new(()).to_chain()
             }
         }
     } else if has_resources {
@@ -179,7 +179,7 @@ fn generate_original_fn(
         quote! {
             {
                 #fn_body
-                crate::EmptyResult::new(()).to_chain()
+                crate::ResultEmpty::new(()).to_chain()
             }
         }
     } else {
