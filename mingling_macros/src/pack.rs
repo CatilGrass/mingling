@@ -1,15 +1,17 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::{Ident, Result as SynResult, Token, Type};
+use syn::{Attribute, Ident, Result as SynResult, Token, Type};
 
 enum PackInput {
     Explicit {
+        attrs: Vec<Attribute>,
         group_name: syn::Path,
         type_name: Ident,
         inner_type: Type,
     },
     Default {
+        attrs: Vec<Attribute>,
         type_name: Ident,
         inner_type: Type,
     },
@@ -17,12 +19,12 @@ enum PackInput {
 
 impl Parse for PackInput {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        // Look ahead to determine format:
+        // First, collect any outer attributes (`#[...]` and `///...`) before the main syntax.
+        let attrs = input.call(Attribute::parse_outer)?;
+
+        // Now determine the format:
         //   - `Path, TypeName = InnerType`  → Explicit
         //   - `TypeName = InnerType`          → Default
-        //
-        // Both start with an ident. We peek at the second token:
-        // if it's a `,` or `::`, it's explicit; if it's `=`, it's default.
 
         if (input.peek(Ident) || input.peek(Token![crate]))
             && (input.peek2(Token![,]) || input.peek2(Token![::]))
@@ -35,6 +37,7 @@ impl Parse for PackInput {
             let inner_type = input.parse()?;
 
             Ok(PackInput::Explicit {
+                attrs,
                 group_name,
                 type_name,
                 inner_type,
@@ -46,6 +49,7 @@ impl Parse for PackInput {
             let inner_type = input.parse()?;
 
             Ok(PackInput::Default {
+                attrs,
                 type_name,
                 inner_type,
             })
@@ -59,22 +63,30 @@ pub fn pack(input: TokenStream) -> TokenStream {
     // Parse the input
     let pack_input = syn::parse_macro_input!(input as PackInput);
 
-    // Determine if we're using default or explicit group
-    let (group_name, type_name, inner_type, use_default) = match pack_input {
+    let (group_name, type_name, inner_type, attrs, use_default) = match pack_input {
         PackInput::Explicit {
+            attrs,
             group_name,
             type_name,
             inner_type,
-        } => (quote! { #group_name }, type_name, inner_type, false),
+        } => (quote! { #group_name }, type_name, inner_type, attrs, false),
         PackInput::Default {
+            attrs,
             type_name,
             inner_type,
-        } => (crate::default_program_path(), type_name, inner_type, true),
+        } => (
+            crate::default_program_path(),
+            type_name,
+            inner_type,
+            attrs,
+            true,
+        ),
     };
 
     // Generate the struct definition
     #[cfg(not(feature = "general_renderer"))]
     let struct_def = quote! {
+        #(#attrs)*
         pub struct #type_name {
             pub(crate) inner: #inner_type,
         }
@@ -82,6 +94,7 @@ pub fn pack(input: TokenStream) -> TokenStream {
 
     #[cfg(feature = "general_renderer")]
     let struct_def = quote! {
+        #(#attrs)*
         #[derive(serde::Serialize)]
         pub struct #type_name {
             pub(crate) inner: #inner_type,

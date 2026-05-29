@@ -2,29 +2,39 @@ use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::{Ident, LitStr, Result as SynResult, Token};
+use syn::{Attribute, Ident, LitStr, Result as SynResult, Token};
 
 #[cfg(feature = "dispatch_tree")]
 use crate::COMPILE_TIME_DISPATCHERS;
 
 enum DispatcherChainInput {
     Explicit {
+        cmd_attrs: Vec<Attribute>,
+        entry_attrs: Vec<Attribute>,
         group_name: syn::Path,
         command_name: syn::LitStr,
         command_struct: Ident,
         pack: Ident,
     },
     Default {
+        cmd_attrs: Vec<Attribute>,
+        entry_attrs: Vec<Attribute>,
         command_name: syn::LitStr,
         command_struct: Ident,
         pack: Ident,
     },
     #[cfg(feature = "extra_macros")]
-    Auto { command_name: syn::LitStr },
+    Auto {
+        cmd_attrs: Vec<Attribute>,
+        command_name: syn::LitStr,
+    },
 }
 
 impl Parse for DispatcherChainInput {
     fn parse(input: ParseStream) -> SynResult<Self> {
+        // Collect outer attributes for the CMD struct
+        let cmd_attrs = input.call(Attribute::parse_outer)?;
+
         if (input.peek(Ident) || input.peek(Token![crate]))
             && (input.peek2(Token![::]) || input.peek2(Token![,]))
         {
@@ -34,9 +44,12 @@ impl Parse for DispatcherChainInput {
             input.parse::<Token![,]>()?;
             let command_struct = input.parse()?;
             input.parse::<Token![=>]>()?;
+            let entry_attrs = input.call(Attribute::parse_outer)?;
             let pack = input.parse()?;
 
             Ok(DispatcherChainInput::Explicit {
+                cmd_attrs,
+                entry_attrs,
                 group_name,
                 command_name,
                 command_struct,
@@ -50,7 +63,10 @@ impl Parse for DispatcherChainInput {
             if input.is_empty() {
                 #[cfg(feature = "extra_macros")]
                 {
-                    return Ok(DispatcherChainInput::Auto { command_name });
+                    return Ok(DispatcherChainInput::Auto {
+                        cmd_attrs,
+                        command_name,
+                    });
                 }
                 #[cfg(not(feature = "extra_macros"))]
                 {
@@ -65,9 +81,12 @@ impl Parse for DispatcherChainInput {
             input.parse::<Token![,]>()?;
             let command_struct = input.parse()?;
             input.parse::<Token![=>]>()?;
+            let entry_attrs = input.call(Attribute::parse_outer)?;
             let pack = input.parse()?;
 
             Ok(DispatcherChainInput::Default {
+                cmd_attrs,
+                entry_attrs,
                 command_name,
                 command_struct,
                 pack,
@@ -90,71 +109,94 @@ pub fn dispatcher(input: TokenStream) -> TokenStream {
     let dispatcher_input = syn::parse_macro_input!(input as DispatcherChainInput);
 
     #[cfg(not(feature = "extra_macros"))]
-    let (command_name, command_struct, pack, _use_default, group_path) = match dispatcher_input {
-        DispatcherChainInput::Explicit {
-            group_name,
-            command_name,
-            command_struct,
-            pack,
-        } => (
-            command_name,
-            command_struct,
-            pack,
-            false,
-            quote! { #group_name },
-        ),
-        DispatcherChainInput::Default {
-            command_name,
-            command_struct,
-            pack,
-        } => (
-            command_name,
-            command_struct,
-            pack,
-            true,
-            crate::default_program_path(),
-        ),
-    };
-
-    #[cfg(feature = "extra_macros")]
-    let (command_name, command_struct, pack, _use_default, group_path) = match dispatcher_input {
-        DispatcherChainInput::Explicit {
-            group_name,
-            command_name,
-            command_struct,
-            pack,
-        } => (
-            command_name,
-            command_struct,
-            pack,
-            false,
-            quote! { #group_name },
-        ),
-        DispatcherChainInput::Default {
-            command_name,
-            command_struct,
-            pack,
-        } => (
-            command_name,
-            command_struct,
-            pack,
-            true,
-            crate::default_program_path(),
-        ),
-        DispatcherChainInput::Auto { command_name } => {
-            let command_name_str = command_name.value();
-            let pascal = dotted_to_pascal_case(&command_name_str);
-            let command_struct = Ident::new(&format!("CMD{pascal}"), command_name.span());
-            let pack = Ident::new(&format!("Entry{pascal}"), command_name.span());
-            (
+    let (command_name, command_struct, pack, cmd_attrs, entry_attrs, _use_default, group_path) =
+        match dispatcher_input {
+            DispatcherChainInput::Explicit {
+                cmd_attrs,
+                entry_attrs,
+                group_name,
                 command_name,
                 command_struct,
                 pack,
+            } => (
+                command_name,
+                command_struct,
+                pack,
+                cmd_attrs,
+                entry_attrs,
+                false,
+                quote! { #group_name },
+            ),
+            DispatcherChainInput::Default {
+                cmd_attrs,
+                entry_attrs,
+                command_name,
+                command_struct,
+                pack,
+            } => (
+                command_name,
+                command_struct,
+                pack,
+                cmd_attrs,
+                entry_attrs,
                 true,
                 crate::default_program_path(),
-            )
-        }
-    };
+            ),
+        };
+
+    #[cfg(feature = "extra_macros")]
+    let (command_name, command_struct, pack, cmd_attrs, entry_attrs, _use_default, group_path) =
+        match dispatcher_input {
+            DispatcherChainInput::Explicit {
+                cmd_attrs,
+                entry_attrs,
+                group_name,
+                command_name,
+                command_struct,
+                pack,
+            } => (
+                command_name,
+                command_struct,
+                pack,
+                cmd_attrs,
+                entry_attrs,
+                false,
+                quote! { #group_name },
+            ),
+            DispatcherChainInput::Default {
+                cmd_attrs,
+                entry_attrs,
+                command_name,
+                command_struct,
+                pack,
+            } => (
+                command_name,
+                command_struct,
+                pack,
+                cmd_attrs,
+                entry_attrs,
+                true,
+                crate::default_program_path(),
+            ),
+            DispatcherChainInput::Auto {
+                cmd_attrs,
+                command_name,
+            } => {
+                let command_name_str = command_name.value();
+                let pascal = dotted_to_pascal_case(&command_name_str);
+                let command_struct = Ident::new(&format!("CMD{pascal}"), command_name.span());
+                let pack = Ident::new(&format!("Entry{pascal}"), command_name.span());
+                (
+                    command_name,
+                    command_struct,
+                    pack,
+                    cmd_attrs,
+                    Vec::new(),
+                    true,
+                    crate::default_program_path(),
+                )
+            }
+        };
 
     let command_name_str = command_name.value();
 
@@ -166,10 +208,11 @@ pub fn dispatcher(input: TokenStream) -> TokenStream {
         let program_path = group_path;
 
         quote! {
+            #(#cmd_attrs)*
             #[derive(Debug, Default)]
             pub struct #command_struct;
 
-            ::mingling::macros::pack!(#program_path, #pack = Vec<String>);
+            ::mingling::macros::pack!(#(#entry_attrs)* #program_path, #pack = Vec<String>);
 
             #comp_entry
             #dispatch_tree_entry

@@ -87,6 +87,40 @@ dispatcher!("remote.add" /*, CMDRemoteAdd => EntryRemoteAdd */);
 dispatcher!("remote.remove", CMDRemoteRemove => EntryRemoteRemove);
 ```
 
+8. **\[macros\]** The `pack!` macro now supports adding doc comments and attributes (e.g., `#[doc(hidden)]`) to the inner structs:
+
+```rust
+pack!{ 
+    /// Your comment
+    StateGreet = String 
+}
+
+pack! {
+    #[doc(hidden)]
+    ThisProgram, InternalErrorNoName = ()
+}
+```
+
+9. **[macros]** The `dispatcher!` macro now supports adding doc comments and attributes (e.g., `#[doc(hidden)]`) to both the dispatcher and entry structs, similar to the `pack!` macro:
+
+```rust
+// Implicit
+dispatcher! {
+    /// Comment for dispatcher
+    "todo.add", CMDTodoAdd =>
+    /// Comment for entry
+    EntryTodoAdd
+}
+
+// Explicit
+dispatcher! {
+    /// Comment for dispatcher
+    ThisProgram, "todo.add", CMDTodoAdd =>
+    /// Comment for entry
+    EntryTodoAdd
+}
+```
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **\[core\]** Panic Unwind will not be supported when the `async` feature is enabled
