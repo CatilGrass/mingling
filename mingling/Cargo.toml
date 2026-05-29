@@ -6,7 +6,17 @@ authors = ["Weicao-CatilGrass"]
 license.workspace = true
 readme = "README.md"
 description = "Macro magician in your CLI."
-keywords = ["cli", "framework", "procedural", "subcommand", "command-line"]
+keywords = [
+    "cli",
+    "cli-framework",
+    "framework",
+    "workflow",
+    "procedural",
+    "subcommand",
+    "macro",
+    "dispatch",
+    "command-line",
+]
 categories = ["command-line-interface"]
 repository.workspace = true
 
