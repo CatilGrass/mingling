@@ -53,6 +53,7 @@ pub async fn handle_download(args: EntryDownload) -> Next {
     fake_download(file_name).await
 }
 
+/// Renders the downloaded file name.
 #[renderer]
 // But renderers cannot use the `async` keyword
 pub fn render_downloaded(result: ResultDownloaded) {

@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use just_fmt::kebab_case;
 
+#[must_use]
 pub fn list_namespaces(
     show_trusted: bool,
     show_untrusted: bool,
@@ -13,14 +14,12 @@ pub fn list_namespaces(
     }
 
     let mut namespaces = Vec::new();
-    let entries = match std::fs::read_dir(&wdir) {
-        Ok(entries) => entries,
-        Err(_) => return Vec::new(),
+    let Ok(entries) = std::fs::read_dir(&wdir) else {
+        return Vec::new();
     };
     for entry in entries {
-        let entry = match entry {
-            Ok(e) => e,
-            Err(_) => continue,
+        let Ok(entry) = entry else {
+            continue;
         };
         let path = entry.path();
         if path.is_dir()
@@ -71,24 +70,34 @@ pub fn remove_namespace(namespace: String) {
     }
 }
 
+/// Returns the mingling data directory.
+///
+/// # Panics
+///
+/// Panics if the platform's data directory cannot be determined.
+#[must_use]
 pub fn working_dir() -> PathBuf {
     dirs::data_dir().unwrap().join("mingling")
 }
 
+#[must_use]
 pub fn namespace_dir(namespace: String) -> PathBuf {
     working_dir().join(kebab_case!(namespace))
 }
 
+#[must_use]
 pub fn is_untrusted_namespace(namespace: String) -> bool {
     let untrusted_file = namespace_dir(namespace).join("UNTRUSTED");
     untrusted_file.exists()
 }
 
+#[must_use]
 pub fn is_trusted_namespace(namespace: String) -> bool {
     let trusted = namespace_dir(namespace).join("TRUSTED");
     trusted.exists()
 }
 
+#[must_use]
 pub fn is_untagged_namespace(namespace: String) -> bool {
     let ndir = namespace_dir(namespace);
     let trusted = ndir.join("TRUSTED");
@@ -96,14 +105,17 @@ pub fn is_untagged_namespace(namespace: String) -> bool {
     !trusted.exists() && !untrusted.exists()
 }
 
+#[must_use]
 pub fn bin_dir(namespace: String) -> PathBuf {
     namespace_dir(namespace).join("bin")
 }
 
+#[must_use]
 pub fn comp_dir(namespace: String) -> PathBuf {
     namespace_dir(namespace).join("comp")
 }
 
+#[must_use]
 pub fn exe_path(namespace: String, bin_name_without_ext: String) -> PathBuf {
     if cfg!(target_os = "windows") {
         bin_dir(namespace).join(bin_name_without_ext + ".exe")

@@ -30,6 +30,11 @@ macro_rules! eprintln_cargo_style {
     };
 }
 
+/// Print a message in cargo style format, with bold green prefix.
+///
+/// # Panics
+///
+/// Panics if the prefix (text before the first `:`) exceeds 12 characters.
 pub fn println_cargo_style(str: impl Into<String>) {
     let s = str.into();
     let (prefix, content) = if let Some(pos) = s.find(':') {
@@ -38,16 +43,15 @@ pub fn println_cargo_style(str: impl Into<String>) {
             s[pos + 1..].trim_start().to_string(),
         )
     } else {
-        ("".to_string(), s.trim().to_string())
+        (String::new(), s.trim().to_string())
     };
 
-    if prefix.len() > 12 {
-        panic!(
-            "prefix length exceeds 12: '{}' has length {}",
-            prefix,
-            prefix.len()
-        );
-    }
+    assert!(
+        prefix.len() <= 12,
+        "prefix length exceeds 12: '{}' has length {}",
+        prefix,
+        prefix.len()
+    );
 
     let padding = " ".repeat(12 - prefix.len());
 
@@ -63,6 +67,15 @@ pub fn eprintln_cargo_style(str: impl Into<String>) {
     println!("{}: {}", "error".bold().bright_red(), str.into());
 }
 
+/// Run a shell command and return its exit status.
+///
+/// # Panics
+///
+/// Panics if the shell command cannot be spawned (e.g. the shell binary is not found).
+///
+/// # Errors
+///
+/// Returns `Err` with the exit code if the command finishes with a non-zero exit code.
 pub fn run_cmd(cmd: impl Into<String>) -> Result<(), i32> {
     let shell = if cfg!(target_os = "windows") {
         "powershell"
@@ -84,6 +97,7 @@ pub fn run_cmd(cmd: impl Into<String>) -> Result<(), i32> {
     }
 }
 
+#[must_use]
 pub fn cargo_tomls() -> Vec<std::path::PathBuf> {
     let mut cargo_tomls = Vec::new();
     let mut dirs = vec![std::path::PathBuf::from(".")];

@@ -58,6 +58,7 @@ fn handle_greet(args: EntryGreet) -> Next {
 }
 
 // Define renderer `render_name`, used to render `ResultName`
+/// Renders the greeting message with the provided name.
 #[renderer]
 fn render_name(name: ResultName) {
     r_println!("Hello, {}!", *name);

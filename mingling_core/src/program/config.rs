@@ -109,7 +109,7 @@ impl std::str::FromStr for GeneralRendererSetting {
             "ron" => Ok(GeneralRendererSetting::Ron),
             #[cfg(feature = "ron_serde_fmt")]
             "ron-pretty" => Ok(GeneralRendererSetting::RonPretty),
-            _ => Err(format!("Invalid renderer: '{}'", s)),
+            _ => Err(format!("Invalid renderer: '{s}'")),
         }
     }
 }

@@ -57,7 +57,7 @@
 ///         // Name
 ///         // ^^^^_ finally, pick positional arg
 ///         .pick::<String>(())
-///         .after(|str| str.trim().replace(" ", ""))
+///         .after(|str| str.trim().replace(' ', ""))
 ///         // Unpack to tuple (is_dir, size, name)
 ///         .unpack()
 ///         // Convert into ResultFile
@@ -78,7 +78,7 @@
 ///             .pick_or::<usize>("--size", 1024 * 1024_usize)
 ///             // Finally parse the positional argument; if not found, route to `ErrorNoNameProvided`
 ///             .pick_or_route::<String, _>((), ErrorNoNameProvided::default().to_chain())
-///             .after(|str| str.trim().replace(" ", ""))
+///             .after(|str| str.trim().replace(' ', ""))
 ///             .unpack()
 ///     }
 ///     // Convert into ResultFile
@@ -87,6 +87,7 @@
 ///     result.to_chain()
 /// }
 ///
+/// /// Renders the parsed transfer result (file/dir, size, name).
 /// #[renderer]
 /// fn render_result_file(result: ResultFile) {
 ///     let (is_dir, size, name) = result.into();
@@ -98,6 +99,7 @@
 ///     )
 /// }
 ///
+/// /// Renders the error when no name is provided.
 /// #[renderer]
 /// fn render_error_no_name_provided(_: ErrorNoNameProvided) {
 ///     r_println!("Error: name is not provided")
@@ -189,6 +191,7 @@ pub mod example_argument_parse {}
 ///     fake_download(file_name).await
 /// }
 ///
+/// /// Renders the downloaded file name.
 /// #[renderer]
 /// // But renderers cannot use the `async` keyword
 /// pub fn render_downloaded(result: ResultDownloaded) {
@@ -277,6 +280,7 @@ pub mod example_async_support {}
 /// }
 ///
 /// // Define renderer `render_name`, used to render `ResultName`
+/// /// Renders the greeting message with the provided name.
 /// #[renderer]
 /// fn render_name(name: ResultName) {
 ///     r_println!("Hello, {}!", *name);
@@ -403,6 +407,7 @@ pub mod example_basic {}
 ///     repeat: i32,
 /// }
 ///
+/// /// Renders the greet output with optional repetition.
 /// #[renderer]
 /// fn render_greet(greet: EntryGreet) {
 ///     let name = greet.name;
@@ -418,9 +423,10 @@ pub mod example_basic {}
 ///     r_println!("!");
 /// }
 ///
+/// /// Renders the error message when greet argument parsing fails.
 /// #[renderer]
 /// fn render_greet_parse_failed(err: ErrorGreetParsed) {
-///     r_println!("{}", err.to_string());
+///     r_println!("{}", *err);
 /// }
 ///
 /// gen_program!();
@@ -575,6 +581,7 @@ pub mod example_clap_binding {}
 ///     result
 /// }
 ///
+/// /// Renders the greeting with the result name and repeat count.
 /// #[renderer]
 /// fn render_name(result: ResultName) {
 ///     let (repeat, name) = result.inner;
@@ -619,7 +626,7 @@ pub mod example_completion {}
 ///
 /// Source code (./src/main.rs)
 /// ```ignore
-/// use mingling::{Groupped, macros::route, parser::Pickable, prelude::*};
+/// use mingling::{macros::route, parser::Pickable, prelude::*, Groupped};
 ///
 /// // Define types that can be recognized by Mingling
 /// //               ________________________ `Pickable` trait needs to implement Default
@@ -637,7 +644,7 @@ pub mod example_completion {}
 ///     type Output = Address;
 ///     fn pick(args: &mut mingling::parser::Argument, flag: mingling::Flag) -> Option<Self::Output> {
 ///         // Extract the raw string from Argument using the Flag
-///         let raw: String = args.pick_argument(flag)?.to_string();
+///         let raw: String = args.pick_argument(flag)?.clone();
 ///
 ///         // Use TryFrom to parse the address
 ///         Address::try_from(raw).ok()
@@ -655,11 +662,13 @@ pub mod example_completion {}
 ///     connect.to_chain()
 /// }
 ///
+/// /// Renders the connected address.
 /// #[renderer]
 /// fn render_address(addr: Address) {
 ///     r_println!("Connected to \"{}\"", addr.to_string());
 /// }
 ///
+/// /// Renders the error message when address parsing fails.
 /// #[renderer]
 /// fn render_error_parse_address_failed(_: ErrorParseAddressFailed) {
 ///     r_println!("Failed to parse address");
@@ -698,13 +707,13 @@ pub mod example_completion {}
 ///         for (i, part) in ip_parts.iter().enumerate() {
 ///             ip[i] = part
 ///                 .parse::<u8>()
-///                 .map_err(|_| format!("Invalid IP octet: {}", part))?;
+///                 .map_err(|_| format!("Invalid IP octet: {part}"))?;
 ///         }
 ///
 ///         // Parse port
 ///         let port = port_str
 ///             .parse::<u16>()
-///             .map_err(|_| format!("Invalid port: {}", port_str))?;
+///             .map_err(|_| format!("Invalid port: {port_str}"))?;
 ///
 ///         Ok(Address { ip, port })
 ///     }
@@ -796,9 +805,10 @@ pub mod example_custom_pickable {}
 ///     // // it'll be collected automatically once the `dispatch_tree` feature is enabled
 ///     // program.with_dispatcher(...);
 ///
-///     program.exec_and_exit()
+///     program.exec_and_exit();
 /// }
 ///
+/// /// Renders the confirmation message for the `cmd5` command.
 /// #[renderer]
 /// fn render_cmd5(_: Entry5) {
 ///     r_println!("It's works!");
@@ -908,6 +918,7 @@ pub mod example_dispatch_tree {}
 ///     lang
 /// }
 ///
+/// /// Renders the selected programming language with its name and description.
 /// #[renderer]
 /// fn render_programming_language(lang: ProgrammingLanguages) {
 ///     // You can use `enum_info()` to get the name and description of the current enum
@@ -1005,29 +1016,34 @@ pub mod example_enum_tag {}
 ///     ResultName::new(name).to_render()
 /// }
 ///
+/// /// Renders a successful greeting with the given name.
 /// #[renderer]
 /// fn render_result_name(name: ResultName) {
 ///     r_println!("Hello, {}", *name);
 /// }
 ///
+/// /// Renders the error when no name is provided.
 /// #[renderer]
 /// fn render_error_no_name_provided(_: ErrorNoNameProvided) {
 ///     // Prompt when no name is provided
 ///     r_println!("No name provided");
 /// }
 ///
+/// /// Renders the error when the name is already taken.
 /// #[renderer]
 /// fn render_error_name_not_available(_: ErrorNameNotAvailable) {
 ///     // Prompt when name is already taken
 ///     r_println!("Name not available");
 /// }
 ///
+/// /// Renders the error when the name exceeds the maximum length.
 /// #[renderer]
 /// fn render_error_name_too_long(len: ErrorNameTooLong) {
 ///     // Prompt when name is too long, showing actual length
 ///     r_println!("Name too long: {} > 10", *len);
 /// }
 ///
+/// /// Renders the error when the dispatcher (subcommand) is not found.
 /// #[renderer]
 /// fn render_dispatcher_not_found(err: ErrorDispatcherNotFound) {
 ///     // Prompt when command is not found, showing the input command
@@ -1102,6 +1118,7 @@ pub mod example_error_handling {}
 ///     ResultName::new(name).to_render()
 /// }
 ///
+/// /// Renders a successful greeting with the given name.
 /// #[renderer]
 /// fn render_result_name(name: ResultName) {
 ///     r_println!("Hello, {}", *name);
@@ -1109,6 +1126,7 @@ pub mod example_error_handling {}
 ///
 /// // Define renderer, render error message                      _____________ Inject exit code resource
 /// //                                                           /
+/// /// Renders the error when no name is provided               |
 /// #[renderer] //                                               vvvvvvvvvvvvv
 /// fn render_error_no_name_provided(_: ErrorNoNameProvided, ec: &mut ExitCode) {
 ///     ec.exit_code = 1;
@@ -1160,7 +1178,7 @@ pub mod example_exitcode {}
 /// Source code (./src/main.rs)
 /// ```ignore
 /// use mingling::prelude::*;
-/// use mingling::{Groupped, parser::Picker, setup::GeneralRendererSetup};
+/// use mingling::{parser::Picker, setup::GeneralRendererSetup, Groupped};
 /// use serde::Serialize;
 ///
 /// dispatcher!("render", CMDRender => EntryRender);
@@ -1170,7 +1188,7 @@ pub mod example_exitcode {}
 ///     // Add `GeneralRendererSetup` to receive user input `--json` `--yaml` parameters
 ///     program.with_setup(GeneralRendererSetup);
 ///     program.with_dispatcher(CMDRender);
-///     program.exec();
+///     let _ = program.exec();
 /// }
 ///
 /// // --------- IMPORTANT ---------
@@ -1203,7 +1221,7 @@ pub mod example_exitcode {}
 ///     Info { name, age }.to_render()
 /// }
 ///
-/// // Implement default renderer for when general_renderer is not specified
+/// /// Implement default renderer for when general_renderer is not specified
 /// #[renderer]
 /// fn render_info(prev: Info) {
 ///     r_println!("{} is {} years old", prev.name, prev.age);
@@ -1314,17 +1332,17 @@ pub mod example_help {}
 ///     program.with_hook(
 ///         ProgramHook::<ThisProgram>::empty()
 ///             .on_begin(|| println!("[DEBUG] Program is begin"))
-///             .on_pre_dispatch(|args| println!("[DEBUG] Pre dispatch: {:?}", args))
-///             .on_post_dispatch(|c: &_| println!("[DEBUG] Post dispatch: {:?}", c))
+///             .on_pre_dispatch(|args| println!("[DEBUG] Pre dispatch: {args:?}"))
+///             .on_post_dispatch(|c: &_| println!("[DEBUG] Post dispatch: {c:?}"))
 ///             .on_pre_chain(|c: &_, _| {
-///                 println!("[DEBUG] Pre chain: {}", c);
+///                 println!("[DEBUG] Pre chain: {c}");
 ///             })
 ///             .on_post_chain(|any_output| println!("[DEBUG] Post chain: {}", any_output.member_id))
 ///             .on_finish(|| {
 ///                 println!("[DEBUG] Loop end");
 ///                 0 // Override exit code
 ///             })
-///             .on_pre_render(|c: &_, _| println!("[DEBUG] Pre render: {}", c))
+///             .on_pre_render(|c: &_, _| println!("[DEBUG] Pre render: {c}"))
 ///             .on_post_render(|_| println!("[DEBUG] Post render")),
 ///     );
 ///     // --------- IMPORTANT ---------
@@ -1346,6 +1364,7 @@ pub mod example_help {}
 ///     name
 /// }
 ///
+/// /// Renders the greeting message with the provided name.
 /// #[renderer]
 /// fn render_name(name: ResultName) {
 ///     r_println!("Hello, {}!", *name);
@@ -1446,11 +1465,10 @@ pub mod example_implicit_dispatcher {}
 ///     program.stdout_setting.silence_panic = true;
 ///
 ///     // Define a hook to output &ProgramPanic when a Panic occurs
-///     program
-///         .with_hook(ProgramHook::empty().on_exec_panic(|info| println!("Program panic: {}", info)));
+///     program.with_hook(ProgramHook::empty().on_exec_panic(|info| println!("Program panic: {info}")));
 ///     // --------- IMPORTANT ---------
 ///
-///     program.exec();
+///     let _ = program.exec();
 /// }
 ///
 /// #[chain]
@@ -1465,6 +1483,7 @@ pub mod example_implicit_dispatcher {}
 ///     }
 /// }
 ///
+/// /// Renders the message when no panic occurs.
 /// #[renderer]
 /// fn render(_: NotPanic) {
 ///     r_println!("Program not panic");
@@ -1558,7 +1577,7 @@ pub mod example_panic_unwind {}
 ///     // Add hooks to handle REPL-related events
 ///     program.with_hook(ProgramHook::empty().on_repl_begin(|| {
 ///         // Print welcome message
-///         println!("Welcome!")
+///         println!("Welcome!");
 ///     }));
 ///
 ///     // Start the REPL loop
@@ -1610,11 +1629,11 @@ pub mod example_panic_unwind {}
 ///     let dir = &current_dir.dir;
 ///     let entries: Vec<String> = std::fs::read_dir(dir)
 ///         .into_iter()
-///         .flat_map(|rd| rd.filter_map(|e| e.ok()))
+///         .flat_map(|rd| rd.filter_map(std::result::Result::ok))
 ///         .map(|e| {
 ///             let name = e.file_name().to_string_lossy().to_string();
 ///             if e.file_type().map(|t| t.is_dir()).unwrap_or(false) {
-///                 format!("{}/", name)
+///                 format!("{name}/")
 ///             } else {
 ///                 name
 ///             }
@@ -1625,11 +1644,11 @@ pub mod example_panic_unwind {}
 ///     ResultList::new(entries).to_render()
 /// }
 ///
-/// // Render ResultList data
+/// /// Render ResultList data
 /// #[renderer]
 /// fn render_list(list: ResultList) {
 ///     for item in list.inner {
-///         r_println!("{}", item)
+///         r_println!("{}", item);
 ///     }
 /// }
 ///
@@ -1643,20 +1662,21 @@ pub mod example_panic_unwind {}
 ///     repl.exit = true;
 /// }
 ///
-/// // Handle clear command event
+/// /// Handle clear command event
 /// #[chain]
 /// fn handle_clear(_prev: EntryClear) {
 ///     // Clear the terminal screen
 ///     print!("\x1B[2J\x1B[1;1H");
 /// }
 ///
-/// // Handle path not found event
+/// /// Handle path not found event
 /// #[renderer]
 /// fn render_error_directory_not_exist(err: ErrorDirectoryNotExist) {
 ///     r_println!("Directory not found: {}", err.inner.display())
 /// }
 ///
-/// // Handle dispatcher not found event
+/// /// Handle dispatcher not found event
+/// /// Renders the error when a command is not found.
 /// #[renderer]
 /// fn dispatcher_not_found(prev: ErrorDispatcherNotFound) {
 ///     r_println!("Command not found: \"{}\"", prev.join(", "))
@@ -1737,6 +1757,7 @@ pub mod example_repl_basic {}
 ///
 /// // Define renderer for output current path       _____________ Injected resource
 /// //                                              /
+/// /// Renders the current directory path.         |
 /// #[renderer] //                                  vvvvvvvvvvvvvv
 /// fn render_current(_: EntryCurrent, current_dir: &ResCurrentDir) {
 ///     r_println!("Current directory: {}", current_dir.current_dir.display());
@@ -1762,7 +1783,7 @@ pub mod example_resources {}
 ///
 /// Source code (./src/main.rs)
 /// ```ignore
-/// use mingling::{Program, macros::program_setup, prelude::*};
+/// use mingling::{macros::program_setup, prelude::*, Program};
 ///
 /// fn main() {
 ///     let mut program = ThisProgram::new();
@@ -1897,26 +1918,31 @@ pub mod example_setup {}
 ///     ResultName::new(name).to_render()
 /// }
 ///
+/// /// Renders a successful greeting with the given name.
 /// #[renderer]
 /// fn render_result_name(name: ResultName) -> String {
 ///     r_println!("Hello, {}!", *name);
 /// }
 ///
+/// /// Renders the error when no name is provided.
 /// #[renderer]
 /// fn render_error_no_name_provided(_: ErrorNoNameProvided) -> String {
 ///     r_println!("No name provided");
 /// }
 ///
+/// /// Renders the error when the name is already taken.
 /// #[renderer]
 /// fn render_error_name_not_available(_: ErrorNameNotAvailable) -> String {
 ///     r_println!("Name not available");
 /// }
 ///
+/// /// Renders the error when the name exceeds the maximum length.
 /// #[renderer]
 /// fn render_error_name_too_long(len: ErrorNameTooLong) -> String {
 ///     r_println!("Name too long: {} > 10", *len);
 /// }
 ///
+/// /// Renders the error when the dispatcher (subcommand) is not found.
 /// #[renderer]
 /// fn render_dispatcher_not_found(err: ErrorDispatcherNotFound) {
 ///     r_println!("Command not found: \"{}\"", err.inner.join(" "));

@@ -2,9 +2,13 @@
 name = "mingling_macros"
 version.workspace = true
 edition.workspace = true
+authors = ["Weicao-CatilGrass"]
 license.workspace = true
+readme = "README.md"
 repository.workspace = true
 description = "Macros of the mingling library"
+keywords = ["cli", "macros", "procedural", "command-line", "framework"]
+categories = ["command-line-interface", "development-tools::procedural-macros"]
 
 [lib]
 proc-macro = true

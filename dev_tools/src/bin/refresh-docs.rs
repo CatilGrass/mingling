@@ -49,7 +49,7 @@ fn gen_example_doc_module() {
     let template_str = template.to_string();
     let template_str = template_str
         .lines()
-        .map(|line| line.trim_end())
+        .map(str::trim_end)
         .collect::<Vec<_>>()
         .join("\n")
         + "\n";
@@ -91,19 +91,19 @@ impl ExampleContent {
 
         let cargo_toml = cargo_toml
             .lines()
-            .map(|line| format!("/// {}", line))
+            .map(|line| format!("/// {line}"))
             .collect::<Vec<_>>()
             .join("\n");
 
         let header = header
             .lines()
-            .map(|line| format!("/// {}", line))
+            .map(|line| format!("/// {line}"))
             .collect::<Vec<_>>()
             .join("\n");
 
         let code = code
             .lines()
-            .map(|line| format!("/// {}", line))
+            .map(|line| format!("/// {line}"))
             .collect::<Vec<_>>()
             .join("\n");
 

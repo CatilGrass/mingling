@@ -15,8 +15,7 @@ pub async fn exec<C>(
 where
     C: ProgramCollect<Enum = C>,
 {
-    let args = program.args.clone();
-    exec_with_args(program, args).await
+    exec_with_args(program, &program.args).await
 }
 
 #[cfg(not(feature = "async"))]
@@ -24,26 +23,25 @@ pub fn exec<C>(program: &'static Program<C>) -> Result<RenderResult, ProgramInte
 where
     C: ProgramCollect<Enum = C>,
 {
-    let args = program.args.clone();
-    exec_with_args(program, args)
+    exec_with_args(program, &program.args)
 }
 
 #[cfg(feature = "async")]
 pub async fn exec_with_args<C>(
     program: &'static Program<C>,
-    args: Vec<String>,
+    args: &[String],
 ) -> Result<RenderResult, ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = C>,
 {
     // Run hooks
-    program.run_hook_pre_dispatch(&args);
+    program.run_hook_pre_dispatch(args);
 
     #[cfg(not(feature = "dispatch_tree"))]
-    let mut current = dispatch_args_dynamic(program, &args)?;
+    let mut current = dispatch_args_dynamic(program, args)?;
 
     #[cfg(feature = "dispatch_tree")]
-    let mut current = C::dispatch_args_trie(&args)?;
+    let mut current = C::dispatch_args_trie(args)?;
 
     // Run hook
     program.run_hook_post_dispatch(&current.member_id);
@@ -125,19 +123,19 @@ where
 #[cfg(not(feature = "async"))]
 pub fn exec_with_args<C>(
     program: &'static Program<C>,
-    args: Vec<String>,
+    args: &[String],
 ) -> Result<RenderResult, ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = C>,
 {
     // Run hooks
-    program.run_hook_pre_dispatch(&args);
+    program.run_hook_pre_dispatch(args);
 
     #[cfg(not(feature = "dispatch_tree"))]
-    let mut current = dispatch_args_dynamic(program, &args)?;
+    let mut current = dispatch_args_dynamic(program, args)?;
 
     #[cfg(feature = "dispatch_tree")]
-    let mut current = C::dispatch_args_trie(&args)?;
+    let mut current = C::dispatch_args_trie(args)?;
 
     // Run hook
     program.run_hook_post_dispatch(&current.member_id);
@@ -221,7 +219,7 @@ where
 /// Dynamically dispatch input arguments to registered entry types
 pub(crate) fn dispatch_args_dynamic<C>(
     program: &'static Program<C>,
-    args: &Vec<String>,
+    args: &[String],
 ) -> Result<AnyOutput<C>, ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = C>,
@@ -236,7 +234,7 @@ where
         }
         Err(ProgramInternalExecuteError::DispatcherNotFound) => {
             // No matching Dispatcher is found
-            C::build_dispatcher_not_found(args.clone())
+            C::build_dispatcher_not_found(args.to_vec())
         }
         Err(e) => return Err(e),
     };
@@ -245,10 +243,9 @@ where
 
 /// Match user input against registered dispatchers and return the matched dispatcher and remaining arguments.
 #[allow(clippy::type_complexity)]
-#[allow(clippy::ptr_arg)]
 pub(crate) fn match_user_input<C>(
     program: &'static Program<C>,
-    args: &Vec<String>,
+    args: &[String],
 ) -> Result<(&'static (dyn Dispatcher<C> + Send + Sync), Vec<String>), ProgramInternalExecuteError>
 where
     C: ProgramCollect<Enum = C>,
@@ -260,7 +257,7 @@ where
     let matching_nodes: Vec<&(String, &(dyn Dispatcher<C> + Send + Sync))> = nodes
         .iter()
         // Also add a space to the node string to ensure consistent matching logic
-        .filter(|(node_str, _)| command.starts_with(&format!("{} ", node_str)))
+        .filter(|(node_str, _)| command.starts_with(&format!("{node_str} ")))
         .collect();
 
     match matching_nodes.len() {
@@ -289,7 +286,7 @@ where
     }
 }
 
-#[inline(always)]
+#[inline]
 #[allow(unused_variables)]
 fn render<C: ProgramCollect<Enum = C>>(program: &Program<C>, any: AnyOutput<C>) -> RenderResult {
     #[cfg(not(feature = "general_renderer"))]
@@ -312,7 +309,7 @@ fn render<C: ProgramCollect<Enum = C>>(program: &Program<C>, any: AnyOutput<C>) 
     }
 }
 
-#[inline(always)]
+#[inline]
 #[allow(unused_variables)]
 fn render_help<C: ProgramCollect<Enum = C>>(
     program: &Program<C>,

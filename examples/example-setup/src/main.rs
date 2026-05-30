@@ -2,7 +2,7 @@
 //!
 //! > This example demonstrates how to build a custom Setup for modular management of project components
 
-use mingling::{Program, macros::program_setup, prelude::*};
+use mingling::{macros::program_setup, prelude::*, Program};
 
 fn main() {
     let mut program = ThisProgram::new();

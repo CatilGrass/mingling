@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fmt::Write;
 use std::path::Path;
 
 use tools::println_cargo_style;
@@ -56,7 +57,7 @@ fn gen_translation_sidebars() {
     }
 }
 
-/// Build sidebar content: scan .md files in pages_dir and return a formatted sidebar string
+/// Build sidebar content: scan .md files in `pages_dir` and return a formatted sidebar string
 fn build_sidebar_content(base_dir: &Path, pages_dir: &Path, sidebar_head: &str) -> String {
     let mut lines = String::from(sidebar_head);
 
@@ -95,7 +96,7 @@ fn build_sidebar_content(base_dir: &Path, pages_dir: &Path, sidebar_head: &str) 
 
     // Append root-level files
     for f in &root_files {
-        lines.push_str(&format!("* [{}]({})\n", f.title, f.link));
+        let _ = writeln!(lines, "* [{}]({})", f.title, f.link);
     }
 
     // Append subdirectory groups
@@ -104,9 +105,9 @@ fn build_sidebar_content(base_dir: &Path, pages_dir: &Path, sidebar_head: &str) 
         sorted_entries.sort_by(|a, b| a.link.cmp(&b.link));
 
         // Directory header with 2-space indent
-        lines.push_str(&format!("* {}\n", dir_name));
+        let _ = writeln!(lines, "* {dir_name}");
         for f in &sorted_entries {
-            lines.push_str(&format!("  * [{}]({})\n", f.title, f.link));
+            let _ = writeln!(lines, "  * [{}]({})", f.title, f.link);
         }
     }
 
@@ -160,9 +161,10 @@ fn extract_title(path: &Path) -> String {
         }
     }
     // Fallback: use file stem
-    path.file_stem()
-        .map(|s| s.to_string_lossy().to_string())
-        .unwrap_or_else(|| "Untitled".to_string())
+    path.file_stem().map_or_else(
+        || "Untitled".to_string(),
+        |s| s.to_string_lossy().to_string(),
+    )
 }
 
 fn find_git_repo() -> Option<std::path::PathBuf> {

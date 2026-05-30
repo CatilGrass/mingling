@@ -120,8 +120,7 @@ pub fn markdown(text: impl AsRef<str>) -> String {
 
             // Format heading as white background, black text, bold
             // ANSI codes: \x1b[1m for bold, \x1b[47m for white background, \x1b[30m for black text
-            let formatted_heading =
-                format!("\x1b[1m\x1b[47m\x1b[30m {} \x1b[0m", processed_content);
+            let formatted_heading = format!("\x1b[1m\x1b[47m\x1b[30m {processed_content} \x1b[0m");
 
             // Add indentation to the heading line itself
             // Heading indentation = level - 1
@@ -187,7 +186,7 @@ fn process_line_with_quote(line: &str) -> String {
         let processed_rest = process_line(&rest_of_line);
 
         // Combine the gray background space with the processed rest
-        format!("{}{}", gray_bg_space, processed_rest)
+        format!("{gray_bg_space}{processed_rest}")
     } else {
         // No > at the beginning, process normally
         process_line(line)
@@ -266,7 +265,7 @@ fn process_line(line: &str) -> String {
             && let Some(end) = find_matching(&chars, i + 1, "_")
         {
             let underline_text: String = chars[i + 1..end].iter().collect();
-            let mut formatted_text = format!("\x1b[4m{}\x1b[0m", underline_text);
+            let mut formatted_text = format!("\x1b[4m{underline_text}\x1b[0m");
             apply_color_stack(&mut formatted_text, &color_stack);
             result.push_str(&formatted_text);
             i = end + 1;
@@ -357,16 +356,18 @@ fn apply_color(text: impl AsRef<str>, color_name: impl AsRef<str>) -> String {
     let text = text.as_ref();
     let color_name = color_name.as_ref();
     match color_name {
-        // Normal colors
-        "black" => text.black().to_string(),
-        "red" => text.red().to_string(),
-        "green" => text.green().to_string(),
-        "yellow" => text.yellow().to_string(),
-        "blue" => text.blue().to_string(),
-        "magenta" => text.magenta().to_string(),
-        "cyan" => text.cyan().to_string(),
-        "white" => text.white().to_string(),
-        "bright_black" => text.bright_black().to_string(),
+        // Normal colors and their bright short aliases
+        "black" | "b_black" => text.black().to_string(),
+        "red" | "b_red" => text.red().to_string(),
+        "green" | "b_green" => text.green().to_string(),
+        "yellow" | "b_yellow" => text.yellow().to_string(),
+        "blue" | "b_blue" => text.blue().to_string(),
+        "magenta" | "b_magenta" => text.magenta().to_string(),
+        "cyan" | "b_cyan" => text.cyan().to_string(),
+        "white" | "b_white" | "bright_gray" | "bright_grey" | "b_gray" | "b_grey" => {
+            text.white().to_string()
+        }
+        "bright_black" | "gray" | "grey" => text.bright_black().to_string(),
         "bright_red" => text.bright_red().to_string(),
         "bright_green" => text.bright_green().to_string(),
         "bright_yellow" => text.bright_yellow().to_string(),
@@ -374,21 +375,6 @@ fn apply_color(text: impl AsRef<str>, color_name: impl AsRef<str>) -> String {
         "bright_magenta" => text.bright_magenta().to_string(),
         "bright_cyan" => text.bright_cyan().to_string(),
         "bright_white" => text.bright_white().to_string(),
-
-        // Short aliases for bright colors
-        "b_black" => text.black().to_string(),
-        "b_red" => text.red().to_string(),
-        "b_green" => text.green().to_string(),
-        "b_yellow" => text.yellow().to_string(),
-        "b_blue" => text.blue().to_string(),
-        "b_magenta" => text.magenta().to_string(),
-        "b_cyan" => text.cyan().to_string(),
-        "b_white" => text.white().to_string(),
-
-        // Gray colors using truecolor
-        "gray" | "grey" => text.bright_black().to_string(),
-        "bright_gray" | "bright_grey" => text.white().to_string(),
-        "b_gray" | "b_grey" => text.white().to_string(),
 
         // Default to white if color not recognized
         _ => text.to_string(),

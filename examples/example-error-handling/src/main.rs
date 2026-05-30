@@ -59,29 +59,34 @@ fn handle_hello(args: EntryHello) -> Next {
     ResultName::new(name).to_render()
 }
 
+/// Renders a successful greeting with the given name.
 #[renderer]
 fn render_result_name(name: ResultName) {
     r_println!("Hello, {}", *name);
 }
 
+/// Renders the error when no name is provided.
 #[renderer]
 fn render_error_no_name_provided(_: ErrorNoNameProvided) {
     // Prompt when no name is provided
     r_println!("No name provided");
 }
 
+/// Renders the error when the name is already taken.
 #[renderer]
 fn render_error_name_not_available(_: ErrorNameNotAvailable) {
     // Prompt when name is already taken
     r_println!("Name not available");
 }
 
+/// Renders the error when the name exceeds the maximum length.
 #[renderer]
 fn render_error_name_too_long(len: ErrorNameTooLong) {
     // Prompt when name is too long, showing actual length
     r_println!("Name too long: {} > 10", *len);
 }
 
+/// Renders the error when the dispatcher (subcommand) is not found.
 #[renderer]
 fn render_dispatcher_not_found(err: ErrorDispatcherNotFound) {
     // Prompt when command is not found, showing the input command

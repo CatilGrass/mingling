@@ -56,6 +56,7 @@ fn render_modify_current(args: EntryModifyCurrent, current_dir: &mut ResCurrentD
 
 // Define renderer for output current path       _____________ Injected resource
 //                                              /
+/// Renders the current directory path.         |
 #[renderer] //                                  vvvvvvvvvvvvvv
 fn render_current(_: EntryCurrent, current_dir: &ResCurrentDir) {
     r_println!("Current directory: {}", current_dir.current_dir.display());

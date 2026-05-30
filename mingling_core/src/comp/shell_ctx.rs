@@ -73,8 +73,7 @@ impl TryFrom<Vec<String>> for ShellContext {
         let shell_flag = arg_map
             .get("-F")
             .cloned()
-            .map(ShellFlag::from)
-            .unwrap_or(ShellFlag::Other("unknown".to_string()));
+            .map_or(ShellFlag::Other("unknown".to_string()), ShellFlag::from);
 
         let all_words = command_line
             .split_whitespace()
@@ -120,7 +119,7 @@ impl ShellContext {
         let flag = flag.into();
         if self.filling_argument(&flag) {
             let mut flag_appears = 0;
-            for w in self.all_words.iter() {
+            for w in &self.all_words {
                 for f in flag.iter() {
                     if *f == w {
                         flag_appears += 1;
@@ -190,6 +189,7 @@ impl ShellContext {
     ///     // }
     /// }
     /// ```
+    #[must_use]
     pub fn typing_argument(&self) -> bool {
         #[cfg(target_os = "windows")]
         {
@@ -207,6 +207,7 @@ impl ShellContext {
     /// in the command line. It is useful for preventing duplicate flag suggestions
     /// when the user has already typed certain flags. The method processes both
     /// regular suggestion sets and file completion suggestions differently.
+    #[must_use]
     pub fn strip_typed_argument(&self, suggest: Suggest) -> Suggest {
         let typed = Self::get_typed_arguments(self);
         match suggest {
@@ -223,11 +224,12 @@ impl ShellContext {
     /// This method collects all words in the shell context that start with a dash (`-`),
     /// which typically represent command-line flags or options. It returns a vector
     /// containing these flag strings, converted to owned `String` values.
+    #[must_use]
     pub fn get_typed_arguments(&self) -> HashSet<String> {
         self.all_words
             .iter()
-            .filter(|word| word.starts_with("-"))
-            .map(|word| word.to_string())
+            .filter(|word| word.starts_with('-'))
+            .cloned()
             .collect()
     }
 }

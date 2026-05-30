@@ -1,6 +1,6 @@
 use crate::RenderResult;
 
-/// Takes over a type (Self::Previous) and converts it to a [`RenderResult`](./struct.RenderResult.html)
+/// Takes over a type (`Self::Previous`) and converts it to a [`RenderResult`](./struct.RenderResult.html)
 pub trait Renderer {
     /// The previous type in the chain
     type Previous;

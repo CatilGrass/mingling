@@ -13,8 +13,8 @@ pub enum ChainProcessError {
 impl std::fmt::Display for ChainProcessError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ChainProcessError::Other(s) => write!(f, "Other error: {}", s),
-            ChainProcessError::IO(e) => write!(f, "IO error: {}", e),
+            ChainProcessError::Other(s) => write!(f, "Other error: {s}"),
+            ChainProcessError::IO(e) => write!(f, "IO error: {e}"),
         }
     }
 }
@@ -41,14 +41,14 @@ impl From<ProgramInternalExecuteError> for ChainProcessError {
                 ChainProcessError::Other("DispatcherNotFound".into())
             }
             ProgramInternalExecuteError::RendererNotFound(r) => {
-                ChainProcessError::Other(format!("RendererNotFound: {}", r))
+                ChainProcessError::Other(format!("RendererNotFound: {r}"))
             }
             ProgramInternalExecuteError::Other(e) => ChainProcessError::Other(e),
             ProgramInternalExecuteError::IO(e) => {
-                ChainProcessError::Other(format!("IOError: {:?}", e))
+                ChainProcessError::Other(format!("IOError: {e:?}"))
             }
             ProgramInternalExecuteError::REPLPanic(program_panic) => {
-                ChainProcessError::Other(format!("REPLPanic: {}", program_panic))
+                ChainProcessError::Other(format!("REPLPanic: {program_panic}"))
             }
         }
     }

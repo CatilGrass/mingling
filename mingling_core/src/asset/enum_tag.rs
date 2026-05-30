@@ -1,4 +1,4 @@
-/// Marker trait for EnumTag
+/// Marker trait for `EnumTag`
 pub trait EnumTag {
     /// Get the name and description of this enum
     fn enum_info(&self) -> (&'static str, &'static str);

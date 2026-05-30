@@ -39,7 +39,7 @@ fn handle_transfer_parse(args: EntryTransfer) -> Next {
         // Name
         // ^^^^_ finally, pick positional arg
         .pick::<String>(())
-        .after(|str| str.trim().replace(" ", ""))
+        .after(|str| str.trim().replace(' ', ""))
         // Unpack to tuple (is_dir, size, name)
         .unpack()
         // Convert into ResultFile
@@ -60,7 +60,7 @@ fn handle_strict_transfer_parse(args: EntryStrictTransfer) -> Next {
             .pick_or::<usize>("--size", 1024 * 1024_usize)
             // Finally parse the positional argument; if not found, route to `ErrorNoNameProvided`
             .pick_or_route::<String, _>((), ErrorNoNameProvided::default().to_chain())
-            .after(|str| str.trim().replace(" ", ""))
+            .after(|str| str.trim().replace(' ', ""))
             .unpack()
     }
     // Convert into ResultFile
@@ -69,6 +69,7 @@ fn handle_strict_transfer_parse(args: EntryStrictTransfer) -> Next {
     result.to_chain()
 }
 
+/// Renders the parsed transfer result (file/dir, size, name).
 #[renderer]
 fn render_result_file(result: ResultFile) {
     let (is_dir, size, name) = result.into();
@@ -80,6 +81,7 @@ fn render_result_file(result: ResultFile) {
     )
 }
 
+/// Renders the error when no name is provided.
 #[renderer]
 fn render_error_no_name_provided(_: ErrorNoNameProvided) {
     r_println!("Error: name is not provided")

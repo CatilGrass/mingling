@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::{ChainProcess, Program, ProgramCollect, asset::node::Node};
 
-/// Dispatches user input commands to specific [ChainProcess](./enum.ChainProcess.html)
+/// Dispatches user input commands to specific [`ChainProcess`](./enum.ChainProcess.html)
 ///
 /// Note: If you are using [mingling_macros](https://crates.io/crates/mingling_macros),
 /// you can use the `dispatcher!("node.subnode", CommandType => Entry)` macro to declare a `Dispatcher`
@@ -10,7 +10,7 @@ pub trait Dispatcher<C> {
     /// Returns a command node for matching user input
     fn node(&self) -> Node;
 
-    /// Returns a [ChainProcess](./enum.ChainProcess.html) based on user input arguments,
+    /// Returns a [`ChainProcess`](./enum.ChainProcess.html) based on user input arguments,
     /// to be sent to the specific invocation
     fn begin(&self, args: Vec<String>) -> ChainProcess<C>;
 

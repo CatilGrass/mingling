@@ -115,12 +115,12 @@ where
     C: ProgramCollect<Enum = C> + Send + Sync + 'static,
 {
     #[cfg(panic = "abort")]
-    let exec_result = super::exec::exec_with_args(p, args);
+    let exec_result = super::exec::exec_with_args(p, &args);
 
     #[cfg(not(panic = "abort"))]
     let exec_result = {
         let exec_unwind_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            super::exec::exec_with_args(p, args)
+            super::exec::exec_with_args(p, &args)
         }));
 
         match exec_unwind_result {
@@ -153,5 +153,5 @@ async fn exec_once<C>(
 where
     C: ProgramCollect<Enum = C> + Send + Sync + 'static,
 {
-    super::exec::exec_with_args(p, args).await
+    super::exec::exec_with_args(p, &args).await
 }

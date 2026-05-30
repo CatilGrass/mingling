@@ -81,6 +81,7 @@ fn handle_language_selection(args: EntryLanguageSelection) -> Next {
     lang
 }
 
+/// Renders the selected programming language with its name and description.
 #[renderer]
 fn render_programming_language(lang: ProgrammingLanguages) {
     // You can use `enum_info()` to get the name and description of the current enum

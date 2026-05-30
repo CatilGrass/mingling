@@ -2,9 +2,13 @@
 name = "mingling-cli"
 version.workspace = true
 edition.workspace = true
+authors = ["Weicao-CatilGrass"]
 license.workspace = true
+readme = "README.md"
 repository.workspace = true
 description = "Mingling's scaffolding tool"
+keywords = ["cli", "scaffolding", "command-line", "framework"]
+categories = ["command-line-interface"]
 
 [[bin]]
 name = "mling"

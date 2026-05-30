@@ -18,7 +18,7 @@ where
 {
     fn default() -> Self {
         Self {
-            _collect: Default::default(),
+            _collect: PhantomData,
         }
     }
 }

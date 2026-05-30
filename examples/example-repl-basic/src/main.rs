@@ -66,7 +66,7 @@ fn main() {
     // Add hooks to handle REPL-related events
     program.with_hook(ProgramHook::empty().on_repl_begin(|| {
         // Print welcome message
-        println!("Welcome!")
+        println!("Welcome!");
     }));
 
     // Start the REPL loop
@@ -118,11 +118,11 @@ fn handle_ls(_prev: EntryLs, current_dir: &ResCurrentDir) -> Next {
     let dir = &current_dir.dir;
     let entries: Vec<String> = std::fs::read_dir(dir)
         .into_iter()
-        .flat_map(|rd| rd.filter_map(|e| e.ok()))
+        .flat_map(|rd| rd.filter_map(std::result::Result::ok))
         .map(|e| {
             let name = e.file_name().to_string_lossy().to_string();
             if e.file_type().map(|t| t.is_dir()).unwrap_or(false) {
-                format!("{}/", name)
+                format!("{name}/")
             } else {
                 name
             }
@@ -133,11 +133,11 @@ fn handle_ls(_prev: EntryLs, current_dir: &ResCurrentDir) -> Next {
     ResultList::new(entries).to_render()
 }
 
-// Render ResultList data
+/// Render ResultList data
 #[renderer]
 fn render_list(list: ResultList) {
     for item in list.inner {
-        r_println!("{}", item)
+        r_println!("{}", item);
     }
 }
 
@@ -151,20 +151,21 @@ fn handle_exit(
     repl.exit = true;
 }
 
-// Handle clear command event
+/// Handle clear command event
 #[chain]
 fn handle_clear(_prev: EntryClear) {
     // Clear the terminal screen
     print!("\x1B[2J\x1B[1;1H");
 }
 
-// Handle path not found event
+/// Handle path not found event
 #[renderer]
 fn render_error_directory_not_exist(err: ErrorDirectoryNotExist) {
     r_println!("Directory not found: {}", err.inner.display())
 }
 
-// Handle dispatcher not found event
+/// Handle dispatcher not found event
+/// Renders the error when a command is not found.
 #[renderer]
 fn dispatcher_not_found(prev: ErrorDispatcherNotFound) {
     r_println!("Command not found: \"{}\"", prev.join(", "))

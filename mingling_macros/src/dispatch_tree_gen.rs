@@ -43,7 +43,7 @@ pub fn gen_dispatch_args_trie(entries: &[(String, String, String)]) -> TokenStre
 
     quote! {
         fn dispatch_args_trie(
-            raw: &Vec<String>,
+            raw: &[String],
         ) -> Result<::mingling::AnyOutput<Self::Enum>, ::mingling::error::ProgramInternalExecuteError>
         {
             let raw_string = format!("{} ", raw.join(" "));
@@ -63,7 +63,7 @@ pub fn gen_dispatch_args_trie(entries: &[(String, String, String)]) -> TokenStre
 fn build_dispatch_body(nodes: &[(String, String)], depth: usize) -> TokenStream {
     if nodes.is_empty() {
         return quote! {
-            return Ok(Self::build_dispatcher_not_found(raw.clone()));
+            return Ok(Self::build_dispatcher_not_found(raw.to_vec()));
         };
     }
 
@@ -121,7 +121,7 @@ fn build_dispatch_body(nodes: &[(String, String)], depth: usize) -> TokenStream 
             arms.push(quote! {
                 Some(#ch_char) => {
                     #arm
-                    return Ok(Self::build_dispatcher_not_found(raw.clone()));
+                    return Ok(Self::build_dispatcher_not_found(raw.to_vec()));
                 }
             });
         } else {
@@ -150,7 +150,7 @@ fn build_dispatch_body(nodes: &[(String, String)], depth: usize) -> TokenStream 
         let match_body = quote! {
             match raw_chars.nth(0) {
                 #(#arms)*
-                _ => return Ok(Self::build_dispatcher_not_found(raw.clone())),
+                _ => return Ok(Self::build_dispatcher_not_found(raw.to_vec())),
             }
         };
         quote! {
@@ -161,19 +161,19 @@ fn build_dispatch_body(nodes: &[(String, String)], depth: usize) -> TokenStream 
         // Only exact nodes, no deeper groups
         quote! {
             #(#exact_checks)*
-            return Ok(Self::build_dispatcher_not_found(raw.clone()));
+            return Ok(Self::build_dispatcher_not_found(raw.to_vec()));
         }
     } else if arms.is_empty() {
         // Only fallback (shouldn't happen if nodes is non-empty)
         quote! {
-            return Ok(Self::build_dispatcher_not_found(raw.clone()));
+            return Ok(Self::build_dispatcher_not_found(raw.to_vec()));
         }
     } else {
         // Only group arms
         quote! {
             match raw_chars.nth(0) {
                 #(#arms)*
-                _ => return Ok(Self::build_dispatcher_not_found(raw.clone())),
+                _ => return Ok(Self::build_dispatcher_not_found(raw.to_vec())),
             }
         }
     }

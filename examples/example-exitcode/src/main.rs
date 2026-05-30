@@ -44,6 +44,7 @@ fn handle_hello(args: EntryHello) -> Next {
     ResultName::new(name).to_render()
 }
 
+/// Renders a successful greeting with the given name.
 #[renderer]
 fn render_result_name(name: ResultName) {
     r_println!("Hello, {}", *name);
@@ -51,6 +52,7 @@ fn render_result_name(name: ResultName) {
 
 // Define renderer, render error message                      _____________ Inject exit code resource
 //                                                           /
+/// Renders the error when no name is provided               |
 #[renderer] //                                               vvvvvvvvvvvvv
 fn render_error_no_name_provided(_: ErrorNoNameProvided, ec: &mut ExitCode) {
     ec.exit_code = 1;

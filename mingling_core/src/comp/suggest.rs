@@ -16,17 +16,20 @@ pub enum Suggest {
 }
 
 impl Suggest {
-    /// Creates a new Suggest variant containing a BTreeSet of suggestions.
+    /// Creates a new Suggest variant containing a `BTreeSet` of suggestions.
+    #[must_use]
     pub fn new() -> Self {
         Self::Suggest(BTreeSet::new())
     }
 
-    /// Creates a FileCompletion variant.
+    /// Creates a `FileCompletion` variant.
+    #[must_use]
     pub fn file_comp() -> Self {
         Self::FileCompletion
     }
 
     /// Filters out already typed flag arguments from suggestion results.
+    #[must_use]
     pub fn strip_typed_argument(self, ctx: &ShellContext) -> Self {
         ctx.strip_typed_argument(self)
     }
@@ -103,40 +106,44 @@ impl Ord for SuggestItem {
 
 impl SuggestItem {
     /// Creates a new simple suggestion without description.
+    #[must_use]
     pub fn new(suggest: String) -> Self {
         Self::Simple(suggest)
     }
 
     /// Creates a new suggestion with a description.
+    #[must_use]
     pub fn new_with_desc(suggest: String, description: String) -> Self {
         Self::WithDescription(suggest, description)
     }
 
     /// Adds a description to this suggestion, replacing any existing description.
+    #[must_use]
     pub fn with_desc(self, description: String) -> Self {
         match self {
-            Self::Simple(suggest) => Self::WithDescription(suggest, description),
-            Self::WithDescription(suggest, _) => Self::WithDescription(suggest, description),
+            Self::Simple(suggest) | Self::WithDescription(suggest, _) => {
+                Self::WithDescription(suggest, description)
+            }
         }
     }
 
     /// Returns the suggestion text.
+    #[must_use]
     pub fn suggest(&self) -> &String {
         match self {
-            Self::Simple(suggest) => suggest,
-            Self::WithDescription(suggest, _) => suggest,
+            Self::Simple(suggest) | Self::WithDescription(suggest, _) => suggest,
         }
     }
 
     /// Updates the suggestion text.
     pub fn set_suggest(&mut self, new_suggest: String) {
         match self {
-            Self::Simple(suggest) => *suggest = new_suggest,
-            Self::WithDescription(suggest, _) => *suggest = new_suggest,
+            Self::Simple(suggest) | Self::WithDescription(suggest, _) => *suggest = new_suggest,
         }
     }
 
     /// Returns the description if present.
+    #[must_use]
     pub fn description(&self) -> Option<&String> {
         match self {
             Self::Simple(_) => None,

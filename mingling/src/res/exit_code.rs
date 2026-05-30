@@ -24,6 +24,7 @@ where
 
 /// Retrieves the globally stored exit code for the given `ProgramCollect` type.
 /// Returns `0` if no exit code has been set.
+#[must_use]
 pub fn exit_code<C>() -> i32
 where
     C: ProgramCollect<Enum = C> + 'static,

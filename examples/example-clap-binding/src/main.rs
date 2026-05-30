@@ -87,6 +87,7 @@ pub struct EntryGreet {
     repeat: i32,
 }
 
+/// Renders the greet output with optional repetition.
 #[renderer]
 fn render_greet(greet: EntryGreet) {
     let name = greet.name;
@@ -102,9 +103,10 @@ fn render_greet(greet: EntryGreet) {
     r_println!("!");
 }
 
+/// Renders the error message when greet argument parsing fails.
 #[renderer]
 fn render_greet_parse_failed(err: ErrorGreetParsed) {
-    r_println!("{}", err.to_string());
+    r_println!("{}", *err);
 }
 
 gen_program!();

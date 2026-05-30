@@ -14,7 +14,7 @@ pub enum ShellFlag {
     Zsh,
     /// Represents the Fish shell.
     Fish,
-    /// Represents PowerShell.
+    /// Represents `PowerShell`.
     Powershell,
     /// A custom or unsupported shell type, identified by the provided string.
     Other(String),

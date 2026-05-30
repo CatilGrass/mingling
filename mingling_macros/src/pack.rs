@@ -59,6 +59,7 @@ impl Parse for PackInput {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn pack(input: TokenStream) -> TokenStream {
     // Parse the input
     let pack_input = syn::parse_macro_input!(input as PackInput);

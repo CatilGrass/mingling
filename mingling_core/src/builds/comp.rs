@@ -10,7 +10,7 @@ const TMPL_COMP_FISH: &str = include_str!("../../tmpls/comps/fish.fish");
 const TMPL_COMP_PWSH: &str = include_str!("../../tmpls/comps/pwsh.ps1");
 
 /// Generate shell completion scripts for a given binary name.
-/// On Windows, generates PowerShell completion.
+/// On Windows, generates `PowerShell` completion.
 /// On Linux, generates Zsh, Bash, and Fish completions.
 /// Scripts are written to the `OUT_DIR` (or `target/` if `OUT_DIR` is not set).
 ///
@@ -63,7 +63,7 @@ pub fn build_comp_scripts(name: &str) -> Result<(), std::io::Error> {
 /// ```
 pub fn build_comp_script(shell_flag: &ShellFlag, bin_name: &str) -> Result<(), std::io::Error> {
     let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    let target_dir = out_dir.join("../../../").to_path_buf();
+    let target_dir = out_dir.join("../../../").clone();
     build_comp_script_to(shell_flag, bin_name, &target_dir.to_string_lossy())
 }
 
@@ -89,7 +89,7 @@ pub fn build_comp_script_to(
     tmpl_param!(tmpl, bin_name = bin_name);
     let target_path = std::path::PathBuf::from(target_dir);
     std::fs::create_dir_all(&target_path)?;
-    let output_path = target_path.join(format!("{}_comp{}", bin_name, ext));
+    let output_path = target_path.join(format!("{bin_name}_comp{ext}"));
     std::fs::write(&output_path, tmpl.to_string())
 }
 

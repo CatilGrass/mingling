@@ -17,13 +17,24 @@ pub struct BinaryItem {
     pub path: PathBuf,
 }
 
+/// Solves the current directory for project metadata.
+///
+/// # Errors
+///
+/// Returns an `io::Error` if the current directory cannot be determined
+/// or if `cargo metadata` fails.
 pub fn solve_current_dir() -> Result<ProjectSolveResult, std::io::Error> {
     let current = std::env::current_dir()?;
-    solve(current)
+    solve(&current)
 }
 
-pub fn solve(current: PathBuf) -> Result<ProjectSolveResult, std::io::Error> {
-    let (target_dir, workspace_root, binaries) = solve_inner(&current)?;
+/// Solves the given directory path for project metadata.
+///
+/// # Errors
+///
+/// Returns an `io::Error` if `cargo metadata` fails for the given path.
+pub fn solve(current: &PathBuf) -> Result<ProjectSolveResult, std::io::Error> {
+    let (target_dir, workspace_root, binaries) = solve_inner(current)?;
     Ok(ProjectSolveResult {
         target_dir,
         workspace_root,
@@ -40,9 +51,9 @@ fn solve_inner(current: &PathBuf) -> Result<(PathBuf, PathBuf, Vec<BinaryItem>),
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(std::io::Error::other(
-            format!("cargo metadata failed: {}", stderr),
-        ));
+        return Err(std::io::Error::other(format!(
+            "cargo metadata failed: {stderr}"
+        )));
     }
     let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
@@ -75,9 +86,7 @@ fn solve_inner(current: &PathBuf) -> Result<(PathBuf, PathBuf, Vec<BinaryItem>),
             if let Some(targets) = pkg["targets"].as_array() {
                 for target in targets {
                     let kind = target["kind"].as_array();
-                    let is_bin = kind
-                        .map(|k| k.iter().any(|v| v.as_str() == Some("bin")))
-                        .unwrap_or(false);
+                    let is_bin = kind.is_some_and(|k| k.iter().any(|v| v.as_str() == Some("bin")));
                     if is_bin {
                         let name = target["name"].as_str().ok_or_else(|| {
                             std::io::Error::new(

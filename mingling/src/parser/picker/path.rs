@@ -91,7 +91,7 @@ impl<T: Into<PathBuf>> PathChecker for T where T: Into<PathBuf> {}
 
 fn check_paths(path: impl Into<Vec<PathBuf>>, rule: &PathCheckRule) -> Result<(), ()> {
     let paths = path.into();
-    for p in paths.iter() {
+    for p in &paths {
         check_exist(p, rule)?;
         check_type(p, rule)?;
     }

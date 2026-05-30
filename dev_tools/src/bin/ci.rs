@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::Write as _;
 use std::process::exit;
 
 use tools::{cargo_tomls, eprintln_cargo_style, println_cargo_style, run_cmd};
@@ -26,7 +26,7 @@ fn main() {
     }
 
     if let Err(exit_code) = ci() {
-        restore_workspace().unwrap();
+        restore_workspace(needs_commit_temp).unwrap();
         exit(exit_code)
     }
 
@@ -39,7 +39,7 @@ fn main() {
         let _ = run_cmd!("git status");
 
         if needs_commit_temp {
-            restore_workspace().unwrap();
+            restore_workspace(true).unwrap();
         }
         exit(1)
     }
@@ -47,14 +47,16 @@ fn main() {
     println_cargo_style!("Done: All check passed!");
 
     if needs_commit_temp {
-        restore_workspace().unwrap();
+        restore_workspace(true).unwrap();
     }
 }
 
-fn restore_workspace() -> Result<(), i32> {
+fn restore_workspace(undo_commit: bool) -> Result<(), i32> {
     run_cmd!("git reset --hard --quiet")?;
-    run_cmd!("git reset --soft HEAD~1 --quiet")?;
-    run_cmd!("git reset --quiet")?;
+    if undo_commit {
+        run_cmd!("git reset --soft HEAD~1 --quiet")?;
+        run_cmd!("git reset --quiet")?;
+    }
     Ok(())
 }
 

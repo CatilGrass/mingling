@@ -48,9 +48,10 @@ fn main() {
     // // it'll be collected automatically once the `dispatch_tree` feature is enabled
     // program.with_dispatcher(...);
 
-    program.exec_and_exit()
+    program.exec_and_exit();
 }
 
+/// Renders the confirmation message for the `cmd5` command.
 #[renderer]
 fn render_cmd5(_: Entry5) {
     r_println!("It's works!");

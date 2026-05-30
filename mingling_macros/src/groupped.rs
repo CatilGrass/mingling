@@ -23,13 +23,10 @@ pub fn derive_groupped(input: TokenStream) -> TokenStream {
 
     // Parse attributes to find #[group(...)]
     let group_ident: proc_macro2::TokenStream = parse_group_attribute(&input.attrs)
-        .map(|ident| quote! { #ident })
-        .unwrap_or_else(crate::default_program_path);
+        .map_or_else(crate::default_program_path, |ident| quote! { #ident });
 
-    let any_output_convert_impls = proc_macro2::TokenStream::from(build_any_output_convert_impls(
-        struct_name.clone(),
-        group_ident.clone(),
-    ));
+    let any_output_convert_impls =
+        proc_macro2::TokenStream::from(build_any_output_convert_impls(&struct_name, &group_ident));
 
     // Generate the Groupped trait implementation
     let expanded = quote! {
@@ -55,13 +52,10 @@ pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
 
     // Parse attributes to find #[group(...)]
     let group_ident: proc_macro2::TokenStream = parse_group_attribute(&input_parsed.attrs)
-        .map(|ident| quote! { #ident })
-        .unwrap_or_else(crate::default_program_path);
+        .map_or_else(crate::default_program_path, |ident| quote! { #ident });
 
-    let any_output_convert_impls = proc_macro2::TokenStream::from(build_any_output_convert_impls(
-        struct_name.clone(),
-        group_ident.clone(),
-    ));
+    let any_output_convert_impls =
+        proc_macro2::TokenStream::from(build_any_output_convert_impls(&struct_name, &group_ident));
 
     // Generate both Serialize and Groupped implementations
     let expanded = quote! {
@@ -83,8 +77,8 @@ pub fn derive_groupped_serialize(input: TokenStream) -> TokenStream {
 }
 
 fn build_any_output_convert_impls(
-    struct_name: Ident,
-    group_ident: proc_macro2::TokenStream,
+    struct_name: &Ident,
+    group_ident: &proc_macro2::TokenStream,
 ) -> TokenStream {
     quote! {
         impl ::std::convert::Into<::mingling::AnyOutput<#group_ident>> for #struct_name {

@@ -16,7 +16,7 @@ where
     pub begin: Option<fn()>,
 
     /// Executes before the program dispatches
-    pub pre_dispatch: Option<fn(args: &Vec<String>)>,
+    pub pre_dispatch: Option<fn(args: &[String])>,
 
     /// Executes after the program dispatches
     pub post_dispatch: Option<fn(entry: &C)>,
@@ -98,19 +98,19 @@ where
 
         for hook in &self.hooks {
             if let Some(begin) = hook.begin {
-                begin()
+                begin();
             }
         }
     }
 
-    pub(crate) fn run_hook_pre_dispatch(&self, args: &Vec<String>) {
+    pub(crate) fn run_hook_pre_dispatch(&self, args: &[String]) {
         if !self.user_context.run_hook {
             return;
         }
 
         for hook in &self.hooks {
             if let Some(pre_dispatch) = hook.pre_dispatch {
-                pre_dispatch(args)
+                pre_dispatch(args);
             }
         }
     }
@@ -122,7 +122,7 @@ where
 
         for hook in &self.hooks {
             if let Some(post_dispatch) = hook.post_dispatch {
-                post_dispatch(entry)
+                post_dispatch(entry);
             }
         }
     }
@@ -134,7 +134,7 @@ where
 
         for hook in &self.hooks {
             if let Some(pre_chain) = hook.pre_chain {
-                pre_chain(input, raw)
+                pre_chain(input, raw);
             }
         }
     }
@@ -146,7 +146,7 @@ where
 
         for hook in &self.hooks {
             if let Some(post_chain) = hook.post_chain {
-                post_chain(output)
+                post_chain(output);
             }
         }
     }
@@ -158,7 +158,7 @@ where
 
         for hook in &self.hooks {
             if let Some(pre_render) = hook.pre_render {
-                pre_render(input, raw)
+                pre_render(input, raw);
             }
         }
     }
@@ -170,7 +170,7 @@ where
 
         for hook in &self.hooks {
             if let Some(post_render) = hook.post_render {
-                post_render(result)
+                post_render(result);
             }
         }
     }
@@ -184,7 +184,7 @@ where
 
         for hook in &self.hooks {
             if let Some(exec_panic) = hook.exec_panic {
-                exec_panic(panic_info)
+                exec_panic(panic_info);
             }
         }
     }
@@ -354,6 +354,7 @@ where
     C: ProgramCollect<Enum = C>,
 {
     /// Creates a new empty hook set with no handlers.
+    #[must_use]
     pub fn empty() -> Self {
         Self {
             begin: None,
@@ -390,48 +391,56 @@ where
     }
 
     /// Sets the handler for the `begin` event.
+    #[must_use]
     pub fn on_begin(mut self, handler: fn()) -> Self {
         let _ = self.begin.insert(handler);
         self
     }
 
     /// Sets the handler for the `pre_dispatch` event.
-    pub fn on_pre_dispatch(mut self, handler: fn(args: &Vec<String>)) -> Self {
+    #[must_use]
+    pub fn on_pre_dispatch(mut self, handler: fn(args: &[String])) -> Self {
         let _ = self.pre_dispatch.insert(handler);
         self
     }
 
     /// Sets the handler for the `post_dispatch` event.
+    #[must_use]
     pub fn on_post_dispatch(mut self, handler: fn(entry: &C)) -> Self {
         let _ = self.post_dispatch.insert(handler);
         self
     }
 
     /// Sets the handler for the `pre_chain` event.
+    #[must_use]
     pub fn on_pre_chain(mut self, handler: fn(input: &C, raw: &dyn Any)) -> Self {
         let _ = self.pre_chain.insert(handler);
         self
     }
 
     /// Sets the handler for the `post_chain` event.
+    #[must_use]
     pub fn on_post_chain(mut self, handler: fn(output: &AnyOutput<C>)) -> Self {
         let _ = self.post_chain.insert(handler);
         self
     }
 
     /// Sets the handler for the `pre_render` event.
+    #[must_use]
     pub fn on_pre_render(mut self, handler: fn(input: &C, raw: &dyn Any)) -> Self {
         let _ = self.pre_render.insert(handler);
         self
     }
 
     /// Sets the handler for the `post_render` event.
+    #[must_use]
     pub fn on_post_render(mut self, handler: fn(result: &RenderResult)) -> Self {
         let _ = self.post_render.insert(handler);
         self
     }
 
     /// Sets the handler for the `finish` event.
+    #[must_use]
     pub fn on_finish(mut self, handler: fn() -> i32) -> Self {
         let _ = self.finish.insert(handler);
         self
@@ -439,6 +448,7 @@ where
 
     /// Sets the handler for the `exec_panic` event.
     #[cfg(not(feature = "async"))]
+    #[must_use]
     pub fn on_exec_panic(mut self, handler: fn(&ProgramPanic)) -> Self {
         let _ = self.exec_panic.insert(handler);
         self
@@ -446,6 +456,7 @@ where
 
     /// Sets the handler for the REPL begin event (only available with `repl` feature).
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_begin(mut self, handler: fn()) -> Self {
         let _ = self.repl_on_begin.insert(handler);
         self
@@ -454,6 +465,7 @@ where
     /// Sets the handler for the REPL pre-readline event (only available with `repl` feature).
     /// This hook runs after `on_repl_begin` but before reading the next input line.
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_pre_readline(mut self, handler: fn()) -> Self {
         let _ = self.repl_pre_readline.insert(handler);
         self
@@ -463,6 +475,7 @@ where
     /// If set, this function will be called to read a line instead of the default mechanism.
     /// Returning `None` signals that there is no input (e.g., EOF).
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_readline(mut self, handler: fn() -> Option<String>) -> Self {
         let _ = self.repl_readline.insert(handler);
         self
@@ -471,6 +484,7 @@ where
     /// Sets the handler for the REPL post-readline event (only available with `repl` feature).
     /// This hook runs after reading a line of input and receives a mutable reference to the line.
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_post_readline(mut self, handler: fn(line: &mut String)) -> Self {
         let _ = self.repl_post_readline.insert(handler);
         self
@@ -479,6 +493,7 @@ where
     /// Sets the handler for the REPL pre-exec event (only available with `repl` feature).
     /// This hook runs before executing a REPL command, receiving the parsed arguments.
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_pre_exec(mut self, handler: fn(args: &[String])) -> Self {
         let _ = self.repl_pre_exec.insert(handler);
         self
@@ -487,6 +502,7 @@ where
     /// Sets the handler for the REPL post-exec event (only available with `repl` feature).
     /// This hook runs after executing a REPL command.
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_post_exec(mut self, handler: fn()) -> Self {
         let _ = self.repl_post_exec.insert(handler);
         self
@@ -495,6 +511,7 @@ where
     /// Sets the handler for the REPL receive result event (only available with `repl` feature).
     /// This hook runs after a command is executed, receiving the render result on success.
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_receive_result(mut self, handler: fn(result: &RenderResult)) -> Self {
         let _ = self.repl_on_receive_result.insert(handler);
         self
@@ -502,6 +519,7 @@ where
 
     /// Sets the handler for the REPL panic event (only available with `repl` feature).
     #[cfg(all(feature = "repl", not(feature = "async")))]
+    #[must_use]
     pub fn on_repl_panic(mut self, handler: fn(panic: &ProgramPanic)) -> Self {
         let _ = self.repl_on_panic.insert(handler);
         self
@@ -510,6 +528,7 @@ where
     /// Sets the handler for the REPL exit event (only available with `repl` feature).
     /// This hook runs when the REPL is about to exit.
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_exit(mut self, handler: fn()) -> Self {
         let _ = self.repl_exit.insert(handler);
         self
@@ -518,6 +537,7 @@ where
     /// Sets the handler for the REPL loop_once event (only available with `repl` feature).
     /// This hook runs after each REPL loop iteration.
     #[cfg(feature = "repl")]
+    #[must_use]
     pub fn on_repl_loop_once(mut self, handler: fn()) -> Self {
         let _ = self.repl_loop_once.insert(handler);
         self

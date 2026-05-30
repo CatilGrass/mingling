@@ -18,7 +18,7 @@
 //! ```
 
 use mingling::prelude::*;
-use mingling::{Groupped, parser::Picker, setup::GeneralRendererSetup};
+use mingling::{parser::Picker, setup::GeneralRendererSetup, Groupped};
 use serde::Serialize;
 
 dispatcher!("render", CMDRender => EntryRender);
@@ -28,7 +28,7 @@ fn main() {
     // Add `GeneralRendererSetup` to receive user input `--json` `--yaml` parameters
     program.with_setup(GeneralRendererSetup);
     program.with_dispatcher(CMDRender);
-    program.exec();
+    let _ = program.exec();
 }
 
 // --------- IMPORTANT ---------
@@ -61,7 +61,7 @@ fn parse_render(prev: EntryRender) -> Next {
     Info { name, age }.to_render()
 }
 
-// Implement default renderer for when general_renderer is not specified
+/// Implement default renderer for when general_renderer is not specified
 #[renderer]
 fn render_info(prev: Info) {
     r_println!("{} is {} years old", prev.name, prev.age);

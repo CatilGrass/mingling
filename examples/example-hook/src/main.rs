@@ -31,17 +31,17 @@ fn main() {
     program.with_hook(
         ProgramHook::<ThisProgram>::empty()
             .on_begin(|| println!("[DEBUG] Program is begin"))
-            .on_pre_dispatch(|args| println!("[DEBUG] Pre dispatch: {:?}", args))
-            .on_post_dispatch(|c: &_| println!("[DEBUG] Post dispatch: {:?}", c))
+            .on_pre_dispatch(|args| println!("[DEBUG] Pre dispatch: {args:?}"))
+            .on_post_dispatch(|c: &_| println!("[DEBUG] Post dispatch: {c:?}"))
             .on_pre_chain(|c: &_, _| {
-                println!("[DEBUG] Pre chain: {}", c);
+                println!("[DEBUG] Pre chain: {c}");
             })
             .on_post_chain(|any_output| println!("[DEBUG] Post chain: {}", any_output.member_id))
             .on_finish(|| {
                 println!("[DEBUG] Loop end");
                 0 // Override exit code
             })
-            .on_pre_render(|c: &_, _| println!("[DEBUG] Pre render: {}", c))
+            .on_pre_render(|c: &_, _| println!("[DEBUG] Pre render: {c}"))
             .on_post_render(|_| println!("[DEBUG] Post render")),
     );
     // --------- IMPORTANT ---------
@@ -63,6 +63,7 @@ fn handle_greet(args: EntryGreet) -> Next {
     name
 }
 
+/// Renders the greeting message with the provided name.
 #[renderer]
 fn render_name(name: ResultName) {
     r_println!("Hello, {}!", *name);

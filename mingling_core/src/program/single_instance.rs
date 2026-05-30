@@ -7,6 +7,11 @@ pub(crate) static THIS_PROGRAM: OnceLock<Option<Box<dyn std::any::Any + Send + S
     OnceLock::new();
 
 /// Returns a reference to the current program instance, panics if not set.
+///
+/// # Panics
+///
+/// Panics if the program has not been initialized yet.
+#[must_use]
 pub fn this<C>() -> &'static Program<C>
 where
     C: ProgramCollect<Enum = C> + 'static,

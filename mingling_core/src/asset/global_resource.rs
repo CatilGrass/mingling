@@ -25,11 +25,8 @@ where
         Res: 'static + Default + ResourceMarker + Send + Sync,
         Return: Default,
     {
-        let mut guard = match self.resources.lock() {
-            Ok(guard) => guard,
-            Err(_) => {
-                return Return::default();
-            }
+        let Ok(mut guard) = self.resources.lock() else {
+            return Return::default();
         };
         if let Some(arc_res) = guard
             .get_mut(&TypeId::of::<Res>())
@@ -56,12 +53,9 @@ where
         Res: 'static + Default + ResourceMarker + Send + Sync,
         Return: Into<ChainProcess<C>>,
     {
-        let mut guard = match self.resources.lock() {
-            Ok(guard) => guard,
-            Err(_) => {
-                let mut default_res = Res::res_default();
-                return f(&mut default_res);
-            }
+        let Ok(mut guard) = self.resources.lock() else {
+            let mut default_res = Res::res_default();
+            return f(&mut default_res);
         };
         if let Some(arc_res) = guard
             .get_mut(&TypeId::of::<Res>())
@@ -81,6 +75,7 @@ where
     }
 
     /// Get an resources by type, returning `Res` if present
+    #[must_use]
     pub fn res<Res: 'static + Send + Sync>(&self) -> Option<GlobalResource<Res>> {
         let guard = self.resources.lock().ok()?;
         let boxed_any = guard.get(&TypeId::of::<Res>())?;
@@ -100,6 +95,7 @@ where
     }
 
     /// Get a resource by type, returning `GlobalResource<Res>` or inserting a default
+    #[must_use]
     pub fn res_or_default<Res: 'static + Send + Sync + ResourceMarker>(
         &self,
     ) -> GlobalResource<Res> {
@@ -144,6 +140,7 @@ impl<ResType: 'static + Send + Sync> AsRef<ResType> for GlobalResource<ResType> 
 
 /// Resource marker trait, types that implement the Clone and Default traits can be considered as resources
 pub trait ResourceMarker {
+    #[must_use]
     fn res_clone(&self) -> Self;
     fn res_default() -> Self;
     fn modify<C>(f: impl FnOnce(&mut Self))

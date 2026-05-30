@@ -29,6 +29,15 @@ where
     }
 
     /// Run the command line program
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(ProgramExecuteError)` if execution fails,
+    /// e.g., if no dispatcher is found or a chain error occurs.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the program encounters a non-recoverable internal error.
     pub async fn exec_without_render(mut self) -> Result<RenderResult, ProgramExecuteError>
     where
         C: 'static + Send + Sync,
@@ -127,6 +136,15 @@ where
     }
 
     /// Run the command line program
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(ProgramExecuteError)` if execution fails,
+    /// e.g., if no dispatcher is found or a chain error occurs.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the program encounters a non-recoverable internal error.
     pub fn exec_without_render(mut self) -> Result<RenderResult, ProgramExecuteError>
     where
         C: 'static + Send + Sync,
@@ -141,7 +159,7 @@ where
 
         #[cfg(not(panic = "abort"))]
         match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            self.exec_wrapper(|p| crate::exec::exec(p).map_err(|e| e.into()))
+            self.exec_wrapper(|p| crate::exec::exec(p).map_err(std::convert::Into::into))
         })) {
             Ok(result) => result,
             Err(panic_info) => {
@@ -164,6 +182,7 @@ where
     }
 
     /// Run the command line program
+    #[must_use]
     pub fn exec(self) -> i32
     where
         C: 'static + Send + Sync,
@@ -179,15 +198,15 @@ where
                     return 1;
                 }
                 ProgramExecuteError::RendererNotFound(renderer_name) => {
-                    eprintln!("Renderer `{}` not found", renderer_name);
+                    eprintln!("Renderer `{renderer_name}` not found");
                     return 1;
                 }
                 ProgramExecuteError::Other(e) => {
-                    eprintln!("{}", e);
+                    eprintln!("{e}");
                     return 1;
                 }
                 ProgramExecuteError::Panic(unwinded_error) => {
-                    eprintln!("{}", unwinded_error);
+                    eprintln!("{unwinded_error}");
                     return 1;
                 }
             },
@@ -196,12 +215,12 @@ where
         // Render result
         if stdout_setting.render_output && !result.is_empty() {
             let exit_code = result.exit_code;
-            print!("{}", result);
+            print!("{result}");
 
             if let Err(e) = std::io::Write::flush(&mut std::io::stdout())
                 && stdout_setting.error_output
             {
-                eprintln!("{}", e);
+                eprintln!("{e}");
                 1
             } else {
                 exit_code

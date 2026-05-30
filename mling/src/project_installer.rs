@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use mingling::{ShellFlag, build::build_comp_script_to};
 
 use crate::{
@@ -21,15 +19,27 @@ struct Package {
     name: String,
 }
 
+/// Installs all projects and shell scripts.
+///
+/// # Errors
+///
+/// Returns an `io::Error` if the current directory cannot be determined, if the project
+/// installation fails, or if the shell scripts cannot be installed.
 pub fn install_all(clean_before_build: bool) -> Result<(), std::io::Error> {
     let current = std::env::current_dir()?;
-    install_this_project(current, clean_before_build)?;
+    install_this_project(&current, clean_before_build)?;
     install_shell_scripts()?;
     Ok(())
 }
 
+/// Installs a project from the given path.
+///
+/// # Errors
+///
+/// Returns an `io::Error` if the project installation fails, e.g., if `cargo build`
+/// fails, the Cargo.toml cannot be parsed, or file operations (copy, create dir) fail.
 pub fn install_this_project(
-    current: PathBuf,
+    current: &std::path::PathBuf,
     clean_before_build: bool,
 ) -> Result<(), std::io::Error> {
     // Obtain context data
@@ -95,6 +105,11 @@ pub fn install_this_project(
     Ok(())
 }
 
+/// Installs shell completion scripts for the `mling` command.
+///
+/// # Errors
+///
+/// Returns an `io::Error` if the shell scripts cannot be built or installed.
 pub fn install_shell_scripts() -> Result<(), std::io::Error> {
     // Get the working directory (mingling data dir)
     let wdir = working_dir();
@@ -138,7 +153,7 @@ pub fn install_shell_scripts() -> Result<(), std::io::Error> {
                 .args(["+x", &dest.to_string_lossy()])
                 .status()?;
             if !status.success() {
-                eprintln!("Failed to chmod {}", filename);
+                eprintln!("Failed to chmod {filename}");
             }
         }
     }

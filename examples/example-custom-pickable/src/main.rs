@@ -14,7 +14,7 @@
 //! Failed to parse address
 //! ```
 
-use mingling::{Groupped, macros::route, parser::Pickable, prelude::*};
+use mingling::{macros::route, parser::Pickable, prelude::*, Groupped};
 
 // Define types that can be recognized by Mingling
 //               ________________________ `Pickable` trait needs to implement Default
@@ -32,7 +32,7 @@ impl Pickable for Address {
     type Output = Address;
     fn pick(args: &mut mingling::parser::Argument, flag: mingling::Flag) -> Option<Self::Output> {
         // Extract the raw string from Argument using the Flag
-        let raw: String = args.pick_argument(flag)?.to_string();
+        let raw: String = args.pick_argument(flag)?.clone();
 
         // Use TryFrom to parse the address
         Address::try_from(raw).ok()
@@ -50,11 +50,13 @@ fn handle_connect(prev: EntryConnect) -> Next {
     connect.to_chain()
 }
 
+/// Renders the connected address.
 #[renderer]
 fn render_address(addr: Address) {
     r_println!("Connected to \"{}\"", addr.to_string());
 }
 
+/// Renders the error message when address parsing fails.
 #[renderer]
 fn render_error_parse_address_failed(_: ErrorParseAddressFailed) {
     r_println!("Failed to parse address");
@@ -93,13 +95,13 @@ impl TryFrom<String> for Address {
         for (i, part) in ip_parts.iter().enumerate() {
             ip[i] = part
                 .parse::<u8>()
-                .map_err(|_| format!("Invalid IP octet: {}", part))?;
+                .map_err(|_| format!("Invalid IP octet: {part}"))?;
         }
 
         // Parse port
         let port = port_str
             .parse::<u16>()
-            .map_err(|_| format!("Invalid port: {}", port_str))?;
+            .map_err(|_| format!("Invalid port: {port_str}"))?;
 
         Ok(Address { ip, port })
     }

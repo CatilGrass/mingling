@@ -229,8 +229,8 @@ fn generate_struct_and_impl(
     group_name: &proc_macro2::TokenStream,
     program_type: &proc_macro2::TokenStream,
     use_crate_prefix: bool,
-    proc_fn: proc_macro2::TokenStream,
-    origin_proc_fn: proc_macro2::TokenStream,
+    proc_fn: &proc_macro2::TokenStream,
+    origin_proc_fn: &proc_macro2::TokenStream,
 ) -> proc_macro2::TokenStream {
     let chain_type = if use_crate_prefix {
         program_type
@@ -389,8 +389,8 @@ pub fn chain_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
         &group_name,
         &program_type,
         use_crate_prefix,
-        proc_fn,
-        origin_proc_fn,
+        &proc_fn,
+        &origin_proc_fn,
     );
 
     expanded.into()

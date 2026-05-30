@@ -78,44 +78,44 @@ pub(crate) fn render_installed(prev: ResultInstalledNamespaces) {
     match prev.option {
         StateListInstalledOptions::All => {
             print_list(
-                "Trusted".bright_green().bold().to_string(),
-                prev.trusted,
+                &"Trusted".bright_green().bold().to_string(),
+                &prev.trusted,
                 __renderer_inner_result,
             );
             print_list(
-                "Untrusted".bright_red().bold().to_string(),
-                prev.untrusted,
+                &"Untrusted".bright_red().bold().to_string(),
+                &prev.untrusted,
                 __renderer_inner_result,
             );
             print_list(
-                "Untagged".bright_black().bold().to_string(),
-                prev.untagged,
+                &"Untagged".bright_black().bold().to_string(),
+                &prev.untagged,
                 __renderer_inner_result,
             );
         }
         StateListInstalledOptions::OnlyTrusted => {
             print_list(
-                "Trusted".bright_green().bold().to_string(),
-                prev.trusted,
+                &"Trusted".bright_green().bold().to_string(),
+                &prev.trusted,
                 __renderer_inner_result,
             );
         }
         StateListInstalledOptions::OnlyUntrusted => {
             print_list(
-                "Untrusted".bright_red().bold().to_string(),
-                prev.untrusted,
+                &"Untrusted".bright_red().bold().to_string(),
+                &prev.untrusted,
                 __renderer_inner_result,
             );
         }
     }
 }
 
-fn print_list(title: String, list: Vec<String>, __renderer_inner_result: &mut RenderResult) {
+fn print_list(title: &str, list: &[String], __renderer_inner_result: &mut RenderResult) {
     if list.is_empty() {
         return;
     }
 
-    r_println!("{}", title);
+    r_println!("{title}");
 
     for (i, namespace) in (1..).zip(list.iter()) {
         r_println!("  {}. {}", i.to_string(), namespace.bold());

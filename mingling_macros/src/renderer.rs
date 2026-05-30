@@ -7,20 +7,21 @@ use crate::get_global_set;
 use crate::res_injection::{extract_args_info, generate_immut_resource_bindings};
 
 /// Extracts and returns the return type from the function signature (or None for `()` / no return type).
-fn extract_return_type(sig: &Signature) -> syn::Result<Option<syn::Type>> {
+fn extract_return_type(sig: &Signature) -> Option<syn::Type> {
     match &sig.output {
         ReturnType::Type(_, ty) => {
             match &**ty {
                 // `()` means no custom return type
-                Type::Tuple(tuple) if tuple.elems.is_empty() => Ok(None),
+                Type::Tuple(tuple) if tuple.elems.is_empty() => None,
                 // Any other return type is allowed
-                custom_ty => Ok(Some((*custom_ty).clone())),
+                custom_ty => Some((*custom_ty).clone()),
             }
         }
-        ReturnType::Default => Ok(None),
+        ReturnType::Default => None,
     }
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse attribute arguments for program path (e.g. #[renderer(my_crate::Program)])
     let (program_path, _use_crate_prefix) = parse_renderer_attr_args(attr);
@@ -48,10 +49,7 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     // Validate return type – now returns Some(type) if custom type, None if ()
-    let return_type = match extract_return_type(&input_fn.sig) {
-        Ok(rt) => rt,
-        Err(e) => return e.to_compile_error().into(),
-    };
+    let return_type = extract_return_type(&input_fn.sig);
 
     // Get function body statements
     let fn_body_stmts: Vec<syn::Stmt> = input_fn.block.stmts.clone();
@@ -83,23 +81,20 @@ pub fn renderer_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut_resources: Vec<_> = resources.iter().filter(|r| r.is_mut).collect();
 
     // Determine public return type and the expression to return dummy_r
-    let (public_return_type, result_return) = match &return_type {
+    let (public_return_type, result_return) = if let Some(custom_ty) = &return_type {
         // User specified a custom return type (e.g. -> String)
-        Some(custom_ty) => {
-            let ret_ty = quote! { #custom_ty };
-            let expr = quote! { dummy_r.into() };
-            (ret_ty, expr)
-        }
+        let ret_ty = quote! { #custom_ty };
+        let expr = quote! { dummy_r.into() };
+        (ret_ty, expr)
+    } else {
         // Return type is () — no custom return type specified
-        None => {
-            let ret_ty = quote! { () };
-            let expr = quote! {
-                if !dummy_r.is_empty() {
-                    ::std::println!("{}", &*dummy_r);
-                }
-            };
-            (ret_ty, expr)
-        }
+        let ret_ty = quote! { () };
+        let expr = quote! {
+            if !dummy_r.is_empty() {
+                ::std::println!("{}", &*dummy_r);
+            }
+        };
+        (ret_ty, expr)
     };
 
     let inner_body_with_resources = if has_mut_resources {

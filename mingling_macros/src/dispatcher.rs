@@ -104,6 +104,7 @@ impl Parse for DispatcherChainInput {
 // Additionally, the token stream generation patterns are nearly identical between
 // the two main functions and could benefit from refactoring.
 
+#[allow(clippy::too_many_lines)]
 pub fn dispatcher(input: TokenStream) -> TokenStream {
     // Parse the input
     let dispatcher_input = syn::parse_macro_input!(input as DispatcherChainInput);
@@ -332,7 +333,7 @@ pub fn register_dispatcher(_input: TokenStream) -> TokenStream {
     quote! {}.into()
 }
 
-/// Converts a dotted command name (e.g. "remote.add") to PascalCase (e.g. "RemoteAdd").
+/// Converts a dotted command name (e.g. "remote.add") to `PascalCase` (e.g. "`RemoteAdd`").
 ///
 /// Each segment is split by `.`, the first character of each segment is uppercased,
 /// and the segments are joined. This is used by the abbreviated `dispatcher!` syntax

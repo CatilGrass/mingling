@@ -13,6 +13,7 @@ pub(crate) struct ResourceInjection {
 
 /// Extracts the previous type and parameter name from function arguments,
 /// and collects resource injection parameters from the 2nd argument onward.
+#[allow(clippy::too_many_lines)]
 pub(crate) fn extract_args_info(
     sig: &Signature,
 ) -> syn::Result<(Pat, TypePath, Vec<ResourceInjection>)> {
@@ -183,7 +184,7 @@ pub(crate) fn wrap_body_with_mut_resources(
         #(#fn_body_stmts)*
     };
 
-    for res in mut_resources.iter() {
+    for res in mut_resources {
         let var_name = &res.var_name;
         let inner_type = &res.inner_type;
         wrapped = quote! {

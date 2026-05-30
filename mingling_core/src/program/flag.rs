@@ -51,7 +51,7 @@ impl From<&Flag> for Flag {
 }
 
 impl From<()> for Flag {
-    fn from(_: ()) -> Self {
+    fn from((): ()) -> Self {
         Flag { vec: vec![] }
     }
 }

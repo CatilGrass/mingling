@@ -29,11 +29,10 @@ fn main() {
     program.stdout_setting.silence_panic = true;
 
     // Define a hook to output &ProgramPanic when a Panic occurs
-    program
-        .with_hook(ProgramHook::empty().on_exec_panic(|info| println!("Program panic: {}", info)));
+    program.with_hook(ProgramHook::empty().on_exec_panic(|info| println!("Program panic: {info}")));
     // --------- IMPORTANT ---------
 
-    program.exec();
+    let _ = program.exec();
 }
 
 #[chain]
@@ -48,6 +47,7 @@ fn handle_panic(prev: EntryPanic) -> Next {
     }
 }
 
+/// Renders the message when no panic occurs.
 #[renderer]
 fn render(_: NotPanic) {
     r_println!("Program not panic");

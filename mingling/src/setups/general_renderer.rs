@@ -35,7 +35,7 @@ where
     fn setup(&mut self, program: &mut Program<C>) {
         #[cfg(feature = "json_serde_fmt")]
         program.global_flag("--json", |p| {
-            p.general_renderer_name = crate::GeneralRendererSetting::Json
+            p.general_renderer_name = crate::GeneralRendererSetting::Json;
         });
         #[cfg(feature = "json_serde_fmt")]
         program.global_flag("--json-pretty", |p| {

@@ -75,7 +75,7 @@ fn run_all_tests(config: &TestConfig) -> (usize, usize) {
 
 /// Build the example binary, return true on success
 fn build_example(example_name: &str) -> bool {
-    let manifest = format!("examples/{}/Cargo.toml", example_name);
+    let manifest = format!("examples/{example_name}/Cargo.toml");
     run_cmd!("cargo build --manifest-path {}", manifest).is_ok()
 }
 
@@ -132,7 +132,7 @@ fn run_single_test(example_name: &str, test_case: &TestCase) -> bool {
 fn get_binary_name(example_name: &str) -> String {
     let base = example_name;
     if cfg!(target_os = "windows") {
-        format!("{}.exe", base)
+        format!("{base}.exe")
     } else {
         base.to_string()
     }

@@ -9,9 +9,9 @@ pub struct ProgramPanic {
 impl fmt::Display for ProgramPanic {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(s) = self.payload.downcast_ref::<&str>() {
-            write!(f, "{}", s)
+            write!(f, "{s}")
         } else if let Some(s) = self.payload.downcast_ref::<String>() {
-            write!(f, "{}", s)
+            write!(f, "{s}")
         } else {
             write!(f, "")
         }
@@ -19,6 +19,7 @@ impl fmt::Display for ProgramPanic {
 }
 
 impl ProgramPanic {
+    #[must_use]
     pub fn new(payload: Box<dyn Any + Send>) -> Self {
         ProgramPanic { payload }
     }

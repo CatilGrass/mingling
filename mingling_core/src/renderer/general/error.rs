@@ -9,6 +9,7 @@ pub struct GeneralRendererSerializeError {
 }
 
 impl GeneralRendererSerializeError {
+    #[must_use]
     pub fn new(error: String) -> Self {
         Self { error }
     }

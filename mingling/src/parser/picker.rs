@@ -71,15 +71,12 @@ impl Picker {
     where
         TNext: Pickable<Output = TNext> + Default,
     {
-        let v = match TNext::pick(&mut self.args, val.into()) {
-            Some(value) => value,
-            None => {
-                return PickWithRoute1 {
-                    args: self.args,
-                    val_1: TNext::default(),
-                    route: Some(route),
-                };
-            }
+        let Some(v) = TNext::pick(&mut self.args, val.into()) else {
+            return PickWithRoute1 {
+                args: self.args,
+                val_1: TNext::default(),
+                route: Some(route),
+            };
         };
         PickWithRoute1 {
             args: self.args,
@@ -112,6 +109,7 @@ impl Picker {
     /// Takes a closure that receives the current `Argument` and returns a new `Argument`.
     /// The returned `Argument` replaces the original arguments in the builder.
     /// This method can be used to modify or transform the parsed arguments before extracting values.
+    #[must_use]
     pub fn operate_args<F: FnOnce(Argument) -> Argument>(mut self, operation: F) -> Self {
         self.args = operation(self.args);
         self
@@ -141,7 +139,7 @@ pub trait Pickable {
 // Non-routed Pick structs (no R parameter, no route field)
 
 /// Internal macro: generates the struct definition and common methods
-/// (after, after_or_route, operate_args) for non-routed Pick structs.
+/// (after, `after_or_route`, `operate_args`) for non-routed Pick structs.
 macro_rules! define_pick_struct {
     ($n:ident $final:ident $final_val:ident $route_self:ident $($T:ident $val:ident),+ $(,)?) => {
         #[doc(hidden)]
@@ -163,6 +161,7 @@ macro_rules! define_pick_struct {
             /// Takes a closure that receives the last extracted value and returns a new value of the same type.
             /// The transformed value replaces the original value in the builder.
             /// This method can be used to modify or validate the extracted value before final unpacking.
+            #[must_use]
             pub fn after<F>(mut self, mut edit: F) -> Self
             where
                 F: FnMut($final) -> $final,
@@ -177,6 +176,7 @@ macro_rules! define_pick_struct {
             /// If the closure returns `Ok(new_value)`, the new value replaces the original value in the builder.
             /// If the closure returns `Err(route)`, the provided `route` is stored in the builder for later error handling.
             /// If a route was already stored from a previous `pick_or_route` call, the existing route is preserved.
+            #[must_use]
             pub fn after_or_route<F, R>(mut self, mut edit: F) -> $route_self<$($T,)+ R>
             where
                 F: FnMut(&$final) -> Result<$final, R>,
@@ -205,6 +205,7 @@ macro_rules! define_pick_struct {
             /// Takes a closure that receives the current `Argument` and returns a new `Argument`.
             /// The returned `Argument` replaces the original arguments in the builder.
             /// This method can be used to modify or transform the parsed arguments before extracting values.
+            #[must_use]
             pub fn operate_args<F: FnOnce(Argument) -> Argument>(mut self, operation: F) -> Self {
                 self.args = operation(self.args);
                 self
@@ -359,17 +360,14 @@ macro_rules! impl_pick_next {
             where
                 TNext: Pickable<Output = TNext> + Default,
             {
-                let v = match TNext::pick(&mut self.args, val.into()) {
-                    Some(value) => value,
-                    None => {
-                        return $route_next {
-                            args: self.args,
-                            $($val: self.$val,)+
-                            $next_val: TNext::default(),
-                            route: Some(route),
-                        };
-                    }
-                };
+                let Some(v) = TNext::pick(&mut self.args, val.into()) else {
+                                return $route_next {
+                                    args: self.args,
+                                    $($val: self.$val,)+
+                                    $next_val: TNext::default(),
+                                    route: Some(route),
+                                };
+                            };
                 $route_next {
                     args: self.args,
                     $($val: self.$val,)+
@@ -413,7 +411,7 @@ impl_pick_next! { Pick11 Pick12 val_12 PickWithRoute12 T1 val_1, T2 val_2, T3 va
 // Routed PickWithRoute structs (with R parameter, route field)
 
 /// Internal macro: generates the routed struct definition and common methods
-/// (after, after_or_route, operate_args) for PickWithRoute structs.
+/// (after, `after_or_route`, `operate_args`) for `PickWithRoute` structs.
 macro_rules! define_pick_with_route_struct {
     ($n:ident $final:ident $final_val:ident $($T:ident $val:ident),+) => {
         #[doc(hidden)]
@@ -436,6 +434,7 @@ macro_rules! define_pick_with_route_struct {
             /// Takes a closure that receives the last extracted value and returns a new value of the same type.
             /// The transformed value replaces the original value in the builder.
             /// This method can be used to modify or validate the extracted value before final unpacking.
+            #[must_use]
             pub fn after<F>(mut self, mut edit: F) -> Self
             where
                 F: FnMut($final) -> $final,
@@ -450,6 +449,7 @@ macro_rules! define_pick_with_route_struct {
             /// If the closure returns `Ok(new_value)`, the new value replaces the original value in the builder.
             /// If the closure returns `Err(route)`, the provided `route` is stored in the builder for later error handling.
             /// If a route was already stored from a previous `pick_or_route` call, the existing route is preserved.
+            #[must_use]
             pub fn after_or_route<F>(mut self, mut edit: F) -> Self
             where
                 F: FnMut(&$final) -> Result<$final, R>,
@@ -475,6 +475,7 @@ macro_rules! define_pick_with_route_struct {
             /// Takes a closure that receives the current `Argument` and returns a new `Argument`.
             /// The returned `Argument` replaces the original arguments in the builder.
             /// This method can be used to modify or transform the parsed arguments before extracting values.
+            #[must_use]
             pub fn operate_args<F: FnOnce(Argument) -> Argument>(mut self, operation: F) -> Self {
                 self.args = operation(self.args);
                 self
@@ -483,7 +484,7 @@ macro_rules! define_pick_with_route_struct {
     };
 }
 
-/// Internal macro: generates `From` impl for routed PickWithRouteN into a tuple.
+/// Internal macro: generates `From` impl for routed `PickWithRouteN` into a tuple.
 macro_rules! impl_pick_with_route_from_tuple {
     ($n:ident $($T:ident $val:ident),+) => {
         impl<$($T,)+ R> From<$n<$($T,)+ R>> for ($($T,)+)
@@ -497,7 +498,7 @@ macro_rules! impl_pick_with_route_from_tuple {
     };
 }
 
-/// Internal macro: generates `unpack` and `unpack_directly` for routed PickWithRouteN (N >= 2).
+/// Internal macro: generates `unpack` and `unpack_directly` for routed `PickWithRouteN` (N >= 2).
 macro_rules! impl_pick_with_route_unpack_tuple {
     ($n:ident $($T:ident $val:ident),+) => {
         impl<$($T,)+ R> $n<$($T,)+ R>
@@ -507,6 +508,10 @@ macro_rules! impl_pick_with_route_unpack_tuple {
             /// Unpacks the builder into a tuple of extracted values.
             ///
             /// Returns `Ok((T1, T2, ...))` if no route was stored.
+            /// Returns `Err(R)` if a route was stored via `pick_or_route` or `after_or_route`.
+            ///
+            /// # Errors
+            ///
             /// Returns `Err(R)` if a route was stored via `pick_or_route` or `after_or_route`.
             pub fn unpack(self) -> Result<($($T,)+), R> {
                 match self.route {
@@ -518,6 +523,7 @@ macro_rules! impl_pick_with_route_unpack_tuple {
             /// Unpacks the builder into a tuple of extracted values.
             ///
             /// Returns the tuple of extracted values regardless of route state.
+            #[must_use]
             pub fn unpack_directly(self) -> ($($T,)+) {
                 ($(self.$val,)+)
             }
@@ -546,6 +552,10 @@ where
     ///
     /// Returns `Ok(T1)` if no route was stored.
     /// Returns `Err(R)` if a route was stored via `pick_or_route` or `after_or_route`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(R)` if a route was stored via `pick_or_route` or `after_or_route`.
     pub fn unpack(self) -> Result<T1, R> {
         match self.route {
             Some(route) => Err(route),
@@ -556,6 +566,7 @@ where
     /// Unpacks the builder into the extracted value.
     ///
     /// Returns the extracted value regardless of route state.
+    #[must_use]
     pub fn unpack_directly(self) -> T1 {
         self.val_1
     }
@@ -650,6 +661,7 @@ macro_rules! impl_pick_with_route_next {
             ///
             /// If a route was already stored from a previous `pick_or_route` or `after_or_route` call,
             /// the existing route is preserved and the new `route` parameter is ignored.
+            #[allow(clippy::manual_let_else)]
             pub fn pick_or_route<TNext>(mut self, val: impl Into<mingling_core::Flag>, route: R) -> $next<$($T,)+ TNext, R>
             where
                 TNext: Pickable<Output = TNext> + Default,

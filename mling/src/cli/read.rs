@@ -25,7 +25,8 @@ pub(crate) struct ResultBinaries {
 }
 
 #[chain]
-pub(crate) fn handle_target_dir_entry(_prev: ReadTargetDirEntry) -> Next {
+#[allow(unused_variables)]
+pub(crate) fn handle_target_dir_entry(entry: ReadTargetDirEntry) -> Next {
     match solve_current_dir() {
         Ok(solved) => {
             let dir = solved.target_dir;
@@ -36,7 +37,8 @@ pub(crate) fn handle_target_dir_entry(_prev: ReadTargetDirEntry) -> Next {
 }
 
 #[chain]
-pub(crate) fn handle_workspace_root_entry(_prev: ReadWorkspaceRootEntry) -> Next {
+#[allow(unused_variables)]
+pub(crate) fn handle_workspace_root_entry(entry: ReadWorkspaceRootEntry) -> Next {
     match solve_current_dir() {
         Ok(solved) => {
             let dir = solved.workspace_root;
@@ -47,7 +49,8 @@ pub(crate) fn handle_workspace_root_entry(_prev: ReadWorkspaceRootEntry) -> Next
 }
 
 #[chain]
-pub(crate) fn handle_binaries_entry(_prev: ReadBinariesEntry) -> Next {
+#[allow(unused_variables)]
+pub(crate) fn handle_binaries_entry(entry: ReadBinariesEntry) -> Next {
     match solve_current_dir() {
         Ok(solved) => {
             let binaries = solved.binaries;

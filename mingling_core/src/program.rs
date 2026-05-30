@@ -70,6 +70,7 @@ where
     C: ProgramCollect<Enum = C>,
 {
     /// Creates a new Program instance, initializing command-line arguments from the environment.
+    #[must_use]
     pub fn new() -> Self {
         #[cfg(not(windows))]
         return Self::new_with_args(env::args().collect::<Vec<String>>());
@@ -96,8 +97,8 @@ where
             #[cfg(not(feature = "dispatch_tree"))]
             dispatcher: Vec::new(),
 
-            stdout_setting: Default::default(),
-            user_context: Default::default(),
+            stdout_setting: ProgramStdoutSetting::default(),
+            user_context: ProgramUserContext::default(),
 
             #[cfg(feature = "general_renderer")]
             general_renderer_name: GeneralRendererSetting::Disable,
@@ -109,6 +110,10 @@ where
     }
 
     /// Returns a reference to the current program instance, if set.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the program has not been initialized yet.
     pub fn this_program() -> &'static Program<C>
     where
         C: 'static,
@@ -123,6 +128,7 @@ where
     }
 
     /// Get all registered dispatcher names from the program
+    #[must_use]
     pub fn get_nodes(
         &'static self,
     ) -> Vec<(String, &'static (dyn Dispatcher<C> + Send + Sync + 'static))> {
@@ -130,11 +136,17 @@ where
     }
 
     /// Dynamically dispatch input arguments to registered entry types
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(ChainProcessError)` if the dispatch fails,
+    /// e.g., if no dispatcher is found for the given arguments.
     pub fn dispatch_args_dynamic(
         &'static self,
         args: impl Into<StringVec>,
     ) -> Result<AnyOutput<C>, ChainProcessError> {
-        match exec::dispatch_args_dynamic(self, &args.into().into()) {
+        let sv: Vec<String> = args.into().into();
+        match exec::dispatch_args_dynamic(self, &sv) {
             Ok(ok) => Ok(ok),
             Err(e) => Err(e.into()),
         }
@@ -229,6 +241,7 @@ macro_rules! __dispatch_program_chains {
 
 /// Get all registered dispatcher names from the program
 #[allow(unused_variables)]
+#[must_use]
 pub fn get_nodes<C: ProgramCollect<Enum = C>>(
     program: &'static Program<C>,
 ) -> Vec<(String, &'static (dyn Dispatcher<C> + Send + Sync + 'static))> {

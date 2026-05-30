@@ -11,7 +11,10 @@ pub struct Argument {
 impl From<Vec<&str>> for Argument {
     fn from(vec: Vec<&str>) -> Self {
         Argument {
-            vec: vec.into_iter().map(|s| s.to_string()).collect(),
+            vec: vec
+                .into_iter()
+                .map(std::string::ToString::to_string)
+                .collect(),
         }
     }
 }
@@ -85,17 +88,16 @@ impl Argument {
         }
 
         let flag: Flag = flag.into();
-        if !flag.is_empty() {
-            // Has any flag
-            for argument in flag.iter() {
-                let value = special_argument!(self.vec, argument);
-                if value.is_some() {
-                    return value;
-                }
-            }
-        } else {
+        if flag.is_empty() {
             // No flag
             return Some(self.vec.remove(0));
+        }
+        // Has any flag
+        for argument in flag.iter() {
+            let value = special_argument!(self.vec, argument);
+            if value.is_some() {
+                return value;
+            }
         }
         None
     }
@@ -135,15 +137,7 @@ impl Argument {
         }
 
         let flag: Flag = flag.into();
-        if !flag.is_empty() {
-            // Has any flag
-            for argument in flag.iter() {
-                let enabled = special_flag!(self.vec, argument);
-                if enabled {
-                    return enabled;
-                }
-            }
-        } else {
+        if flag.is_empty() {
             let first = self.vec.remove(0);
             let first_lower = first.to_lowercase();
             let trimmed = first_lower.trim();
@@ -153,6 +147,13 @@ impl Argument {
                 _ => false,
             };
             return result;
+        }
+        // Has any flag
+        for argument in flag.iter() {
+            let enabled = special_flag!(self.vec, argument);
+            if enabled {
+                return enabled;
+            }
         }
         false
     }
@@ -167,6 +168,7 @@ impl Argument {
     ///
     /// This method filters out all command-line style flags from the arguments,
     /// returning a new `Argument` instance containing only non-flag arguments.
+    #[must_use]
     pub fn strip_all_flags(mut self) -> Self {
         self.vec.retain(|f| !f.starts_with('-'));
         self

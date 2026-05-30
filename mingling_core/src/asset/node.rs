@@ -11,6 +11,7 @@ pub struct Node {
 
 impl Node {
     /// Append a new part to the node path.
+    #[must_use]
     pub fn join(self, node: impl Into<String>) -> Node {
         let mut new_node = self.node;
         new_node.push(node.into());

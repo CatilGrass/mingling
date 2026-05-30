@@ -41,7 +41,7 @@ fn gen_feature_module() {
     let template_str = template.to_string();
     let template_str = template_str
         .lines()
-        .map(|line| line.trim_end())
+        .map(str::trim_end)
         .collect::<Vec<_>>()
         .join("\n")
         + "\n";

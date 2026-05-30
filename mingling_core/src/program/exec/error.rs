@@ -26,10 +26,10 @@ impl fmt::Display for ProgramExecuteError {
         match self {
             ProgramExecuteError::DispatcherNotFound => write!(f, "No Dispatcher Found"),
             ProgramExecuteError::RendererNotFound(s) => {
-                write!(f, "No Renderer (`{}`) Found", s)
+                write!(f, "No Renderer (`{s}`) Found")
             }
-            ProgramExecuteError::Panic(p) => write!(f, "Panic: {:?}", p),
-            ProgramExecuteError::Other(s) => write!(f, "Other error: {}", s),
+            ProgramExecuteError::Panic(p) => write!(f, "Panic: {p:?}"),
+            ProgramExecuteError::Other(s) => write!(f, "Other error: {s}"),
         }
     }
 }
@@ -74,12 +74,12 @@ impl fmt::Display for ProgramInternalExecuteError {
                 write!(f, "No Dispatcher Found")
             }
             ProgramInternalExecuteError::RendererNotFound(s) => {
-                write!(f, "No Renderer (`{}`) Found", s)
+                write!(f, "No Renderer (`{s}`) Found")
             }
-            ProgramInternalExecuteError::Other(s) => write!(f, "Other error: {}", s),
-            ProgramInternalExecuteError::IO(e) => write!(f, "IO error: {}", e),
+            ProgramInternalExecuteError::Other(s) => write!(f, "Other error: {s}"),
+            ProgramInternalExecuteError::IO(e) => write!(f, "IO error: {e}"),
             ProgramInternalExecuteError::REPLPanic(panic) => {
-                write!(f, "A single REPL execution failed: {}", panic)
+                write!(f, "A single REPL execution failed: {panic}")
             }
         }
     }
@@ -110,11 +110,10 @@ impl From<ProgramInternalExecuteError> for ProgramExecuteError {
                 ProgramExecuteError::RendererNotFound(s)
             }
             ProgramInternalExecuteError::Other(s) => ProgramExecuteError::Other(s),
-            ProgramInternalExecuteError::IO(e) => ProgramExecuteError::Other(format!("{}", e)),
-            ProgramInternalExecuteError::REPLPanic(p) => ProgramExecuteError::Other(format!(
-                "A single REPL execution failed: {}",
-                p
-            )),
+            ProgramInternalExecuteError::IO(e) => ProgramExecuteError::Other(format!("{e}")),
+            ProgramInternalExecuteError::REPLPanic(p) => {
+                ProgramExecuteError::Other(format!("A single REPL execution failed: {p}"))
+            }
         }
     }
 }

@@ -100,11 +100,11 @@ pub mod macros {
     /// Used to create a wrapper type for use with `Chain` and `Renderer`
     pub use mingling_macros::pack;
     #[cfg(feature = "comp")]
-    /// Internal macro for 'gen_program' used to finally generate the completion structure
+    /// Internal macro for '`gen_program`' used to finally generate the completion structure
     pub use mingling_macros::program_comp_gen;
-    /// Internal macro for 'gen_program' used to finally generate the fallback
+    /// Internal macro for '`gen_program`' used to finally generate the fallback
     pub use mingling_macros::program_fallback_gen;
-    /// Internal macro for 'gen_program' used to finally generate the program
+    /// Internal macro for '`gen_program`' used to finally generate the program
     pub use mingling_macros::program_final_gen;
     /// Used to generate program setup
     #[cfg(feature = "extra_macros")]
@@ -115,7 +115,7 @@ pub mod macros {
     pub use mingling_macros::r_println;
     /// Used to register a chain
     pub use mingling_macros::register_chain;
-    /// Used to register a dispatcher for dispatch_tree feature
+    /// Used to register a dispatcher for `dispatch_tree` feature
     pub use mingling_macros::register_dispatcher;
     /// Used to register a help
     pub use mingling_macros::register_help;
@@ -136,7 +136,7 @@ pub mod macros {
     pub use mingling_macros::suggest_enum;
 }
 
-/// derive macro EnumTag
+/// derive macro `EnumTag`
 pub use mingling_macros::EnumTag;
 
 /// derive macro Groupped

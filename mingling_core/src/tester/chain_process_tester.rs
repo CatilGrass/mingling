@@ -47,7 +47,7 @@ where
             }
         }
         ChainProcess::Err(chain_process_error) => {
-            panic!("Chain process error: {}", chain_process_error);
+            panic!("Chain process error: {chain_process_error}");
         }
     }
 }
@@ -87,7 +87,7 @@ where
         ChainProcess::Ok((any, _next)) => any
             .downcast_ref::<Type>()
             .expect("Type mismatch: expected type does not match actual output type"),
-        ChainProcess::Err(chain_process_error) => panic!("{:?}", chain_process_error),
+        ChainProcess::Err(chain_process_error) => panic!("{chain_process_error:?}"),
     }
 }
 
@@ -187,7 +187,7 @@ macro_rules! assert_render_result {
     };
 }
 
-/// Asserts that the result's output type matches the expected member_id.
+/// Asserts that the result's output type matches the expected `member_id`.
 ///
 /// This macro checks that the `ChainProcess` result is `Ok` and that its output type identifier
 /// matches the expected type. It is a convenience wrapper around `assert_next_eq` with the `next`

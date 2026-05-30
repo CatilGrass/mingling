@@ -14,7 +14,11 @@ pub mod error;
 pub struct GeneralRenderer;
 
 impl GeneralRenderer {
-    // Renders data in the specified format to the given RenderResult.
+    /// Renders data in the specified format to the given `RenderResult`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(GeneralRendererSerializeError)` if serialization fails.
     #[allow(unused_variables)]
     pub fn render<T: Serialize + Send>(
         data: &T,
@@ -39,6 +43,10 @@ impl GeneralRenderer {
     }
 
     /// Serializes data to JSON format and writes it to the render result.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(GeneralRendererSerializeError)` if serialization fails.
     #[cfg(feature = "json_serde_fmt")]
     pub fn render_to_json<T: Serialize + Send>(
         data: &T,
@@ -46,11 +54,15 @@ impl GeneralRenderer {
     ) -> Result<(), GeneralRendererSerializeError> {
         let json_string = serde_json::to_string(data)
             .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
-        r.print(json_string.to_string().as_str());
+        r.print(json_string.clone().as_str());
         Ok(())
     }
 
     /// Serializes data to pretty-printed JSON format and writes it to the render result.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(GeneralRendererSerializeError)` if serialization fails.
     #[cfg(feature = "json_serde_fmt")]
     pub fn render_to_json_pretty<T: Serialize + Send>(
         data: &T,
@@ -58,11 +70,15 @@ impl GeneralRenderer {
     ) -> Result<(), GeneralRendererSerializeError> {
         let json_string = serde_json::to_string_pretty(data)
             .map_err(|e| GeneralRendererSerializeError::new(e.to_string()))?;
-        r.print(json_string.to_string().as_str());
+        r.print(json_string.clone().as_str());
         Ok(())
     }
 
     /// Serializes data to RON format and writes it to the render result.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(GeneralRendererSerializeError)` if serialization fails.
     #[cfg(feature = "ron_serde_fmt")]
     pub fn render_to_ron<T: Serialize + Send>(
         data: &T,
@@ -75,6 +91,10 @@ impl GeneralRenderer {
     }
 
     /// Serializes data to pretty-printed RON format and writes it to the render result.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(GeneralRendererSerializeError)` if serialization fails.
     #[cfg(feature = "ron_serde_fmt")]
     pub fn render_to_ron_pretty<T: Serialize + Send>(
         data: &T,
@@ -91,6 +111,10 @@ impl GeneralRenderer {
     }
 
     /// Serializes data to TOML format and writes it to the render result.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(GeneralRendererSerializeError)` if serialization fails.
     #[cfg(feature = "toml_serde_fmt")]
     pub fn render_to_toml<T: Serialize + Send>(
         data: &T,
@@ -103,6 +127,10 @@ impl GeneralRenderer {
     }
 
     /// Serializes data to YAML format and writes it to the render result.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(GeneralRendererSerializeError)` if serialization fails.
     #[cfg(feature = "yaml_serde_fmt")]
     pub fn render_to_yaml<T: Serialize + Send>(
         data: &T,

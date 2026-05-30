@@ -17,6 +17,11 @@ pub use read::*;
 pub mod install;
 pub use install::*;
 
+/// Entry point for the CLI application.
+///
+/// # Panics
+///
+/// Panics on Windows if the virtual terminal processing cannot be enabled.
 pub fn cli_entry() {
     let mut program = ThisProgram::new();
 
@@ -62,7 +67,7 @@ pub fn cli_entry() {
     #[cfg(windows)]
     colored::control::set_virtual_terminal(true).unwrap();
 
-    program.exec();
+    let _ = program.exec();
 }
 
 #[renderer]

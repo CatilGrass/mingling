@@ -13,7 +13,7 @@ pub fn derive_enum_tag(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Implementation of the EnumTag derive macro
+/// Implementation of the `EnumTag` derive macro
 fn derive_enum_tag_impl(input: DeriveInput) -> Result<proc_macro2::TokenStream> {
     let enum_name = &input.ident;
     let generics = &input.generics;
@@ -42,7 +42,7 @@ fn derive_enum_tag_impl(input: DeriveInput) -> Result<proc_macro2::TokenStream> 
 
     for variant in data.variants {
         process_variant(
-            variant,
+            &variant,
             enum_name,
             &mut variant_info,
             &mut match_arms,
@@ -82,7 +82,7 @@ fn derive_enum_tag_impl(input: DeriveInput) -> Result<proc_macro2::TokenStream> 
 
 /// Process a single enum variant
 fn process_variant(
-    variant: Variant,
+    variant: &Variant,
     enum_name: &Ident,
     variant_info: &mut Vec<proc_macro2::TokenStream>,
     match_arms: &mut Vec<proc_macro2::TokenStream>,
@@ -97,10 +97,9 @@ fn process_variant(
         }
         Fields::Named(_) | Fields::Unnamed(_) => {
             return Err(Error::new_spanned(
-                &variant,
+                variant,
                 format!(
-                    "EnumTag cannot be derived for enum variant `{}` with fields. Only unit variants are supported.",
-                    variant_name
+                    "EnumTag cannot be derived for enum variant `{variant_name}` with fields. Only unit variants are supported."
                 ),
             ));
         }
@@ -132,7 +131,7 @@ fn process_variant(
     Ok(())
 }
 
-/// Extract description from #[enum_desc] attribute
+/// Extract description from #[`enum_desc`] attribute
 fn extract_description(attrs: &[Attribute]) -> Result<Option<String>> {
     for attr in attrs {
         if attr.path().is_ident("enum_desc") {
@@ -150,7 +149,7 @@ fn extract_description(attrs: &[Attribute]) -> Result<Option<String>> {
     Ok(None)
 }
 
-/// Extract rename from #[enum_rename] attribute
+/// Extract rename from #[`enum_rename`] attribute
 fn extract_rename(attrs: &[Attribute]) -> Result<Option<String>> {
     for attr in attrs {
         if attr.path().is_ident("enum_rename") {

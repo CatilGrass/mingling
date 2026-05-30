@@ -10,7 +10,7 @@ pub mod group;
 /// Any type output
 ///
 /// Accepts any type that implements `Send + Groupped<G>`
-/// After being passed into AnyOutput, it will be converted to `Box<dyn Any + Send + 'static>`
+/// After being passed into `AnyOutput`, it will be converted to `Box<dyn Any + Send + 'static>`
 ///
 /// Note:
 /// - If an enum value that does not belong to this type is incorrectly specified, it will be **unsafely** unwrapped by the scheduler
@@ -24,7 +24,7 @@ pub struct AnyOutput<G> {
 }
 
 impl<G> AnyOutput<G> {
-    /// Create an AnyOutput from a `Send + Groupped<G> + Serialize` type
+    /// Create an `AnyOutput` from a `Send + Groupped<G> + Serialize` type
     #[cfg(feature = "general_renderer")]
     pub fn new<T>(value: T) -> Self
     where
@@ -37,7 +37,7 @@ impl<G> AnyOutput<G> {
         }
     }
 
-    /// Create an AnyOutput from a `Send + Groupped<G>` type
+    /// Create an `AnyOutput` from a `Send + Groupped<G>` type
     #[cfg(not(feature = "general_renderer"))]
     pub fn new<T>(value: T) -> Self
     where
@@ -50,7 +50,15 @@ impl<G> AnyOutput<G> {
         }
     }
 
-    /// Downcast the AnyOutput to a concrete type T
+    /// Attempt to downcast the `AnyOutput` to a concrete type.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(self)` if the downcast fails.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the inner value is not of type `T`.
     pub fn downcast<T: 'static>(self) -> Result<T, Self> {
         if self.type_id == std::any::TypeId::of::<T>() {
             Ok(*self.inner.downcast::<T>().unwrap())
@@ -75,7 +83,7 @@ impl<G> AnyOutput<G> {
     }
 
     #[cfg(feature = "general_renderer")]
-    /// Restore AnyOutput back to the original Serialize type
+    /// Restore `AnyOutput` back to the original Serialize type
     pub fn restore<T: Serialize + 'static>(self) -> Option<T> {
         if self.type_id == std::any::TypeId::of::<T>() {
             match self.inner.downcast::<T>() {

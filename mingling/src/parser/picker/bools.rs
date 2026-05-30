@@ -37,10 +37,12 @@ impl std::ops::Deref for Yes {
 }
 
 impl Yes {
+    #[must_use]
     pub fn is_yes(&self) -> bool {
         matches!(self, Yes::Yes)
     }
 
+    #[must_use]
     pub fn is_no(&self) -> bool {
         matches!(self, Yes::No)
     }
@@ -92,10 +94,12 @@ impl std::ops::Deref for True {
 }
 
 impl True {
+    #[must_use]
     pub fn is_true(&self) -> bool {
         matches!(self, True::True)
     }
 
+    #[must_use]
     pub fn is_false(&self) -> bool {
         matches!(self, True::False)
     }

@@ -68,7 +68,7 @@ impl Pickable for usize {
         let picked = args.pick_argument(flag)?;
         let size_parse = Size::from_str(picked.as_str());
         match size_parse {
-            Ok(size) => Some(size.bytes() as usize),
+            Ok(size) => usize::try_from(size.bytes()).ok(),
             Err(_) => None,
         }
     }
@@ -84,7 +84,7 @@ impl Pickable for Vec<usize> {
         for picked in picked_vec {
             let size_parse = Size::from_str(picked.as_str());
             match size_parse {
-                Ok(size) => result.push(size.bytes() as usize),
+                Ok(size) => result.push(usize::try_from(size.bytes()).unwrap_or(usize::MAX)),
                 Err(_) => return None,
             }
         }

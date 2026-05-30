@@ -116,6 +116,7 @@ fn handle_greet(args: EntryGreet) -> Next {
     result
 }
 
+/// Renders the greeting with the result name and repeat count.
 #[renderer]
 fn render_name(result: ResultName) {
     let (repeat, name) = result.inner;

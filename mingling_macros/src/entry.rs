@@ -42,21 +42,16 @@ fn parse_strings(input: &syn::parse::ParseBuffer) -> syn::Result<Vec<String>> {
 pub fn entry(input: TokenStream) -> TokenStream {
     let parsed = parse_macro_input!(input as EntryInput);
 
-    let string_exprs = match &parsed {
-        EntryInput::Typed { .. } | EntryInput::Untyped { .. } => {
-            let strings = match &parsed {
-                EntryInput::Typed { strings, .. } => strings,
-                EntryInput::Untyped { strings } => strings,
-            };
-            strings
-                .iter()
-                .map(|s| {
-                    let lit = syn::LitStr::new(s, proc_macro2::Span::call_site());
-                    quote! { #lit.to_string() }
-                })
-                .collect::<Vec<_>>()
-        }
+    let strings = match &parsed {
+        EntryInput::Typed { strings, .. } | EntryInput::Untyped { strings } => strings,
     };
+    let string_exprs = strings
+        .iter()
+        .map(|s| {
+            let lit = syn::LitStr::new(s, proc_macro2::Span::call_site());
+            quote! { #lit.to_string() }
+        })
+        .collect::<Vec<_>>();
 
     let expanded = match parsed {
         EntryInput::Typed { ident, .. } => {

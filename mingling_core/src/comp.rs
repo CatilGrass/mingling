@@ -43,6 +43,7 @@ pub trait CompletionEntry {
 /// format appropriate for the target shell.
 pub struct CompletionHelper;
 impl CompletionHelper {
+    #[must_use]
     pub fn exec_completion<P>(ctx: &ShellContext) -> Suggest
     where
         P: ProgramCollect<Enum = P> + Display + PartialEq + 'static + std::fmt::Debug,
@@ -114,6 +115,7 @@ impl CompletionHelper {
         }
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     pub fn render_suggest<P>(ctx: ShellContext, suggest: Suggest)
     where
         P: ProgramCollect<Enum = P> + Display + 'static,
@@ -130,15 +132,15 @@ impl CompletionHelper {
                 match ctx.shell_flag {
                     ShellFlag::Zsh | ShellFlag::Powershell => {
                         trace!("using zsh/pwsh format");
-                        print_suggest_with_description(suggestions)
+                        print_suggest_with_description(suggestions);
                     }
                     ShellFlag::Fish => {
                         trace!("using fish format");
-                        print_suggest_with_description_fish(suggestions)
+                        print_suggest_with_description_fish(suggestions);
                     }
                     _ => {
                         trace!("using default format");
-                        print_suggest(suggestions)
+                        print_suggest(suggestions);
                     }
                 }
             }
@@ -162,7 +164,7 @@ where
     if ctx.word_index < 1 {
         debug!("word_index < 1, returning file suggestions");
         return file_suggest();
-    };
+    }
 
     // Get the current input path
     let input_end = ctx.word_index.min(ctx.all_words.len());
@@ -178,7 +180,7 @@ where
         .unwrap_or(&[])
         .iter()
         .filter(|s| !s.is_empty())
-        .map(|s| s.as_str())
+        .map(std::string::String::as_str)
         .collect();
     debug!(
         "input_path={:?}, current_word='{}'",
