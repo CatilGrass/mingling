@@ -1,14 +1,39 @@
 # Changelogs
 
+### Release 0.2.0 (Unreleased)
+
+#### Fixes:
+
+None
+
+#### Optimizations:
+
+None
+
+#### Features:
+
+1. **\[core\]** Added the `unpack_chain_process!` macro for ergonomically extracting the inner value from a `ChainProcess` result.
+
+This macro wraps `::mingling::test::unpack_chain_process_result` to downcast a `ChainProcess::Ok` result to the specified type. It panics if the result is `ChainProcess::Err` or if the downcast fails.
+
+```rust
+let result = some_chain_function(args).into();
+let value: MyType = unpack_chain_process!(result, MyType);
+```
+
+#### **BREAKING CHANGES** (API CHANGES):
+
+None
+
 ### Release 0.1.9 (2026-05-29)
 
-### Fixes:
+#### Fixes:
 
 1. **\[macros:dispatcher_clap\]** Fixed the issue where clap error messages (`DisplayHelp` and parse errors from `try_parse_from`) could not output ANSI
    - For error paths, use `e.render().ansi()` instead of `e.to_string()` to prevent ANSI codes from being stripped by `strip_str` in `StyledStr::Display`
    - For help info paths, use with `BasicProgramSetup`, output ANSI-colored help content through the mingling framework's `render_help` flow
 
-### Optimizings:
+#### Optimizations:
 
 1. **\[macros\]** Removed dependency `once_cell`, replaced with `std::sync::OnceLock`
 
@@ -90,9 +115,9 @@ dispatcher!("remote.remove", CMDRemoteRemove => EntryRemoteRemove);
 8. **\[macros\]** The `pack!` macro now supports adding doc comments and attributes (e.g., `#[doc(hidden)]`) to the inner structs:
 
 ```rust
-pack!{ 
+pack!{
     /// Your comment
-    StateGreet = String 
+    StateGreet = String
 }
 
 pack! {
@@ -172,7 +197,7 @@ gen_program!();
 
 None
 
-#### Optimizings:
+#### Optimizations:
 
 1. **\[core\]** The core library no longer depends on `thiserror`
 
@@ -334,7 +359,7 @@ fn your_chain(_prev: Prev) -> Next {
 1. Fixed a build failure on **Windows** caused by `mingling_core/src/program.rs`
 2. **\[picker\]** Fixed an issue where the `Pickable` trait for `Yes` and `True` types could not correctly parse explicit boolean `--value true`
 
-#### Optimizings:
+#### Optimizations:
 
 1. **\[macros\]** Optimized the memory usage of the `gen_program!()` macro: the internal generated enum now uses the smallest possible integer representation (`u8`, `u16`, `u32`, or `u128`) based on the number of packed types, instead of always using `u32`.
 
