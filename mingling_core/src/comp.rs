@@ -45,7 +45,7 @@ pub struct CompletionHelper;
 impl CompletionHelper {
     pub fn exec_completion<P>(ctx: &ShellContext) -> Suggest
     where
-        P: ProgramCollect<Enum = P> + Display + PartialEq + 'static,
+        P: ProgramCollect<Enum = P> + Display + PartialEq + 'static + std::fmt::Debug,
     {
         only_debug! {
             crate::debug::init_env_logger();
@@ -80,20 +80,24 @@ impl CompletionHelper {
         };
         #[cfg(feature = "dispatch_tree")]
         let suggest = if let Ok(any) = P::dispatch_args_trie(&args) {
+            debug!("dispatch_args_trie OK, member_id = {:?}", any.member_id);
             trace!("entry type: {}", any.member_id);
 
             let dispatcher_not_found =
                 <P::ErrorDispatcherNotFound as crate::Groupped<P>>::member_id();
 
             if dispatcher_not_found == any.member_id {
+                debug!("dispatcher_not_found matched");
                 trace!("begin not Ok");
                 None
             } else {
                 let result = P::do_comp(&any, ctx);
+                debug!("do_comp result: {:?}", result);
                 trace!("do_comp result: {:?}", result);
                 Some(result)
             }
         } else {
+            debug!("dispatch_args_trie failed, args = {:?}", args);
             trace!("no dispatcher matched");
             None
         };
@@ -161,19 +165,25 @@ where
     };
 
     // Get the current input path
+    let input_end = ctx.word_index.min(ctx.all_words.len());
+
     debug!(
         "input_path before filter: {:?}",
-        &ctx.all_words.get(1..ctx.word_index).unwrap_or(&[])
+        &ctx.all_words.get(1..input_end).unwrap_or(&[])
     );
 
     let input_path: Vec<&str> = ctx
         .all_words
-        .get(1..ctx.word_index)
+        .get(1..input_end)
         .unwrap_or(&[])
         .iter()
         .filter(|s| !s.is_empty())
         .map(|s| s.as_str())
         .collect();
+    debug!(
+        "input_path={:?}, current_word='{}'",
+        input_path, ctx.current_word
+    );
     debug!("input_path after filter: {:?}", input_path);
 
     debug!(
@@ -186,6 +196,7 @@ where
 
     // Special case: if input_path is empty, return all first-level commands
     if input_path.is_empty() {
+        debug!("input_path empty, returning first-level commands");
         for node in cmd_nodes {
             let node_parts: Vec<&str> = node.split(' ').collect();
             if !node_parts.is_empty() && !suggestions.contains(&node_parts[0].to_string()) {
@@ -193,6 +204,7 @@ where
             }
         }
     } else {
+        debug!("input_path NOT empty, doing next-level suggestions");
         // Get the current word
         let current_word = input_path.last().unwrap();
 
@@ -252,10 +264,19 @@ where
             }
 
             if matches && input_path.len() <= node_parts.len() {
-                if input_path.len() == node_parts.len() && !ctx.current_word.is_empty() {
-                    suggestions.push(node_parts[input_path.len() - 1].to_string());
+                let last_idx = input_path.len() - 1;
+                let is_partial = input_path[last_idx] != node_parts[last_idx];
+
+                if input_path.len() == node_parts.len() {
+                    if !ctx.current_word.is_empty() {
+                        suggestions.push(node_parts[last_idx].to_string());
+                    }
                 } else if input_path.len() < node_parts.len() {
-                    suggestions.push(node_parts[input_path.len()].to_string());
+                    if is_partial {
+                        suggestions.push(node_parts[last_idx].to_string());
+                    } else {
+                        suggestions.push(node_parts[input_path.len()].to_string());
+                    }
                 }
             }
         }

@@ -4,7 +4,9 @@
 
 #### Fixes:
 
-None
+1. **\[core:comp\]** Fixed `default_completion` incorrectly handling multi-level subcommand suggestions when the cursor is after a trailing space. `all_words.get(1..word_index)` could go out of bounds because Zsh's `$CURRENT` (`word_index`) may exceed `all_words.len()` when trailing whitespace is present. The range end is now capped with `.min(all_words.len())`.
+
+2. **\[core:comp\]** Fixed `default_completion` jumping to the next subcommand level on partial input (e.g. typing `b` for `bind` would skip `bind` and directly suggest third-level commands `add`/`ls`/`rm`). Now if the last input word is only a partial match (`starts_with` but not equal), the current-level word is suggested instead of skipping ahead.
 
 #### Optimizations:
 
