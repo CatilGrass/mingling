@@ -1,21 +1,138 @@
-//! Mingling Macros Crate
+//! Proc-macro engine of the Mingling CLI framework.
 //!
-//! This crate provides procedural macros for the Mingling framework.
-//! Macros are implemented in separate modules and re-exported here.
+//! This crate is the **macro layer** of Mingling. Each `#[attribute]` or `!`-callable
+//! macro collects metadata into **compile-time global registries** (`OnceLock<Mutex<BTreeSet>>`).
+//! At the end, [`gen_program!`] reads all registries and generates the final program struct
+//! with all dispatchers, chains, renderers, and completions wired together.
 //!
-//! # Architecture Overview
+//! # How Macros Work Together
 //!
-//! The Mingling macros crate provides the following categories of macros:
+//! The Mingling macro pipeline has three phases:
 //!
-//! - **Command definition**: `dispatcher!`, `dispatcher_clap!`, `node!`, `pack!`
-//! - **Chain processing**: `#[chain]`, `gen_program!`, `route!`, `empty_result!`
-//! - **Rendering**: `#[renderer]`, `r_print!`, `r_println!`
-//! - **Help system**: `#[help]`, `register_help!`
-//! - **Derive macros**: `#[derive(Groupped)]`, `#[derive(EnumTag)]`, `#[derive(GrouppedSerialize)]`
-//! - **Program setup**: `#[program_setup]`
-//! - **Completion (comp feature)**: `#[completion]`, `suggest!`, `suggest_enum!`
-//! - **Internal registration**: `register_type!`, `register_chain!`, `register_renderer!`,
-//!   `program_fallback_gen!`, `program_final_gen!`, `program_comp_gen!`
+//! ```text
+//! ┌──────────────────────────────────────────────────────────────────┐
+//! │  Phase 1: Declaration                                            │
+//! │                                                                  │
+//! │  dispatcher!  pack!     node!       #[derive(Groupped)]          │
+//! │  │            │         │           │                            │
+//! │  V            V         V           V                            │
+//! │  Declares     Wraps a   Builds      Makes a type                 │
+//! │  a command    type in   a command   recognizable                 │
+//! │  entry        a new     path Node   by the                       │
+//! │               type                  framework                    │
+//! ├──────────────────────────────────────────────────────────────────┤
+//! │  Phase 2: Registration (at compile time, in statics)             │
+//! │                                                                  │
+//! │  #[chain]       #[renderer]     #[help]     #[completion]        │
+//! │  │              │               │           │                    │
+//! │  V              V               V           V                    │
+//! │  Registers      Registers       Registers   Registers            │
+//! │  type → chain   type → renderer type → help completion logic     │
+//! ├──────────────────────────────────────────────────────────────────┤
+//! │  Phase 3: Code Generation                                        │
+//! │                                                                  │
+//! │  gen_program!()                                                  │
+//! │  │                                                               │
+//! │  V                                                               │
+//! │  Reads all registries → generates ThisProgram with:              │
+//! │    • ProgramCollect impl (dispatch/render/chain dispatch tree)   │
+//! │    • Fallback types (ErrorDispatcherNotFound, etc.)              │
+//! │    • Completion logic (if `comp` feature enabled)                │
+//! └──────────────────────────────────────────────────────────────────┘
+//! ```
+//!
+//! # Macro Categories
+//!
+//! ## Phase 1: Command & Type Declaration
+//!
+//! | Macro | What it does |
+//! |-------|-------------|
+//! | [`dispatcher!`] | Declares a command entry point and its argument type |
+//! | [`dispatcher_clap!`] | Like `dispatcher!` but powered by `clap::Parser` |
+//! | [`node!`] | Builds a [`Node`] from a dot-separated path string |
+//! | [`pack!`] | Creates a newtype wrapper around an inner type for use in Chain/Renderer |
+//! | [`entry!`] | Creates a packed entry from string literals |
+//! | [`#[derive(Groupped)]`](derive@Groupped) | Makes a type recognizable by the framework's type registry |
+//! | [`#[derive(EnumTag)]`](derive@EnumTag) | Adds enum variant metadata (name, description) |
+//!
+//! ## Phase 2: Processing & Rendering Registration
+//!
+//! | Macro | What it does |
+//! |-------|-------------|
+//! | [`#[chain]`](attr:chain) | Transforms a function into a chain processing step |
+//! | [`#[renderer]`](attr:renderer) | Transforms a function into a renderer for a type |
+//! | [`#[help]`](attr:help) | Defines help output for a command entry type |
+//! | [`route!`] | Routes execution depending on a condition |
+//! | [`empty_result!`] | Returns an empty result for early termination |
+//! | [`r_print!`] / [`r_println!`] | Print to the `RenderResult` buffer inside a renderer |
+//! | [`#[completion]`](attr:completion) | Registers a shell completion handler |
+//!
+//! ## Phase 3: Program Generation
+//!
+//! | Macro | What it does |
+//! |-------|-------------|
+//! | [`gen_program!`] | **Final step**: reads all registries and generates the full program |
+//! | [`suggest!`] | Generates suggestion logic for a dispatcher |
+//! | [`suggest_enum!`] | Generates suggestion logic for an enum dispatcher |
+//!
+//! ## Internal (used by the macros above)
+//!
+//! | Macro | What it does |
+//! |-------|-------------|
+//! | [`register_type!`] | Registers a type in the packed-type registry |
+//! | [`register_chain!`] | Registers a chain mapping in the chain registry |
+//! | [`register_renderer!`] | Registers a renderer mapping in the renderer registry |
+//! | [`register_dispatcher!`] | Registers a dispatcher for the `dispatch_tree` feature |
+//! | [`register_help!`] | Registers a help request handler |
+//! | `program_fallback_gen!` | Generates fallback error types |
+//! | `program_final_gen!` | Generates the `ProgramCollect` impl and `ThisProgram` struct |
+//! | `program_comp_gen!` | Generates completion logic |
+//! | [`#[program_setup]`](attr:program_setup) | Declares a custom program setup step |
+//!
+//! # Feature Gates
+//!
+//! Some macros are only available when certain Cargo features are enabled:
+//!
+//! | Feature | Macros enabled |
+//! |---------|---------------|
+//! | `clap` | [`dispatcher_clap!`] |
+//! | `comp` | [`#[completion]`](attr:completion), [`suggest!`], [`suggest_enum!`] |
+//! | `extra_macros` | [`entry!`], [`empty_result!`], [`route!`], [`#[program_setup]`](attr:program_setup) |
+//! | `dispatch_tree` | `register_dispatcher!` (enables trie-based command dispatch) |
+//! | `general_renderer` | Enables JSON/YAML/TOML/RON serialization renderers |
+//! | `async` | Enables async `#[chain]` functions |
+//! | `repl` | Enables REPL execution loop |
+//!
+//! # The Compile-Time Registry System
+//!
+//! Macros in this crate do **not** generate all code immediately. Instead, they
+//! store entries into `OnceLock<Mutex<BTreeSet<String>>>` statics. These string
+//! entries contain the **token-stream representation** of match arms, type mappings,
+//! and struct definitions.
+//!
+//! When [`gen_program!`] is called, it reads all registries, concatenates their
+//! entries, and emits the complete program:
+//!
+//! ```rust,ignore
+//! // Example of what gen_program! generates (simplified):
+//! impl ProgramCollect for ThisProgram {
+//!     fn build_dispatcher_not_found(args: Vec<String>) -> AnyOutput {
+//!         AnyOutput::new(ErrorDispatcherNotFound::new(args))
+//!     }
+//!     fn has_chain(any: &AnyOutput) -> bool {
+//!         match any.member_id() {
+//!             MyType => true,  // ← collected from #[chain] macros
+//!             _ => false,
+//!         }
+//!     }
+//!     fn has_renderer(any: &AnyOutput) -> bool {
+//!         match any.member_id() {
+//!             MyType => true,  // ← collected from #[renderer] macros
+//!             _ => false,
+//!         }
+//!     }
+//! }
+//! ```
 
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
@@ -244,9 +361,12 @@ pub fn route(input: TokenStream) -> TokenStream {
 /// Creates an empty result value wrapped in `ChainProcess` for early return
 /// from a chain function.
 ///
-/// This macro is a shorthand for constructing an `ResultEmpty` and converting
-/// it into a `ChainProcess`, which signals to the pipeline that there is
-/// no meaningful output to continue processing.
+/// This macro is a shorthand for constructing a [`ResultEmpty`] and converting
+/// it into a [`ChainProcess`], which signals to the pipeline that there is
+/// no meaningful output to continue processing and the chain should terminate.
+///
+/// This is useful in `#[chain]` functions where a condition determines that
+/// no further processing is needed (e.g., validation failures or early exits).
 ///
 /// # Syntax
 ///
@@ -262,7 +382,7 @@ pub fn route(input: TokenStream) -> TokenStream {
 /// #[chain]
 /// fn maybe_skip(prev: SomeEntry) -> Next {
 ///     if should_skip() {
-///         return empty_result!();
+///         return empty_result!();  // Terminate chain gracefully
 ///     }
 ///     // ... continue processing
 ///     NextEntry::new(result).to_chain()
@@ -276,8 +396,16 @@ pub fn route(input: TokenStream) -> TokenStream {
 /// crate::ResultEmpty::new(()).to_chain()
 /// ```
 ///
-/// This works because `ResultEmpty` is automatically generated by `gen_program!`
-/// and implements the necessary trait conversions into `ChainProcess`.
+/// This works because [`ResultEmpty`] is automatically generated by [`gen_program!`]
+/// and implements the necessary trait conversions into [`ChainProcess`].
+///
+/// # See also
+///
+/// - [`ResultEmpty`] — The type that represents an empty result.
+/// - [`route!`] — For early-return from `Result` expressions.
+///
+/// [`ResultEmpty`]: https://docs.rs/mingling/latest/mingling/type.ResultEmpty.html
+/// [`ChainProcess`]: https://docs.rs/mingling/latest/mingling/enum.ChainProcess.html
 #[cfg(feature = "extra_macros")]
 #[proc_macro]
 pub fn empty_result(_input: TokenStream) -> TokenStream {
@@ -291,9 +419,14 @@ pub fn empty_result(_input: TokenStream) -> TokenStream {
 ///
 /// This is the primary way to define command-line subcommands in Mingling.
 /// It generates a dispatcher struct that, when matched against user input,
-/// converts the arguments into a `ChainProcess` via the specified entry type.
+/// converts the arguments into a [`ChainProcess`] via the specified entry type.
+///
+/// The generated dispatcher implements [`Dispatcher<Program>`], which the
+/// framework uses to route user input to the correct chain processor.
 ///
 /// # Syntax
+///
+/// ## Full syntax (recommended)
 ///
 /// ```rust,ignore
 /// // Default program name (uses `ThisProgram`):
@@ -306,68 +439,85 @@ pub fn empty_result(_input: TokenStream) -> TokenStream {
 /// ## Abbreviated syntax (requires `extra_macros` feature)
 ///
 /// When the `extra_macros` feature is enabled, the `CommandStruct => EntryStruct`
-/// portion can be omitted. The struct names are auto-derived from the command path
+/// portion can be omitted. Struct names are auto-derived from the command path
 /// using `PascalCase` conversion:
 ///
 /// ```rust,ignore
-/// // Auto-derives: "remote.add" → CMDRemoteAdd ⇒ EntryRemoteAdd
+/// // "remote.add" → CMDRemoteAdd ⇒ EntryRemoteAdd
 /// dispatcher!("remote.add");
-///
-/// // Auto-derives: "cmd.sub.leaf" → CMDCmdSubLeaf ⇒ EntryCmdSubLeaf
-/// dispatcher!("cmd.sub.leaf");
 /// ```
 ///
-/// The generated code is equivalent to writing:
-/// ```rust,ignore
-/// dispatcher!("remote.add", CMDRemoteAdd => EntryRemoteAdd);
-/// ```
+/// ⚠️ **Note**: The abbreviated form generates structs with internal names.
+/// If you need to reference the dispatcher (e.g., `program.with_dispatcher(Dispatcher)`),
+/// use the full syntax instead.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```rust,ignore
 /// use mingling::macros::dispatcher;
 ///
-/// // "hello" subcommand → HelloCommand → HelloEntry
+/// // Single-level command: "hello"
 /// dispatcher!("hello", HelloCommand => HelloEntry);
 ///
-/// // Nested: "remote control" → RemoteControlCommand → RemoteControlEntry
+/// // Nested command: "remote.control" creates a two-level path
 /// dispatcher!("remote.control", RemoteControlCommand => RemoteControlEntry);
 ///
 /// // With explicit program:
 /// dispatcher!(MyApp, "status", StatusCommand => StatusEntry);
 ///
-/// // Abbreviated form (requires extra_macros):
-/// // dispatcher!("remote.add");
+/// // Abbreviated form (extra_macros required):
+/// // dispatcher!("remote.add");  // → CMDRemoteAdd, EntryRemoteAdd
 /// ```
 ///
-/// The generated `HelloCommand` implements `Dispatcher<ThisProgram>`:
-/// - `node()` returns the `Node` hierarchy for "hello"
-/// - `begin(args)` wraps `args` into `HelloEntry` and routes to chain
-/// - `clone_dispatcher()` returns a boxed clone
+/// # How it works
 ///
-/// The `HelloEntry` struct is a wrapper around `Vec<String>` created via
-/// an implicit `pack!` call with the program name.
+/// The macro generates:
 ///
-/// When the `comp` feature is enabled, the entry type also implements
-/// `CompletionEntry` for providing shell completion suggestions.
+/// 1. **Entry struct** — A `pack!`-style wrapper around `Vec<String>` (the raw args).
+///    Registered in the program enum via `register_type!`.
+/// 2. **Dispatcher struct** — A zero-sized struct implementing [`Dispatcher<Program>`]:
+///    - `node()` returns the [`Node`] hierarchy for the command path.
+///    - `begin(args)` wraps `args` into the entry type and routes to chain.
+///    - `clone_dispatcher()` returns a boxed clone.
+/// 3. **Registration** — If the `dispatch_tree` feature is enabled, also calls
+///    `register_dispatcher!` for compile-time trie construction.
+///
+/// With the `comp` feature, the entry type also implements `CompletionEntry`
+/// for providing shell completion suggestions.
+///
+/// # See also
+///
+/// - [`dispatcher_clap!`] — For clap-powered argument parsing.
+/// - [`node!`] — For building custom [`Node`] paths.
+/// - [`#[chain]`](attr:chain) — For processing the dispatched entry.
+///
+/// [`ChainProcess`]: https://docs.rs/mingling/latest/mingling/enum.ChainProcess.html
+/// [`Dispatcher<Program>`]: https://docs.rs/mingling/latest/mingling/trait.Dispatcher.html
+/// [`Node`]: https://docs.rs/mingling/latest/mingling/struct.Node.html
 #[proc_macro]
 pub fn dispatcher(input: TokenStream) -> TokenStream {
     dispatcher::dispatcher(input)
 }
 
-/// Prints formatted text to the current `RenderResult` buffer within a
-/// `#[renderer]`(macro.renderer.html) function.
+/// Prints formatted text to the current [`RenderResult`] buffer within a
+/// `#[renderer]` function.
 ///
-/// This macro requires a mutable reference to a `RenderResult` named `__renderer_inner_result`
-/// to be in scope, which is automatically provided inside `#[renderer]`
-/// functions.
+/// Unlike `print!`, this macro writes to the in-memory `RenderResult` buffer
+/// rather than directly to stdout. The buffered output is flushed automatically
+/// when the renderer returns, allowing the framework to control output timing
+/// and capture (e.g., for testing or general rendering to JSON/YAML).
+///
+/// This macro requires a mutable reference to a [`RenderResult`] named
+/// `__renderer_inner_result` to be in scope, which is automatically provided
+/// inside `#[renderer]` and `#[help]` functions.
 ///
 /// # Syntax
 ///
-/// Same as `format!` / `print!`:
+/// Same as [`format!`] / [`print!`]:
 ///
 /// ```rust,ignore
 /// r_print!("Hello, {}!", name);
+/// r_print!("Value: {value}");
 /// ```
 ///
 /// # Example
@@ -383,25 +533,37 @@ pub fn dispatcher(input: TokenStream) -> TokenStream {
 ///
 /// # Difference from `r_println!`
 ///
-/// `r_print!` does **not** append a newline. Use `r_println!` for newline-terminated output.
+/// `r_print!` does **not** append a newline. Use [`r_println!`] for newline-terminated output.
+///
+/// # Panics
+///
+/// Does not panic under normal circumstances. The underlying `RenderResult`
+/// buffer operations are infallible.
+///
+/// [`RenderResult`]: https://docs.rs/mingling/latest/mingling/struct.RenderResult.html
 #[proc_macro]
 pub fn r_print(input: TokenStream) -> TokenStream {
     render::r_print(input)
 }
 
-/// Prints formatted text followed by a newline to the current `RenderResult`
-/// buffer within a `#[renderer]`(macro.renderer.html) function.
+/// Prints formatted text followed by a newline to the current [`RenderResult`] buffer
+/// within a `#[renderer]` or `#[help]` function.
 ///
-/// This macro requires a mutable reference to a `RenderResult` named `__renderer_inner_result`
-/// to be in scope, which is automatically provided inside `#[renderer]`
-/// functions.
+/// Unlike `println!`, this macro writes to the in-memory `RenderResult` buffer
+/// rather than directly to stdout. The buffered output is flushed automatically
+/// when the renderer returns.
+///
+/// This macro requires a mutable reference to a [`RenderResult`] named
+/// `__renderer_inner_result` to be in scope, which is automatically provided
+/// inside `#[renderer]` and `#[help]` functions.
 ///
 /// # Syntax
 ///
-/// Same as `println!`:
+/// Same as [`println!`]:
 ///
 /// ```rust,ignore
 /// r_println!("Hello, {}!", name);
+/// r_println!("Value: {value}");
 /// r_println!();  // just a newline
 /// ```
 ///
@@ -415,6 +577,12 @@ pub fn r_print(input: TokenStream) -> TokenStream {
 ///     r_println!("Hello, {}!", *prev);
 /// }
 /// ```
+///
+/// # See also
+///
+/// - [`r_print!`] for output without a trailing newline.
+///
+/// [`RenderResult`]: https://docs.rs/mingling/latest/mingling/struct.RenderResult.html
 #[proc_macro]
 pub fn r_println(input: TokenStream) -> TokenStream {
     render::r_println(input)
@@ -808,20 +976,40 @@ pub fn dispatcher_clap(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 /// Creates a packed entry value from a list of string literals.
 ///
+/// This is a convenience macro for constructing entry wrapper types (created
+/// via [`pack!`] or [`dispatcher!`]) with test data, typically used in unit tests
+/// or quick prototypes.
+///
 /// # Syntax
 ///
 /// Two forms:
 ///
 /// ```rust,ignore
-/// // With explicit type — expands to MyEntry::new(vec!["a".to_string(), ...])
+/// // Named form — wraps into a specific pack type:
 /// entry!(MyEntry, ["a", "b", "c"])
+/// // Expands to: MyEntry::new(vec!["a".to_string(), "b".to_string(), "c".to_string()])
 ///
-/// // Without type — use bracket syntax, expands to vec!["a".to_string(), ...].into()
+/// // Bracket form — returns Vec<String>.into() for type inference:
 /// entry!["a", "b", "c"]
+/// // Expands to: vec!["a".to_string(), ...].into()
 /// ```
 ///
-/// This is a convenience macro for constructing entry wrapper types (created
-/// via `pack!` or `dispatcher!`) with test data.
+/// # Example
+///
+/// ```rust,ignore
+/// use mingling::macros::entry;
+///
+/// // Named form (with a specific pack type):
+/// let args = entry!(MyEntry, ["--name", "Alice", "--count", "5"]);
+///
+/// // Bracket form (type inference):
+/// let args: Vec<String> = entry!["hello", "world"];
+/// ```
+///
+/// # See also
+///
+/// - [`pack!`] — For creating the wrapper types used with `entry!`.
+/// - [`dispatcher!`] — Which implicitly creates entry types via `pack!`.
 #[cfg(feature = "extra_macros")]
 #[proc_macro]
 pub fn entry(input: TokenStream) -> TokenStream {
@@ -848,17 +1036,28 @@ pub fn register_help(input: TokenStream) -> TokenStream {
 
 /// Registers a dispatcher at compile time for the `dispatch_tree` feature.
 ///
-/// This macro is called internally by `dispatcher!`(macro.dispatcher.html) when
-/// the `dispatch_tree` feature is enabled. It stores the node name into the global
+/// This macro is called internally by [`dispatcher!`] when the `dispatch_tree`
+/// feature is enabled. Each call stores the node name into the global
 /// `COMPILE_TIME_DISPATCHERS` registry and generates a static variable for the
-/// dispatcher instance, which is later used by `gen_program!` to generate the
-/// dispatch tree routing logic.
+/// dispatcher instance. This data is later consumed by [`gen_program!`] to
+/// generate a character-level **Trie** for efficient command dispatch.
+///
+/// The trie dispatch works by grouping commands by their character prefix,
+/// enabling O(n) lookup (where n is input length) instead of linear iteration
+/// over all registered commands.
 ///
 /// # Syntax
 ///
 /// ```rust,ignore
 /// register_dispatcher!("node.name", DispatcherType, EntryName);
 /// ```
+///
+/// This macro should not be called directly by user code.
+///
+/// # See also
+///
+/// - [`dispatcher!`] — The primary way to declare dispatchers (calls this internally).
+/// - `dispatch_tree_gen` module — The trie generation logic.
 #[proc_macro]
 pub fn register_dispatcher(input: TokenStream) -> TokenStream {
     dispatcher::register_dispatcher(input)
@@ -866,12 +1065,20 @@ pub fn register_dispatcher(input: TokenStream) -> TokenStream {
 
 /// Declares a help rendering function for an entry type.
 ///
-/// The `#[help]` attribute converts a function into a help provider by:
+/// The `#[help]` attribute converts a function into a help provider. Help
+/// functions are invoked when the user passes `--help` / `-h` for a command
+/// and `BasicProgramSetup` is registered on the program.
+///
+/// When `program.user_context.help` is `true`, the command will **skip** the
+/// normal `#[chain]` and `#[renderer`] pipeline and instead route directly
+/// to the registered `#[help]` function for that entry type.
+///
+/// The macro works by:
 /// 1. Generating a hidden struct implementing the `HelpRequest` trait.
 /// 2. Registering the help mapping in the global `HELP_REQUESTS` registry.
 /// 3. Keeping the original function for direct calls (with a dummy `RenderResult`).
 ///
-/// Inside a `#[help]` function, you can use `r_print!` and `r_println!`
+/// Inside a `#[help]` function, you can use [`r_print!`] and [`r_println!`]
 /// to write help text to the `RenderResult` buffer.
 ///
 /// # Syntax
@@ -888,21 +1095,38 @@ pub fn register_dispatcher(input: TokenStream) -> TokenStream {
 ///
 /// ```rust,ignore
 /// use mingling::macros::{help, r_println, pack, gen_program};
+/// use mingling::{prelude::*, setup::BasicProgramSetup};
 ///
 /// pack!(MyEntry = Vec<String>);
 ///
 /// #[help]
-/// fn help_my_entry(_prev: MyEntry) {
+/// fn help_my_entry(prev: MyEntry) {
 ///     r_println!("Usage: myapp greet [name]");
 ///     r_println!("Greets the user.");
+/// }
+///
+/// fn main() {
+///     let mut program = ThisProgram::new();
+///     program.with_setup(BasicProgramSetup);  // Required for --help
+///     program.with_dispatcher(CMDMyEntry);
+///     program.exec_and_exit();
 /// }
 /// ```
 ///
 /// # Requirements
 ///
 /// - The function must have exactly one parameter (the entry type to provide help for).
+/// - The parameter type must be a single-segment type path (e.g., `MyEntry`, not `other::MyEntry`).
 /// - The function must return `()`.
 /// - The function cannot be async.
+///
+/// # See also
+///
+/// - [`BasicProgramSetup`] — The setup that enables `--help` and `-h` flag processing.
+/// - [`r_print!`] / [`r_println!`] — For outputting help text.
+/// - [`#[chain]`](attr:chain) — For processing the dispatched entry after help.
+///
+/// [`BasicProgramSetup`]: https://docs.rs/mingling/latest/mingling/setup/struct.BasicProgramSetup.html
 #[proc_macro_attribute]
 pub fn help(_attr: TokenStream, item: TokenStream) -> TokenStream {
     help::help_attr(item)
