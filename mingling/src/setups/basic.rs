@@ -1,4 +1,4 @@
-use mingling_core::{Program, ProgramCollect, setup::ProgramSetup};
+use mingling_core::{Flag, Program, ProgramCollect, setup::ProgramSetup};
 
 /// Performs basic program initialization:
 ///
@@ -12,17 +12,108 @@ where
     C: ProgramCollect<Enum = C>,
 {
     fn setup(self, program: &mut Program<C>) {
-        program.global_flag(["--quiet", "-q"], |p| {
+        program.with_setup(HelpFlagSetup::new(["-h", "--help"]));
+        program.with_setup(QuietFlagSetup::new(["-q", "--quiet"]));
+        program.with_setup(ConfirmFlagSetup::new(["-C", "--confirm"]));
+    }
+}
+
+/// Provides setup for parsing the user help flag
+///
+/// The default value is `--help / -h`
+pub struct HelpFlagSetup {
+    flag: Flag,
+}
+
+impl HelpFlagSetup {
+    /// Creates a new `HelpFlagSetup` with the given flag aliases.
+    pub fn new(flag: impl Into<Flag>) -> Self {
+        Self { flag: flag.into() }
+    }
+}
+
+impl<C> ProgramSetup<C> for HelpFlagSetup
+where
+    C: ProgramCollect<Enum = C>,
+{
+    fn setup(self, program: &mut Program<C>) {
+        program.global_flag(self.flag.clone(), |p| {
+            p.user_context.help = true;
+        });
+    }
+}
+
+impl Default for HelpFlagSetup {
+    fn default() -> Self {
+        Self {
+            flag: ["-h", "--help"].into(),
+        }
+    }
+}
+
+/// Provides setup for parsing the quiet flag
+///
+/// The default value is `--quiet / -q`
+pub struct QuietFlagSetup {
+    flag: Flag,
+}
+
+impl QuietFlagSetup {
+    /// Creates a new `QuietFlagSetup` with the given flag aliases.
+    pub fn new(flag: impl Into<Flag>) -> Self {
+        Self { flag: flag.into() }
+    }
+}
+
+impl<C> ProgramSetup<C> for QuietFlagSetup
+where
+    C: ProgramCollect<Enum = C>,
+{
+    fn setup(self, program: &mut Program<C>) {
+        program.global_flag(self.flag.clone(), |p| {
             p.stdout_setting.render_output = false;
             p.stdout_setting.error_output = false;
         });
+    }
+}
 
-        program.global_flag(["--help", "-h"], |p| {
-            p.user_context.help = true;
-        });
+impl Default for QuietFlagSetup {
+    fn default() -> Self {
+        Self {
+            flag: ["-q", "--quiet"].into(),
+        }
+    }
+}
 
-        program.global_flag(["--confirm", "-C"], |p| {
+/// Provides setup for parsing the confirm flag
+///
+/// The default value is `--confirm / -C`
+pub struct ConfirmFlagSetup {
+    flag: Flag,
+}
+
+impl ConfirmFlagSetup {
+    /// Creates a new `ConfirmFlagSetup` with the given flag aliases.
+    pub fn new(flag: impl Into<Flag>) -> Self {
+        Self { flag: flag.into() }
+    }
+}
+
+impl<C> ProgramSetup<C> for ConfirmFlagSetup
+where
+    C: ProgramCollect<Enum = C>,
+{
+    fn setup(self, program: &mut Program<C>) {
+        program.global_flag(self.flag.clone(), |p| {
             p.user_context.confirm = true;
         });
+    }
+}
+
+impl Default for ConfirmFlagSetup {
+    fn default() -> Self {
+        Self {
+            flag: ["-C", "--confirm"].into(),
+        }
     }
 }
