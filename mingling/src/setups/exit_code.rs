@@ -27,7 +27,7 @@ impl<C> ProgramSetup<C> for ExitCodeSetup<C>
 where
     C: ProgramCollect<Enum = C> + 'static,
 {
-    fn setup(&mut self, program: &mut crate::Program<C>) {
+    fn setup(self, program: &mut crate::Program<C>) {
         // Insert resource
         program.with_resource(ExitCode { exit_code: 0 });
 

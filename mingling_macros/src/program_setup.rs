@@ -105,7 +105,7 @@ pub fn setup_attr(attr: TokenStream, item: TokenStream) -> TokenStream {
             #vis struct #struct_name;
 
             impl ::mingling::setup::ProgramSetup<#program_name> for #struct_name {
-                fn setup(&mut self, program: &mut ::mingling::Program<#program_name>) {
+                fn setup(self, program: &mut ::mingling::Program<#program_name>) {
                     // Call the original function with the actual Program type
                     #fn_name(program);
                 }

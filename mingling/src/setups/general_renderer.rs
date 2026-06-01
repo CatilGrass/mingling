@@ -9,7 +9,7 @@ impl<C> ProgramSetup<C> for GeneralRendererSimpleSetup
 where
     C: ProgramCollect<Enum = C>,
 {
-    fn setup(&mut self, program: &mut Program<C>) {
+    fn setup(self, program: &mut Program<C>) {
         program.global_argument("--renderer", |p, renderer| {
             p.general_renderer_name = renderer.into();
         });
@@ -32,7 +32,7 @@ where
     C: ProgramCollect<Enum = C>,
 {
     #[allow(unused_variables)]
-    fn setup(&mut self, program: &mut Program<C>) {
+    fn setup(self, program: &mut Program<C>) {
         #[cfg(feature = "json_serde_fmt")]
         program.global_flag("--json", |p| {
             p.general_renderer_name = crate::GeneralRendererSetting::Json;

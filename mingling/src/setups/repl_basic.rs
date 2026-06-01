@@ -8,7 +8,7 @@ impl<C> ProgramSetup<C> for BasicREPLReadlineSetup
 where
     C: ProgramCollect<Enum = C>,
 {
-    fn setup(&mut self, program: &mut Program<C>) {
+    fn setup(self, program: &mut Program<C>) {
         program.with_hook(ProgramHook::empty().on_repl_readline(|| readline().ok()));
     }
 }
@@ -39,7 +39,7 @@ impl<C> ProgramSetup<C> for BasicREPLPromptSetup
 where
     C: ProgramCollect<Enum = C>,
 {
-    fn setup(&mut self, program: &mut Program<C>) {
+    fn setup(self, program: &mut Program<C>) {
         match self {
             BasicREPLPromptSetup::Prompt(prompt) => {
                 static PROMPT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
@@ -52,7 +52,7 @@ where
             }
             BasicREPLPromptSetup::Func(f) => {
                 static FUNC: std::sync::OnceLock<fn() -> String> = std::sync::OnceLock::new();
-                let _ = FUNC.set(*f);
+                let _ = FUNC.set(f);
                 fn print_func_prompt() {
                     print!("{}", FUNC.get().unwrap()());
                     let _ = std::io::stdout().flush();
@@ -69,7 +69,7 @@ impl<C> ProgramSetup<C> for BasicREPLOutputSetup
 where
     C: ProgramCollect<Enum = C>,
 {
-    fn setup(&mut self, program: &mut Program<C>) {
+    fn setup(self, program: &mut Program<C>) {
         program.with_hook(ProgramHook::empty().on_repl_receive_result(|r| {
             if !r.is_empty() {
                 println!("{}", r.trim())

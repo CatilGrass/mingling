@@ -11,7 +11,7 @@ impl<C> ProgramSetup<C> for BasicProgramSetup
 where
     C: ProgramCollect<Enum = C>,
 {
-    fn setup(&mut self, program: &mut Program<C>) {
+    fn setup(self, program: &mut Program<C>) {
         program.global_flag(["--quiet", "-q"], |p| {
             p.stdout_setting.render_output = false;
             p.stdout_setting.error_output = false;

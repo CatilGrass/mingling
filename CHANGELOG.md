@@ -25,7 +25,7 @@ let value: MyType = unpack_chain_process!(result, MyType);
 
 #### **BREAKING CHANGES** (API CHANGES):
 
-None
+1. **\[core\]** Changed the signature of `ProgramSetup::setup` from `fn setup(&mut self, program: &mut Program<C>) -> S` to `fn setup(self, program: &mut Program<C>)`, consuming `self` instead of taking a mutable reference. Correspondingly, `Program::with_setup` now accepts `S` by value (`&mut self, setup: S`) instead of by mutable reference (`&mut self, setup: &mut S`).
 
 ### Release 0.1.9 (2026-05-29)
 
