@@ -1,1 +1,1 @@
-cargo doc --manifest-path ./mingling/Cargo.toml --no-deps --features builds,general_renderer,repl,comp,parser --open
+cargo doc --workspace --no-deps --features builds,general_renderer,repl,comp,parser,clap --open

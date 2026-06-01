@@ -48,8 +48,8 @@
 //! | Macro | What it does |
 //! |-------|-------------|
 //! | [`dispatcher!`] | Declares a command entry point and its argument type |
-//! | [`dispatcher_clap!`] | Like `dispatcher!` but powered by `clap::Parser` |
-//! | [`node!`] | Builds a [`Node`] from a dot-separated path string |
+//! | [`macro@dispatcher_clap`] | Like `dispatcher!` but powered by `clap::Parser` |
+//! | [`node!`] | Builds a [`Node`](https://docs.rs/mingling/latest/mingling/struct.Node.html) from a dot-separated path string |
 //! | [`pack!`] | Creates a newtype wrapper around an inner type for use in Chain/Renderer |
 //! | [`entry!`] | Creates a packed entry from string literals |
 //! | [`#[derive(Groupped)]`](derive@Groupped) | Makes a type recognizable by the framework's type registry |
@@ -59,13 +59,13 @@
 //!
 //! | Macro | What it does |
 //! |-------|-------------|
-//! | [`#[chain]`](attr:chain) | Transforms a function into a chain processing step |
-//! | [`#[renderer]`](attr:renderer) | Transforms a function into a renderer for a type |
-//! | [`#[help]`](attr:help) | Defines help output for a command entry type |
+//! | [`#[chain]`](attr.chain.html) | Transforms a function into a chain processing step |
+//! | [`#[renderer]`](attr.renderer.html) | Transforms a function into a renderer for a type |
+//! | [`#[help]`](attr.help.html) | Defines help output for a command entry type |
 //! | [`route!`] | Routes execution depending on a condition |
 //! | [`empty_result!`] | Returns an empty result for early termination |
 //! | [`r_print!`] / [`r_println!`] | Print to the `RenderResult` buffer inside a renderer |
-//! | [`#[completion]`](attr:completion) | Registers a shell completion handler |
+//! | [`#[completion]`](attr.completion.html) | Registers a shell completion handler |
 //!
 //! ## Phase 3: Program Generation
 //!
@@ -87,7 +87,7 @@
 //! | `program_fallback_gen!` | Generates fallback error types |
 //! | `program_final_gen!` | Generates the `ProgramCollect` impl and `ThisProgram` struct |
 //! | `program_comp_gen!` | Generates completion logic |
-//! | [`#[program_setup]`](attr:program_setup) | Declares a custom program setup step |
+//! | [`#[program_setup]`](attr.program_setup.html) | Declares a custom program setup step |
 //!
 //! # Feature Gates
 //!
@@ -95,9 +95,9 @@
 //!
 //! | Feature | Macros enabled |
 //! |---------|---------------|
-//! | `clap` | [`dispatcher_clap!`] |
-//! | `comp` | [`#[completion]`](attr:completion), [`suggest!`], [`suggest_enum!`] |
-//! | `extra_macros` | [`entry!`], [`empty_result!`], [`route!`], [`#[program_setup]`](attr:program_setup) |
+//! | `clap` | [`macro@dispatcher_clap`] |
+//! | `comp` | [`#[completion]`](attr.completion.html), [`suggest!`], [`suggest_enum!`] |
+//! | `extra_macros` | [`entry!`], [`empty_result!`], [`route!`], [`#[program_setup]`](attr.program_setup.html) |
 //! | `dispatch_tree` | `register_dispatcher!` (enables trie-based command dispatch) |
 //! | `general_renderer` | Enables JSON/YAML/TOML/RON serialization renderers |
 //! | `async` | Enables async `#[chain]` functions |
@@ -487,9 +487,9 @@ pub fn empty_result(_input: TokenStream) -> TokenStream {
 ///
 /// # See also
 ///
-/// - [`dispatcher_clap!`] — For clap-powered argument parsing.
+/// - [`macro@dispatcher_clap`] — For clap-powered argument parsing.
 /// - [`node!`] — For building custom [`Node`] paths.
-/// - [`#[chain]`](attr:chain) — For processing the dispatched entry.
+/// - [`#[chain]`](attr.chain.html) — For processing the dispatched entry.
 ///
 /// [`ChainProcess`]: https://docs.rs/mingling/latest/mingling/enum.ChainProcess.html
 /// [`Dispatcher<Program>`]: https://docs.rs/mingling/latest/mingling/trait.Dispatcher.html
@@ -1124,7 +1124,7 @@ pub fn register_dispatcher(input: TokenStream) -> TokenStream {
 ///
 /// - [`BasicProgramSetup`] — The setup that enables `--help` and `-h` flag processing.
 /// - [`r_print!`] / [`r_println!`] — For outputting help text.
-/// - [`#[chain]`](attr:chain) — For processing the dispatched entry after help.
+/// - [`#[chain]`](attr.chain.html) — For processing the dispatched entry after help.
 ///
 /// [`BasicProgramSetup`]: https://docs.rs/mingling/latest/mingling/setup/struct.BasicProgramSetup.html
 #[proc_macro_attribute]
