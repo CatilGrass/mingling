@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")" || exit 1
 
-# 收集所有可用工具名称
+# Collect all available tool names
 tools=()
 
 if [ -d "dev_tools/scripts" ]; then
@@ -35,7 +35,7 @@ fi
 
 target_bin="$1"
 
-# 检查是否输入的是数字
+# Check if input is a number
 if [[ "$target_bin" =~ ^[0-9]+$ ]]; then
     idx=$((target_bin - 1))
     if [ "$idx" -ge 0 ] && [ "$idx" -lt "${#tools[@]}" ]; then
