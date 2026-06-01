@@ -27,6 +27,7 @@ features = [
     "repl",
     "comp",
     "parser",
+    "clap",
     "extra_macros",
 ]
 
