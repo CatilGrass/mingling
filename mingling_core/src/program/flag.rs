@@ -116,21 +116,15 @@ macro_rules! special_flag {
 macro_rules! special_argument {
     ($args:expr, $flag:expr) => {{
         let flag = $flag;
-        let mut value: Option<String> = None;
-        let mut i = 0;
-        while i < $args.len() {
-            if &$args[i] == flag {
-                if i + 1 < $args.len() {
-                    value = Some($args[i + 1].clone());
-                    $args.remove(i + 1);
-                    $args.remove(i);
-                } else {
-                    value = None;
-                    $args.remove(i);
-                }
-                break;
+        let mut value = None;
+        if let Some(pos) = $args.iter().position(|arg| arg == flag) {
+            if pos + 1 < $args.len() {
+                let mut drained = $args.drain(pos..=pos + 1);
+                drained.next();
+                value = drained.next();
+            } else {
+                $args.remove(pos);
             }
-            i += 1;
         }
         value
     }};
@@ -142,21 +136,23 @@ macro_rules! special_arguments {
     ($args:expr, $flag:expr) => {{
         let flag = $flag;
         let mut values: Vec<String> = Vec::new();
-        let mut i = 0;
-        while i < $args.len() {
-            if &$args[i] == flag {
-                $args.remove(i);
-                while i < $args.len() && (flag.is_empty() || !$args[i].starts_with('-')) {
-                    values.push($args[i].clone());
-                    $args.remove(i);
-                }
-                break;
-            }
-            i += 1;
-        }
+
         if flag.is_empty() {
-            while !$args.is_empty() && !$args[0].starts_with('-') {
-                values.push($args.remove(0));
+            let end = $args
+                .iter()
+                .position(|a| a.starts_with('-'))
+                .unwrap_or($args.len());
+            values.extend($args.drain(0..end));
+        } else {
+            if let Some(start) = $args.iter().position(|a| a == flag) {
+                let end = $args[start + 1..]
+                    .iter()
+                    .position(|a| a.starts_with('-'))
+                    .map_or($args.len(), |p| start + 1 + p);
+
+                let mut drained = $args.drain(start..end);
+                drained.next();
+                values.extend(drained);
             }
         }
         values

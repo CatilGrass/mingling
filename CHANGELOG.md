@@ -10,7 +10,7 @@
 
 #### Optimizations:
 
-None
+1. **\[core:flag\]** Refactored the `special_argument!` and `special_arguments!` macros to replace index‑based `while` loops with iterator `position` and `drain`, improving both performance and readability.
 
 #### Features:
 
@@ -22,6 +22,7 @@ This macro wraps `::mingling::test::unpack_chain_process_result` to downcast a `
 let result = some_chain_function(args).into();
 let value: MyType = unpack_chain_process!(result, MyType);
 ```
+
 2. **\[core\]** Refactored the built-in flag system in `BasicProgramSetup` into individual, reusable setup structs (`HelpFlagSetup`, `QuietFlagSetup`, `ConfirmFlagSetup`). These setups are now separate implementations of `ProgramSetup`, each with customizable flag aliases and `Default` implementations. `BasicProgramSetup` now composes them via `with_setup` instead of defining flags inline.
 
 ```rust
