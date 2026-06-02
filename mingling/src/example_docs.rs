@@ -1841,7 +1841,7 @@ pub mod example_setup {}
 /// mod tests {
 ///     use super::*;
 ///     use mingling::macros::entry;
-///     use mingling::{assert_member_id, assert_render_result};
+///     use mingling::{assert_member_id, assert_render_result, unpack_chain_process};
 ///
 ///     // --------- IMPORTANT ---------
 ///     #[test]
@@ -1863,6 +1863,8 @@ pub mod example_setup {}
 ///
 ///         let hello_with_valid_name = handle_hello(entry!("Peter")).into();
 ///         assert_render_result!(hello_with_valid_name);
+///         let result_name = unpack_chain_process!(hello_with_valid_name, ResultName);
+///         assert_eq!(result_name.inner, "Peter");
 ///     }
 ///
 ///     #[test]
