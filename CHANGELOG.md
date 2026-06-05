@@ -37,6 +37,8 @@ program.with_setup(ConfirmFlagSetup::new(["-C", "--confirm"]));
 program.with_setup(BasicProgramSetup);
 ```
 
+3. **\[core\]** Added `verbose` option to `ProgramStdoutSetting` and `dry_run` option to `ProgramUserContext`. These fields are annotated as conventions only, meaning the framework does not enforce any particular behavior — it is up to the application to read and act on them.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **\[core\]** Changed the signature of `ProgramSetup::setup` from `fn setup(&mut self, program: &mut Program<C>) -> S` to `fn setup(self, program: &mut Program<C>)`, consuming `self` instead of taking a mutable reference. Correspondingly, `Program::with_setup` now accepts `S` by value (`&mut self, setup: S`) instead of by mutable reference (`&mut self, setup: &mut S`).

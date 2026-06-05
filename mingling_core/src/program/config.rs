@@ -10,6 +10,11 @@ pub struct ProgramStdoutSetting {
     /// Silence panic messages
     pub silence_panic: bool,
 
+    /// Verbose output: provide detailed information
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub verbose: bool,
+
     #[cfg(feature = "clap")]
     /// Behavior when Clap Dispatcher outputs help information
     pub clap_help_print_behaviour: ClapHelpPrintBehaviour,
@@ -32,6 +37,7 @@ impl Default for ProgramStdoutSetting {
             error_output: true,
             render_output: true,
             silence_panic: false,
+            verbose: false,
             #[cfg(feature = "clap")]
             clap_help_print_behaviour: ClapHelpPrintBehaviour::default(),
         }
@@ -44,19 +50,27 @@ pub struct ProgramUserContext {
     /// View help information instead of running the command
     pub help: bool,
 
-    /// Skip user confirmation step
-    pub confirm: bool,
-
     /// Execute hooks during the program lifecycle
     pub run_hook: bool,
+
+    /// Skip user confirmation step
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub confirm: bool,
+
+    /// Dry-run mode: simulate actions without making changes
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub dry_run: bool,
 }
 
 impl Default for ProgramUserContext {
     fn default() -> Self {
         Self {
             help: false,
-            confirm: false,
             run_hook: true,
+            confirm: false,
+            dry_run: false,
         }
     }
 }
