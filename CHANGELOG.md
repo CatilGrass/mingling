@@ -12,6 +12,8 @@
 
 1. **\[core:flag\]** Refactored the `special_argument!` and `special_arguments!` macros to replace index‑based `while` loops with iterator `position` and `drain`, improving both performance and readability.
 
+2. **\[core:comp\]** Changed the completion system's node filtering to exclude all hidden nodes (names starting with `_`) instead of only the specific `__comp` node. This makes the completion script generation more general — any node prefixed with an underscore is now treated as internal/hidden and excluded from suggestions.
+
 #### Features:
 
 1. **\[core\]** Added the `unpack_chain_process!` macro for ergonomically extracting the inner value from a `ChainProcess` result.

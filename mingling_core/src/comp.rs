@@ -155,7 +155,7 @@ where
     let cmd_nodes: Vec<String> = this::<P>()
         .get_nodes()
         .into_iter()
-        .filter(|(s, _)| s != "__comp")
+        .filter(|(s, _)| !s.starts_with('_'))
         .map(|(s, _)| s)
         .collect();
     debug!("cmd_nodes: {:?}", cmd_nodes);
