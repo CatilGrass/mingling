@@ -71,7 +71,7 @@ where
     ///
     /// **Note:** When the `async` feature is enabled, panic unwinding is not supported.
     /// Any panics during command execution will result in an abort rather than being caught and handled gracefully.
-    pub async fn exec_repl(self) {
+    pub async fn exec_repl(mut self) {
         // Inject default REPL resource
         self.with_resource(REPL::default());
 
