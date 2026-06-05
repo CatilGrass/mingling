@@ -1,0 +1,281 @@
+[
+  {
+    "id": "example-basic",
+    "name": "Basic",
+    "icon": "🚀",
+    "category": "core",
+    "desc": "Example The Basic Usage of Mingling\n",
+    "tags": [
+      "dispatcher!",
+      "#[chain]",
+      "#[renderer]"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-argument-parse",
+    "name": "Argument Parse",
+    "icon": "📋",
+    "category": "parsing",
+    "desc": "Example Argument Parse\n",
+    "tags": [
+      "pick",
+      "Pickable"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-async-support",
+    "name": "Async Support",
+    "icon": "⚡",
+    "category": "runtime",
+    "desc": "Example Async Runtime Support\n",
+    "tags": [
+      "async",
+      "tokio"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-clap-binding",
+    "name": "Clap Binding",
+    "icon": "🔗",
+    "category": "parsing",
+    "desc": "Example Clap Binding\n",
+    "tags": [
+      "clap"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-completion",
+    "name": "Completion",
+    "icon": "🔄",
+    "category": "ux",
+    "desc": "Example Completion\n",
+    "tags": [
+      "comp"
+    ],
+    "files": [
+      "src/main.rs",
+      "build.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-custom-pickable",
+    "name": "Custom Pickable",
+    "icon": "🎯",
+    "category": "parsing",
+    "desc": "Example Custom Pickable\n",
+    "tags": [
+      "Pickable",
+      "custom"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-dispatch-tree",
+    "name": "Dispatch Tree",
+    "icon": "🌳",
+    "category": "dispatch",
+    "desc": "Example Dispatch Tree\n",
+    "tags": [
+      "dispatch_tree"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-enum-tag",
+    "name": "Enum Tag",
+    "icon": "🏷️",
+    "category": "parsing",
+    "desc": "Example Enum Tag\n",
+    "tags": [
+      "enum_tag",
+      "Pickable"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-error-handling",
+    "name": "Error Handling",
+    "icon": "⚠️",
+    "category": "runtime",
+    "desc": "Example Error Handling\n",
+    "tags": [
+      "Result"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-exitcode",
+    "name": "Exitcode",
+    "icon": "🚪",
+    "category": "runtime",
+    "desc": "Example Error Handling\n",
+    "tags": [
+      "ExitCode"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-general-renderer",
+    "name": "General Renderer",
+    "icon": "📤",
+    "category": "output",
+    "desc": "Example General Renderer\n",
+    "tags": [
+      "general_renderer",
+      "--json",
+      "--yaml"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-help",
+    "name": "Help",
+    "icon": "💡",
+    "category": "ux",
+    "desc": "Example Help\n",
+    "tags": [
+      "#[helper]"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-hook",
+    "name": "Hook",
+    "icon": "🪝",
+    "category": "runtime",
+    "desc": "Example Hook\n",
+    "tags": [
+      "ProgramHook"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-implicit-dispatcher",
+    "name": "Implicit Dispatcher",
+    "icon": "🫥",
+    "category": "dispatch",
+    "desc": "Example Implicit Dispatcher\n",
+    "tags": [
+      "implicit"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-panic-unwind",
+    "name": "Panic Unwind",
+    "icon": "💥",
+    "category": "runtime",
+    "desc": "Example Panic Unwind\n",
+    "tags": [
+      "panic_unwind"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-repl-basic",
+    "name": "REPL Basic",
+    "icon": "🔁",
+    "category": "repl",
+    "desc": "Example REPL Basic\n",
+    "tags": [
+      "repl"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-resources",
+    "name": "Resources",
+    "icon": "📦",
+    "category": "advanced",
+    "desc": "Example Resource Injection\n",
+    "tags": [
+      "Resources",
+      "injection"
+    ],
+    "files": [
+      "Cargo.toml",
+      "src/main.rs",
+      "src/lib.rs"
+    ]
+  },
+  {
+    "id": "example-setup",
+    "name": "Setup",
+    "icon": "🏗️",
+    "category": "core",
+    "desc": "Example Setup\n",
+    "tags": [
+      "#[setup]",
+      "extra_macros"
+    ],
+    "files": [
+      "src/main.rs",
+      "Cargo.toml"
+    ]
+  },
+  {
+    "id": "example-unit-test",
+    "name": "Unit Test",
+    "icon": "🧪",
+    "category": "testing",
+    "desc": "Example Unit Test\n",
+    "tags": [
+      "testing",
+      "extra_macros"
+    ],
+    "files": [
+      "Cargo.toml",
+      "src/main.rs"
+    ]
+  }
+]

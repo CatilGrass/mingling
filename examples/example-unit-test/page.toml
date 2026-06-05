@@ -1,0 +1,10 @@
+[example]
+id = "example-unit-test"
+name = "Unit Test"
+icon = "🧪"
+category = "testing"
+desc = """
+Example Unit Test
+"""
+tags = ["testing", "extra_macros"]
+files = ["Cargo.toml", "src/main.rs"]

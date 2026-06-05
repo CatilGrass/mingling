@@ -1,0 +1,10 @@
+[example]
+id = "example-enum-tag"
+name = "Enum Tag"
+icon = "🏷️"
+category = "parsing"
+desc = """
+Example Enum Tag
+"""
+tags = ["enum_tag", "Pickable"]
+files = ["src/main.rs", "Cargo.toml"]

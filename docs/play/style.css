@@ -7,62 +7,62 @@
 }
 
 :root {
-    --bg-primary: #1a1b1c;
-    --bg-secondary: #1f2021;
-    --border: #2f3031;
-    --text-primary: #c0c1c2;
-    --text-secondary: #7a7b7c;
-    --text-muted: #565758;
-    --code-bg: #292a2b;
-    --code-text: #bbbcbd;
-    --bubble-bg: #e64a199f;
-    --bubble-text: #ffccbc;
-    --line-num: #3b3c3d;
-    --btn-bg: #2f3031;
-    --btn-text: #c0c1c2;
-    --btn-hover: #3b3c3d;
-    --btn-primary-bg: #7a7b7c;
-    --btn-primary-text: #1a1b1c;
-    --btn-primary-hover: #898a8b;
-    --progress-bg: #2f3031;
-    --progress-fill: #7a7b7c;
-    --cmd-bg: #1a1b1c;
-    --cmd-border: #2f3031;
-    --cmd-text: #9e9fa0;
-    --topbar-bg: #1f2021;
-    --hljs-bg: #1a1b1c;
+    --bg-primary: #1a1410;
+    --bg-secondary: #241c16;
+    --border: #3a2e24;
+    --text-primary: #e8ddd0;
+    --text-secondary: #9a8a7a;
+    --text-muted: #6a5a4a;
+    --code-bg: #241c16;
+    --code-text: #e8ddd0;
+    --bubble-bg: rgba(196, 57, 49, 0.85);
+    --bubble-text: #e8ddd0;
+    --line-num: #6a5a4a;
+    --btn-bg: #3a2e24;
+    --btn-text: #e8ddd0;
+    --btn-hover: #4a3e34;
+    --btn-primary-bg: #c43931;
+    --btn-primary-text: #e8ddd0;
+    --btn-primary-hover: #d44a42;
+    --progress-bg: #3a2e24;
+    --progress-fill: #d4a84b;
+    --cmd-bg: #1a1410;
+    --cmd-border: #3a2e24;
+    --cmd-text: #9a8a7a;
+    --topbar-bg: #241c16;
+    --hljs-bg: #1a1410;
 }
 
 [data-theme="light"] {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f6f7;
-    --border: #dcddde;
-    --text-primary: #2c2d2e;
-    --text-secondary: #5a5b5c;
-    --text-muted: #8a8b8c;
-    --code-bg: #e8e9ea;
-    --code-text: #2c2d2e;
-    --bubble-bg: #e64a19cf;
-    --bubble-text: #ffffff;
-    --line-num: #b0b1b2;
-    --btn-bg: #dcddde;
-    --btn-text: #2c2d2e;
-    --btn-hover: #c8c9ca;
-    --btn-primary-bg: #3a7bd5;
-    --btn-primary-text: #ffffff;
-    --btn-primary-hover: #2a6bc5;
-    --progress-bg: #dcddde;
-    --progress-fill: #3a7bd5;
-    --cmd-bg: #f5f6f7;
-    --cmd-border: #dcddde;
-    --cmd-text: #5a5b5c;
-    --topbar-bg: #f5f6f7;
-    --hljs-bg: #f5f6f7;
+    --bg-primary: #f5ede0;
+    --bg-secondary: #ede0d0;
+    --border: #d4c8b8;
+    --text-primary: #3a2a1a;
+    --text-secondary: #6a5a4a;
+    --text-muted: #9a8a7a;
+    --code-bg: #f0e8d8;
+    --code-text: #3a2a1a;
+    --bubble-bg: rgba(184, 53, 45, 0.85);
+    --bubble-text: #f5ede0;
+    --line-num: #c0b0a0;
+    --btn-bg: #d4c8b8;
+    --btn-text: #3a2a1a;
+    --btn-hover: #c4b8a8;
+    --btn-primary-bg: #b8352d;
+    --btn-primary-text: #f5ede0;
+    --btn-primary-hover: #c8453d;
+    --progress-bg: #d4c8b8;
+    --progress-fill: #b8943e;
+    --cmd-bg: #f0e8d8;
+    --cmd-border: #d4c8b8;
+    --cmd-text: #6a5a4a;
+    --topbar-bg: #ede0d0;
+    --hljs-bg: #f0e8d8;
 }
 
 body {
     font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC",
+        -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Serif SC", Roboto,
         sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -71,7 +71,7 @@ body {
     flex-direction: column;
 }
 
-/* Top bar */
+/* ── Top bar ── */
 .topbar {
     padding: 12px 24px;
     background: var(--topbar-bg);
@@ -101,7 +101,7 @@ body {
     cursor: pointer;
     font-size: 16px;
     padding: 4px 10px;
-    border-radius: 6px;
+    border-radius: 2px;
     transition: all 0.15s;
     font-family: inherit;
     line-height: 1;
@@ -111,14 +111,14 @@ body {
     background: var(--btn-hover);
 }
 
-/* Main panel */
+/* ── Main panel ── */
 .layout {
     display: flex;
     flex: 1;
     overflow: hidden;
 }
 
-/* Left: code panel */
+/* ── Left: code panel ── */
 .code-panel {
     flex: 1;
     background: var(--bg-primary);
@@ -159,7 +159,7 @@ body {
     color: var(--bubble-text);
     border-radius: 10px;
     font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC",
+        -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Serif SC", Roboto,
         sans-serif;
     font-size: 13px;
     font-style: normal;
@@ -191,9 +191,9 @@ body {
     user-select: none;
 }
 
-/* Right: description panel */
+/* ── Right: description panel ── */
 .speech-panel {
-    width: 380px;
+    flex: 0 0 320px;
     background: var(--bg-secondary);
     border-left: 1px solid var(--border);
     display: flex;
@@ -209,13 +209,27 @@ body {
     width: 100%;
     border-left: none;
     border-bottom: 1px solid var(--border);
-    max-height: none;
     flex: 0 0 auto;
+    max-height: 40%;
 }
 
 .layout--tb .code-panel {
     flex: 1;
     min-height: 0;
+}
+
+.layout--tb .speech-content {
+    padding: 16px 20px;
+}
+
+.layout--tb .speech-content p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.layout--tb .code-panel pre {
+    padding: 16px 20px;
 }
 
 .speech-content {
@@ -239,7 +253,7 @@ body {
     background: var(--code-bg);
     color: var(--code-text);
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: 2px;
     font-size: 13px;
 }
 
@@ -247,7 +261,7 @@ body {
     display: block;
     background: var(--cmd-bg);
     border: 1px solid var(--cmd-border);
-    border-radius: 6px;
+    border-radius: 2px;
     padding: 10px 14px;
     margin: 12px 0;
     font-family: "JetBrains Mono", monospace;
@@ -255,7 +269,7 @@ body {
     color: var(--cmd-text);
 }
 
-/* Control panel */
+/* ── Control panel ── */
 .controls {
     padding: 12px 24px;
     background: var(--bg-secondary);
@@ -271,7 +285,7 @@ body {
     border: none;
     color: var(--btn-text);
     padding: 8px 20px;
-    border-radius: 6px;
+    border-radius: 2px;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.15s;

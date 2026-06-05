@@ -1,0 +1,10 @@
+[example]
+id = "example-basic"
+name = "Basic"
+icon = "🚀"
+category = "core"
+desc = """
+Example The Basic Usage of Mingling
+"""
+tags = ["dispatcher!", "#[chain]", "#[renderer]"]
+files = ["src/main.rs", "Cargo.toml"]

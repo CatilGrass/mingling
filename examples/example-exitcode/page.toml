@@ -1,0 +1,10 @@
+[example]
+id = "example-exitcode"
+name = "Exitcode"
+icon = "🚪"
+category = "runtime"
+desc = """
+Example Error Handling
+"""
+tags = ["ExitCode"]
+files = ["src/main.rs", "Cargo.toml"]

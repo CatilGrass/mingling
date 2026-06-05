@@ -1,0 +1,10 @@
+[example]
+id = "example-error-handling"
+name = "Error Handling"
+icon = "⚠️"
+category = "runtime"
+desc = """
+Example Error Handling
+"""
+tags = ["Result"]
+files = ["src/main.rs", "Cargo.toml"]

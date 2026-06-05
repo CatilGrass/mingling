@@ -1,0 +1,10 @@
+[example]
+id = "example-clap-binding"
+name = "Clap Binding"
+icon = "🔗"
+category = "parsing"
+desc = """
+Example Clap Binding
+"""
+tags = ["clap"]
+files = ["src/main.rs", "Cargo.toml"]

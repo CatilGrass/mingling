@@ -111,7 +111,7 @@ function renderSpeech(paragraphs) {
         .replace(/`([^`]+)`/g, "<code>$1</code>")
         .replace(
           /\*\*([^*]+)\*\*/g,
-          '<strong style="color:#7dcfff">$1</strong>',
+          '<strong style="color:#d4a84b">$1</strong>',
         );
       return `<p>${html}</p>`;
     })
@@ -219,6 +219,11 @@ const layoutEl = document.getElementById("layout");
 const speechPanel = document.querySelector(".speech-panel");
 const codePanel = document.querySelector(".code-panel");
 layoutEl.append(speechPanel, codePanel);
-layoutEl.classList.add("layout--tb");
+// layoutEl.classList.add("layout--tb");
+
+// On narrow screens, switch to vertical
+if (window.innerWidth < 800) {
+  layoutEl.classList.add("layout--tb");
+}
 
 loadTutorial(tutorialFile);

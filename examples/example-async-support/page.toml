@@ -1,0 +1,10 @@
+[example]
+id = "example-async-support"
+name = "Async Support"
+icon = "⚡"
+category = "runtime"
+desc = """
+Example Async Runtime Support
+"""
+tags = ["async", "tokio"]
+files = ["src/main.rs", "Cargo.toml"]

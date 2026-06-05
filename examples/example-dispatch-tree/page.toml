@@ -1,0 +1,10 @@
+[example]
+id = "example-dispatch-tree"
+name = "Dispatch Tree"
+icon = "🌳"
+category = "dispatch"
+desc = """
+Example Dispatch Tree
+"""
+tags = ["dispatch_tree"]
+files = ["src/main.rs", "Cargo.toml"]

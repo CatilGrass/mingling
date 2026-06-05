@@ -1,0 +1,10 @@
+[example]
+id = "example-argument-parse"
+name = "Argument Parse"
+icon = "📋"
+category = "parsing"
+desc = """
+Example Argument Parse
+"""
+tags = ["pick", "Pickable"]
+files = ["src/main.rs", "Cargo.toml"]

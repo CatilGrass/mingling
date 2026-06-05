@@ -1,0 +1,10 @@
+[example]
+id = "example-custom-pickable"
+name = "Custom Pickable"
+icon = "🎯"
+category = "parsing"
+desc = """
+Example Custom Pickable
+"""
+tags = ["Pickable", "custom"]
+files = ["src/main.rs", "Cargo.toml"]

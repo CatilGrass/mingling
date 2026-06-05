@@ -1,0 +1,10 @@
+[example]
+id = "example-hook"
+name = "Hook"
+icon = "🪝"
+category = "runtime"
+desc = """
+Example Hook
+"""
+tags = ["ProgramHook"]
+files = ["src/main.rs", "Cargo.toml"]

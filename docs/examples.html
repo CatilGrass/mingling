@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Examples — Mìng Lìng</title>
+        <link rel="icon" type="image/png" href="res/icon_shadow.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="scripts/highlight/github-dark.min.css" />
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                font-family: "Noto Serif SC", Georgia, "Times New Roman", serif;
+                background-color: #1a1410;
+                color: #e8ddd0;
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                overflow-x: hidden;
+            }
+
+            a {
+                color: #d4a84b;
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            a:hover {
+                color: #e8c46a;
+            }
+
+            img {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .container {
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 0 1.5rem;
+            }
+
+            /* ── Nav ── */
+            nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0.8rem 2rem;
+                background: rgba(26, 20, 16, 0.88);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-bottom: 1px solid rgba(212, 168, 75, 0.12);
+            }
+
+            nav .logo {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-weight: 700;
+                font-size: 1.1rem;
+                color: #e8ddd0;
+            }
+            nav .logo img {
+                width: 28px;
+                height: 28px;
+                filter: brightness(0) invert(1);
+            }
+
+            nav .nav-links {
+                display: flex;
+                gap: 1.5rem;
+                align-items: center;
+                font-size: 0.9rem;
+            }
+            nav .nav-links a {
+                color: #9a8a7a;
+                transition: color 0.2s;
+            }
+            nav .nav-links a:hover {
+                color: #d4a84b;
+            }
+            nav .nav-links .active {
+                color: #d4a84b;
+                font-weight: 600;
+            }
+            nav .nav-links .btn-nav {
+                display: inline-block;
+                padding: 0.35rem 1rem;
+                border: 1px solid #d4a84b;
+                border-radius: 2px;
+                color: #d4a84b;
+                font-weight: 600;
+                font-size: 0.85rem;
+                transition:
+                    background 0.2s,
+                    color 0.2s;
+            }
+            nav .nav-links .btn-nav:hover {
+                background: #d4a84b;
+                color: #1a1410;
+            }
+
+            /* ── Hero ── */
+            .hero {
+                padding: 8rem 1.5rem 3rem;
+                text-align: center;
+                position: relative;
+            }
+            .hero h1 {
+                font-size: 3rem;
+                font-weight: 800;
+                letter-spacing: 1px;
+                color: #e8ddd0;
+                margin-bottom: 0.75rem;
+            }
+            .hero h1 span {
+                color: #c43931;
+            }
+            .hero p {
+                color: #9a8a7a;
+                font-size: 1.05rem;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            /* ── Filter bar ── */
+            .filter-bar {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-bottom: 2.5rem;
+            }
+            .filter-bar button {
+                background: transparent;
+                border: 1px solid #3a2e24;
+                color: #9a8a7a;
+                padding: 0.35rem 1rem;
+                border-radius: 2px;
+                font-size: 0.85rem;
+                cursor: pointer;
+                font-family: inherit;
+                transition: all 0.2s;
+            }
+            .filter-bar button:hover {
+                border-color: #d4a84b;
+                color: #d4a84b;
+            }
+            .filter-bar button.active {
+                background: #d4a84b;
+                color: #1a1410;
+                border-color: #d4a84b;
+                font-weight: 600;
+            }
+
+            /* ── Card grid ── */
+            .examples-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.25rem;
+                padding-bottom: 4rem;
+            }
+
+            .example-card {
+                background: #241c16;
+                border: 1px solid #3a2e24;
+                border-radius: 2px;
+                padding: 1.5rem;
+                display: flex;
+                flex-direction: column;
+                transition:
+                    border-color 0.25s,
+                    transform 0.2s;
+                cursor: pointer;
+            }
+            .example-card:hover {
+                border-color: #d4a84b;
+                transform: translateY(-3px);
+            }
+
+            .example-card .icon {
+                font-size: 1.6rem;
+                margin-bottom: 0.6rem;
+                display: block;
+            }
+            .example-card h3 {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: #e8ddd0;
+                margin-bottom: 0.4rem;
+            }
+            .example-card .desc {
+                font-size: 0.88rem;
+                color: #9a8a7a;
+                line-height: 1.6;
+                flex: 1;
+                margin-bottom: 0.75rem;
+            }
+
+            .example-card .tags {
+                display: flex;
+                gap: 0.4rem;
+                flex-wrap: wrap;
+                margin-bottom: 1rem;
+            }
+            .example-card .tags span {
+                font-size: 0.72rem;
+                padding: 0.15rem 0.5rem;
+                background: rgba(212, 168, 75, 0.1);
+                color: #d4a84b;
+                border-radius: 2px;
+                font-family: "Cascadia Code", "Fira Code", monospace;
+            }
+
+            .example-card .card-actions {
+                display: flex;
+                gap: 0.6rem;
+                align-items: center;
+                margin-top: auto;
+            }
+            .example-card .card-actions a {
+                font-size: 0.82rem;
+                font-weight: 600;
+                padding: 0.3rem 0.8rem;
+                border-radius: 2px;
+                transition: all 0.2s;
+            }
+            .example-card .card-actions .view-code {
+                background: #c43931;
+                color: #e8ddd0;
+                border: none;
+            }
+            .example-card .card-actions .view-code:hover {
+                background: #d44a42;
+            }
+            .example-card .card-actions .github-link {
+                background: transparent;
+                color: #d4a84b;
+                border: 1px solid #d4a84b;
+                margin-left: auto;
+            }
+            .example-card .card-actions .github-link:hover {
+                background: rgba(212, 168, 75, 0.1);
+            }
+
+            /* ── Footer ── */
+            footer {
+                padding: 2rem 1.5rem;
+                text-align: center;
+                color: #6a5a4a;
+                font-size: 0.85rem;
+                border-top: 1px solid #2a1e14;
+            }
+            footer a {
+                color: #7a6a5a;
+            }
+            footer a:hover {
+                color: #d4a84b;
+            }
+
+            /* ── Responsive ── */
+            @media (max-width: 900px) {
+                .examples-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .hero h1 {
+                    font-size: 2.2rem;
+                }
+            }
+
+            @media (max-width: 550px) {
+                .examples-grid {
+                    grid-template-columns: 1fr;
+                }
+                nav {
+                    padding: 0.6rem 1rem;
+                }
+                nav .nav-links {
+                    gap: 0.8rem;
+                    font-size: 0.8rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- ── Nav ── -->
+        <nav>
+            <a href="../index.html" class="logo" aria-label="Home">
+                <img
+                    src="res/icon.png"
+                    alt="Mingling icon"
+                    width="28"
+                    height="28"
+                />
+                Mìng Lìng
+            </a>
+            <div class="nav-links">
+                <a href="doc.html">Docs</a>
+                <a href="examples.html" class="active">Examples</a>
+                <a href="https://github.com/catilgrass/mingling" target="_blank"
+                    >GitHub</a
+                >
+                <a
+                    href="https://crates.io/crates/mingling"
+                    target="_blank"
+                    class="btn-nav"
+                    >cargo add mingling</a
+                >
+            </div>
+        </nav>
+
+        <!-- ── Hero ── -->
+        <section class="hero">
+            <div class="container">
+                <h1><span>✦</span> Examples</h1>
+                <p>
+                    Real projects built with Mingling — from basic to advanced.
+                    Click any card to explore its source code.
+                </p>
+            </div>
+        </section>
+
+        <!-- ── Grid ── -->
+        <section class="container">
+            <div class="filter-bar" id="filterBar"></div>
+            <div class="examples-grid" id="examplesGrid"></div>
+        </section>
+
+        <!-- ── Footer ── -->
+        <footer>
+            <p>
+                Built With ❤️ by
+                <a href="https://github.com/Weicao-CatilGrass" target="_blank"
+                    >Weicao-CatilGrass</a
+                >
+                &middot; Licensed under
+                <a href="LICENSE-MIT" target="_blank">MIT</a> /
+                <a href="LICENSE-APACHE" target="_blank">Apache-2.0</a>
+            </p>
+        </footer>
+
+        <script>
+            // ── Load examples from auto-generated JSON ──
+            var examples = [];
+
+            fetch("example-pages/examples.json")
+                .then(function (r) {
+                    if (!r.ok) throw new Error("HTTP " + r.status);
+                    return r.json();
+                })
+                .then(function (data) {
+                    examples = data;
+                    buildFilters();
+                    renderGrid("");
+                })
+                .catch(function (err) {
+                    document.getElementById("examplesGrid").innerHTML =
+                        '<p style="text-align:center;color:#c43931;padding:3rem">Failed to load examples: ' +
+                        err.message +
+                        "<br><small>Run <code>cargo run --bin sync-examples</code> in dev_tools to generate.</small></p>";
+                });
+
+            // ═══════════════════════════════════════════════════════════════
+            //  RENDERING
+            // ═══════════════════════════════════════════════════════════════
+
+            function buildFilters() {
+                var allTags = {};
+                examples.forEach(function (ex) {
+                    if (ex.category) allTags[ex.category] = true;
+                });
+                allTags = Object.keys(allTags);
+
+                var filterBar = document.getElementById("filterBar");
+                filterBar.innerHTML = "";
+                var allBtn = document.createElement("button");
+                allBtn.textContent = "All";
+                allBtn.className = "active";
+                allBtn.dataset.tag = "";
+                filterBar.appendChild(allBtn);
+
+                allTags.forEach(function (tag) {
+                    var btn = document.createElement("button");
+                    btn.textContent =
+                        tag.charAt(0).toUpperCase() + tag.slice(1);
+                    btn.dataset.tag = tag;
+                    filterBar.appendChild(btn);
+                });
+
+                filterBar.addEventListener("click", function (e) {
+                    if (e.target.tagName !== "BUTTON") return;
+                    filterBar.querySelectorAll("button").forEach(function (b) {
+                        b.classList.remove("active");
+                    });
+                    e.target.classList.add("active");
+                    renderGrid(e.target.dataset.tag);
+                });
+            }
+
+            function renderGrid(filter) {
+                var grid = document.getElementById("examplesGrid");
+                grid.innerHTML = "";
+                var filtered = filter
+                    ? examples.filter(function (ex) {
+                          return ex.category === filter;
+                      })
+                    : examples;
+
+                filtered.forEach(function (ex) {
+                    var card = document.createElement("div");
+                    card.className = "example-card";
+
+                    var ghBase =
+                        "https://github.com/catilgrass/mingling/tree/main/examples/" +
+                        ex.id;
+                    var viewUrl =
+                        "example-viewer.html?name=" + encodeURIComponent(ex.id);
+
+                    var tagsHtml = ex.tags
+                        .map(function (t) {
+                            return "<span>" + escapeHtml(t) + "</span>";
+                        })
+                        .join("");
+
+                    card.innerHTML =
+                        '<span class="icon">' +
+                        ex.icon +
+                        "</span>" +
+                        "<h3>" +
+                        escapeHtml(ex.name) +
+                        "</h3>" +
+                        '<p class="desc">' +
+                        escapeHtml(ex.desc).replace(
+                            /`([^`]+)`/g,
+                            "<code>$1</code>",
+                        ) +
+                        "</p>" +
+                        '<div class="tags">' +
+                        tagsHtml +
+                        "</div>" +
+                        '<div class="card-actions">' +
+                        '<a href="' +
+                        viewUrl +
+                        '" class="view-code">View Code</a>' +
+                        '<a href="' +
+                        ghBase +
+                        '" target="_blank" class="github-link">GitHub ↗</a>' +
+                        "</div>";
+
+                    card.addEventListener("click", function (e) {
+                        if (e.target.tagName === "A") return;
+                        window.location.href = viewUrl;
+                    });
+
+                    grid.appendChild(card);
+                });
+            }
+
+            function escapeHtml(text) {
+                return text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;");
+            }
+        </script>
+    </body>
+</html>

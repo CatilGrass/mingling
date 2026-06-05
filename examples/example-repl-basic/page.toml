@@ -1,0 +1,10 @@
+[example]
+id = "example-repl-basic"
+name = "REPL Basic"
+icon = "🔁"
+category = "repl"
+desc = """
+Example REPL Basic
+"""
+tags = ["repl"]
+files = ["src/main.rs", "Cargo.toml"]

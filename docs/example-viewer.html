@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Example — Mìng Lìng</title>
+        <link rel="icon" type="image/png" href="res/icon_shadow.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="scripts/highlight/github-dark.min.css" />
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                font-family: "Noto Serif SC", Georgia, "Times New Roman", serif;
+                background-color: #1a1410;
+                color: #e8ddd0;
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                overflow-x: hidden;
+            }
+            a {
+                color: #d4a84b;
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            a:hover {
+                color: #e8c46a;
+            }
+
+            nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0.8rem 2rem;
+                background: rgba(26, 20, 16, 0.88);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-bottom: 1px solid rgba(212, 168, 75, 0.12);
+            }
+            nav .logo {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-weight: 700;
+                font-size: 1.1rem;
+                color: #e8ddd0;
+            }
+            nav .logo img {
+                width: 28px;
+                height: 28px;
+                filter: brightness(0) invert(1);
+            }
+            nav .nav-links {
+                display: flex;
+                gap: 1.5rem;
+                align-items: center;
+                font-size: 0.9rem;
+            }
+            nav .nav-links a {
+                color: #9a8a7a;
+                transition: color 0.2s;
+            }
+            nav .nav-links a:hover {
+                color: #d4a84b;
+            }
+
+            .viewer {
+                margin-top: 4rem;
+                padding: 1.5rem;
+                max-width: 960px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .viewer-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 1.5rem;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+            .viewer-header h1 {
+                font-size: 1.6rem;
+                font-weight: 700;
+                color: #e8ddd0;
+            }
+            .viewer-header h1 span {
+                color: #c43931;
+            }
+            .viewer-header .gh-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                padding: 0.4rem 1rem;
+                border: 1px solid #d4a84b;
+                color: #d4a84b;
+                font-size: 0.85rem;
+                font-weight: 600;
+                border-radius: 2px;
+                transition: all 0.2s;
+            }
+            .viewer-header .gh-link:hover {
+                background: rgba(212, 168, 75, 0.1);
+            }
+            .viewer-header .back-link {
+                color: #9a8a7a;
+                font-size: 0.9rem;
+            }
+            .viewer-header .back-link:hover {
+                color: #d4a84b;
+            }
+
+            .file-tabs {
+                display: flex;
+                gap: 0.25rem;
+                margin-bottom: 0;
+                flex-wrap: wrap;
+            }
+            .file-tabs button {
+                background: #241c16;
+                border: 1px solid #3a2e24;
+                border-bottom: none;
+                color: #9a8a7a;
+                padding: 0.4rem 1rem;
+                font-size: 0.82rem;
+                font-family: "Cascadia Code", "Fira Code", monospace;
+                cursor: pointer;
+                transition: all 0.2s;
+                border-radius: 2px 2px 0 0;
+            }
+            .file-tabs button:hover {
+                color: #e8ddd0;
+                border-color: #d4a84b;
+            }
+            .file-tabs button.active {
+                background: #1a1410;
+                color: #d4a84b;
+                border-color: #3a2e24;
+                border-bottom: 1px solid #1a1410;
+                margin-bottom: -1px;
+            }
+
+            .code-frame {
+                background: #1a1410;
+                border: 1px solid #3a2e24;
+                border-radius: 0 2px 2px 2px;
+                padding: 0;
+                overflow: hidden;
+            }
+            .code-frame pre {
+                margin: 0;
+                padding: 1.25rem;
+                overflow-x: auto;
+                font-family: "Cascadia Code", "Fira Code", monospace;
+                font-size: 0.85rem;
+                line-height: 1.65;
+            }
+            .code-frame pre code.hljs {
+                background: transparent;
+                padding: 0;
+            }
+
+            .doc-box {
+                background: #241c16;
+                border: 1px solid #3a2e24;
+                border-top: none;
+                padding: 1.25rem 1.5rem;
+                font-size: 0.92rem;
+                line-height: 1.7;
+                color: #c0b0a0;
+            }
+            .doc-box h3 {
+                font-size: 1.15rem;
+                font-weight: 700;
+                color: #d4a84b;
+                margin-bottom: 0.5rem;
+            }
+            .doc-box h4 {
+                font-size: 1rem;
+                font-weight: 600;
+                color: #e8ddd0;
+                margin-top: 0.75rem;
+                margin-bottom: 0.25rem;
+            }
+            .doc-box p {
+                margin-bottom: 0.5rem;
+            }
+            .doc-box p:last-child {
+                margin-bottom: 0;
+            }
+            .doc-box code {
+                background: rgba(212, 168, 75, 0.1);
+                color: #e8c46a;
+                padding: 0.12em 0.4em;
+                border-radius: 2px;
+                font-size: 0.85em;
+                font-family: "Cascadia Code", "Fira Code", monospace;
+            }
+            .doc-box strong {
+                color: #e8ddd0;
+            }
+
+            .loading {
+                text-align: center;
+                padding: 4rem 1rem;
+                color: #6a5a4a;
+                font-size: 1rem;
+            }
+            .error {
+                text-align: center;
+                padding: 4rem 1rem;
+                color: #c43931;
+            }
+
+            footer {
+                padding: 2rem 1.5rem;
+                text-align: center;
+                color: #6a5a4a;
+                font-size: 0.85rem;
+                border-top: 1px solid #2a1e14;
+                margin-top: 3rem;
+            }
+            footer a {
+                color: #7a6a5a;
+            }
+            footer a:hover {
+                color: #d4a84b;
+            }
+
+            @media (max-width: 600px) {
+                .viewer {
+                    padding: 1rem;
+                }
+                .viewer-header h1 {
+                    font-size: 1.2rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <a href="index.html" class="logo">
+                <img
+                    src="res/icon.png"
+                    alt="Mingling icon"
+                    width="28"
+                    height="28"
+                />
+                Mìng Lìng
+            </a>
+            <div class="nav-links">
+                <a href="doc.html">Docs</a>
+                <a href="examples.html">Examples</a>
+                <a href="https://github.com/catilgrass/mingling" target="_blank"
+                    >GitHub</a
+                >
+            </div>
+        </nav>
+
+        <div class="viewer">
+            <div class="viewer-header">
+                <div>
+                    <a href="examples.html" class="back-link"
+                        >← Back to Examples</a
+                    >
+                    <h1>
+                        <span>✦</span> <span id="exampleName">Loading...</span>
+                    </h1>
+                </div>
+                <a id="githubLink" href="#" target="_blank" class="gh-link"
+                    >View on GitHub ↗</a
+                >
+            </div>
+
+            <div class="file-tabs" id="fileTabs"></div>
+            <div class="doc-box" id="docBox" style="display: none"></div>
+            <div class="code-frame" id="codeFrame">
+                <div class="loading" id="loadingMsg">
+                    Loading source code...
+                </div>
+                <pre
+                    style="display: none"
+                    id="codePre"
+                ><code id="codeContent"></code></pre>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                Built With ❤️ by
+                <a href="https://github.com/Weicao-CatilGrass" target="_blank"
+                    >Weicao-CatilGrass</a
+                >
+                &middot; Licensed under
+                <a href="LICENSE-MIT" target="_blank">MIT</a> /
+                <a href="LICENSE-APACHE" target="_blank">Apache-2.0</a>
+            </p>
+        </footer>
+
+        <script src="scripts/highlight/highlight.min.js"></script>
+        <script src="scripts/highlight/rust.min.js"></script>
+        <script src="scripts/highlight/bash.min.js"></script>
+        <script>
+            (function () {
+                var params = new URLSearchParams(window.location.search);
+                var exampleName = params.get("name") || "";
+                if (!exampleName) {
+                    document.getElementById("exampleName").textContent =
+                        "No example specified";
+                    return;
+                }
+
+                document.getElementById("exampleName").textContent =
+                    exampleName.replace(/^example-/, "");
+                document.getElementById("githubLink").href =
+                    "https://github.com/catilgrass/mingling/tree/main/examples/" +
+                    exampleName;
+
+                // ── Load file list from auto-generated JSON ──
+                fetch("example-pages/examples.json")
+                    .then(function (r) {
+                        if (!r.ok) throw new Error("HTTP " + r.status);
+                        return r.json();
+                    })
+                    .then(function (data) {
+                        var matched = null;
+                        for (var i = 0; i < data.length; i++) {
+                            if (data[i].id === exampleName) {
+                                matched = data[i];
+                                break;
+                            }
+                        }
+                        var files = matched
+                            ? matched.files
+                            : ["Cargo.toml", "src/main.rs"];
+                        initViewer(files);
+                    })
+                    .catch(function () {
+                        // Fallback
+                        initViewer(["Cargo.toml", "src/main.rs"]);
+                    });
+
+                function renderMarkdown(md) {
+                    var html = "";
+                    var lines = md.split("\n");
+                    var i = 0;
+
+                    while (i < lines.length) {
+                        var line = lines[i];
+
+                        // Fenced code block
+                        var codeMatch = line.match(/^```(\w*)/);
+                        if (codeMatch) {
+                            var lang = codeMatch[1];
+                            var codeLines = [];
+                            i++;
+                            while (
+                                i < lines.length &&
+                                !lines[i].startsWith("```")
+                            ) {
+                                codeLines.push(lines[i]);
+                                i++;
+                            }
+                            i++; // skip closing ```
+                            var codeText = escapeHtml(codeLines.join("\n"));
+                            html +=
+                                '<pre style="background:#1a1410;border:1px solid #3a2e24;border-radius:2px;padding:0.75rem;margin:0.5rem 0;overflow-x:auto;font-size:0.8rem;line-height:1.5"><code>' +
+                                codeText +
+                                "</code></pre>";
+                            continue;
+                        }
+
+                        // Headings
+                        var hMatch = line.match(/^(#{1,4})\s+(.+)/);
+                        if (hMatch) {
+                            var level = hMatch[1].length;
+                            var tag = level <= 2 ? "h3" : "h4";
+                            html +=
+                                "<" +
+                                tag +
+                                ">" +
+                                inlineMd(hMatch[2]) +
+                                "</" +
+                                tag +
+                                ">";
+                            i++;
+                            continue;
+                        }
+
+                        // Blockquote
+                        if (line.startsWith("> ")) {
+                            var quoteLines = [];
+                            while (
+                                i < lines.length &&
+                                lines[i].startsWith("> ")
+                            ) {
+                                quoteLines.push(lines[i].slice(2));
+                                i++;
+                            }
+                            html +=
+                                '<blockquote style="border-left:3px solid #c43931;padding:0.25em 1em;margin:0.5em 0;color:#9a8a7a">' +
+                                inlineMd(quoteLines.join("<br>")) +
+                                "</blockquote>";
+                            continue;
+                        }
+
+                        // Unordered list
+                        var ulMatch = line.match(/^[-*]\s+(.+)/);
+                        if (ulMatch) {
+                            var items = [];
+                            while (
+                                i < lines.length &&
+                                lines[i].match(/^[-*]\s+(.+)/)
+                            ) {
+                                items.push(
+                                    inlineMd(lines[i].match(/^[-*]\s+(.+)/)[1]),
+                                );
+                                i++;
+                            }
+                            html +=
+                                '<ul style="margin:0.25em 0;padding-left:1.5em">' +
+                                items
+                                    .map(function (x) {
+                                        return "<li>" + x + "</li>";
+                                    })
+                                    .join("") +
+                                "</ul>";
+                            continue;
+                        }
+
+                        // Empty line
+                        if (line.trim() === "") {
+                            i++;
+                            continue;
+                        }
+
+                        // Paragraph
+                        var paraLines = [];
+                        while (
+                            i < lines.length &&
+                            lines[i].trim() !== "" &&
+                            !lines[i].match(/^#{1,4}\s/) &&
+                            !lines[i].startsWith("> ") &&
+                            !lines[i].startsWith("```") &&
+                            !lines[i].match(/^[-*]\s/)
+                        ) {
+                            paraLines.push(lines[i]);
+                            i++;
+                        }
+                        if (paraLines.length > 0) {
+                            html +=
+                                "<p>" +
+                                inlineMd(paraLines.join("<br>")) +
+                                "</p>";
+                        }
+                    }
+
+                    return html;
+
+                    function inlineMd(text) {
+                        return text
+                            .replace(/`([^`]+)`/g, "<code>$1</code>")
+                            .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+                            .replace(/\*(.+?)\*/g, "<em>$1</em>");
+                    }
+
+                    function escapeHtml(t) {
+                        return t
+                            .replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;");
+                    }
+                }
+
+                function initViewer(files) {
+                    var tabsEl = document.getElementById("fileTabs");
+                    var codePre = document.getElementById("codePre");
+                    var codeContent = document.getElementById("codeContent");
+                    var loadingMsg = document.getElementById("loadingMsg");
+
+                    function loadFile(filePath) {
+                        loadingMsg.style.display = "block";
+                        codePre.style.display = "none";
+
+                        var url = "../examples/" + exampleName + "/" + filePath;
+
+                        fetch(url)
+                            .then(function (r) {
+                                if (!r.ok) throw new Error("HTTP " + r.status);
+                                return r.text();
+                            })
+                            .then(function (code) {
+                                loadingMsg.style.display = "none";
+
+                                // ── Extract //! doc block from .rs files ──
+                                var docHtml = "";
+                                var cleanCode = code;
+                                var ext = filePath.split(".").pop();
+
+                                if (ext === "rs") {
+                                    var lines = code.split("\n");
+                                    var docLines = [];
+                                    var codeStart = 0;
+                                    var inDoc = true;
+
+                                    for (var i = 0; i < lines.length; i++) {
+                                        var trimmed = lines[i];
+                                        var docMatch =
+                                            trimmed.match(
+                                                /^\s*\/\/!( ?(.*))?$/,
+                                            );
+
+                                        if (inDoc && docMatch) {
+                                            docLines.push(docMatch[2] || "");
+                                            codeStart = i + 1;
+                                        } else if (
+                                            inDoc &&
+                                            trimmed.trim() === ""
+                                        ) {
+                                            docLines.push("");
+                                            codeStart = i + 1;
+                                        } else {
+                                            inDoc = false;
+                                        }
+                                    }
+
+                                    // Render doc lines to HTML
+                                    if (docLines.length > 0) {
+                                        docHtml = renderMarkdown(
+                                            docLines.join("\n"),
+                                        );
+                                    }
+
+                                    // Remove leading //! lines for code display
+                                    cleanCode = lines
+                                        .slice(codeStart)
+                                        .join("\n")
+                                        .trimStart();
+                                }
+
+                                // Show/hide doc box
+                                var docBox = document.getElementById("docBox");
+                                if (docHtml) {
+                                    docBox.innerHTML = docHtml;
+                                    docBox.style.display = "block";
+                                } else {
+                                    docBox.style.display = "none";
+                                }
+
+                                codePre.style.display = "block";
+                                codeContent.textContent = cleanCode;
+
+                                // Set language class
+                                codeContent.className = "";
+                                var lang =
+                                    {
+                                        rs: "language-rust",
+                                        toml: "language-toml",
+                                        md: "language-markdown",
+                                        js: "language-javascript",
+                                        sh: "language-bash",
+                                        ps1: "language-powershell",
+                                    }[ext] || "";
+                                if (lang) codeContent.className = lang;
+
+                                delete codeContent.dataset.highlighted;
+                                hljs.highlightElement(codeContent);
+
+                                tabsEl
+                                    .querySelectorAll("button")
+                                    .forEach(function (b) {
+                                        b.classList.toggle(
+                                            "active",
+                                            b.dataset.file === filePath,
+                                        );
+                                    });
+                            })
+                            .catch(function (err) {
+                                loadingMsg.style.display = "block";
+                                loadingMsg.textContent =
+                                    "Failed to load: " +
+                                    filePath +
+                                    " (" +
+                                    err.message +
+                                    ")";
+                                loadingMsg.className = "error";
+                            });
+                    }
+
+                    // Build tabs
+                    files.forEach(function (f, i) {
+                        var btn = document.createElement("button");
+                        btn.textContent = f;
+                        btn.dataset.file = f;
+                        if (i === 0) btn.className = "active";
+                        btn.addEventListener("click", function () {
+                            loadFile(f);
+                        });
+                        tabsEl.appendChild(btn);
+                    });
+
+                    // Load first file
+                    if (files.length > 0) loadFile(files[0]);
+                }
+            })();
+        </script>
+    </body>
+</html>

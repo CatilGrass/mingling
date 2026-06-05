@@ -1,0 +1,10 @@
+[example]
+id = "example-implicit-dispatcher"
+name = "Implicit Dispatcher"
+icon = "🫥"
+category = "dispatch"
+desc = """
+Example Implicit Dispatcher
+"""
+tags = ["implicit"]
+files = ["src/main.rs", "Cargo.toml"]

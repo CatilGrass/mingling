@@ -1,0 +1,10 @@
+[example]
+id = "example-resources"
+name = "Resources"
+icon = "📦"
+category = "advanced"
+desc = """
+Example Resource Injection
+"""
+tags = ["Resources", "injection"]
+files = ["Cargo.toml", "src/main.rs", "src/lib.rs"]

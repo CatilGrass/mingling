@@ -1,0 +1,10 @@
+[example]
+id = "example-setup"
+name = "Setup"
+icon = "🏗️"
+category = "core"
+desc = """
+Example Setup
+"""
+tags = ["#[setup]", "extra_macros"]
+files = ["src/main.rs", "Cargo.toml"]

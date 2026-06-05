@@ -11,22 +11,6 @@
 
 若您在使用过程中遇到任何问题，欢迎提交 [Issue](https://github.com/catilgrass/mingling/issues)，我们乐意解决。
 
-<div style="display: flex; gap: 16px; padding: 8px; align-items: stretch; max-width: 90%;">
-  <div style="flex-shrink: 0; display: flex; align-items: center;">
-    <a href="https://github.com/catilgrass/mingling" target="_blank">
-      <img src="../res/pixel_icon_core_1024.png" style="height: 120px; object-fit: contain; padding: 8px;" />
-    </a>
-  </div>
-  <div style="display: flex; flex-direction: column; justify-content: flex-start;">
-    <div style="font-weight: bold; font-size: 1.2em; margin-bottom: 8px;">
-      <a href="https://github.com/catilgrass/mingling" target="_blank" style="text-decoration: none; color: inherit;">Mingling - Github</a>
-    </div>
-    <div style="color: #555;">
-        A Rust CLI framework for many subcmds & complex workflows, reduces boilerplate via proc macros, focus on biz logic
-    </div>
-  </div>
-</div>
-
 ## Mingling 是什么？
 
 **Mingling** 是一款 Rust 命令行开发框架，更准确地说，它是一款在调度、执行、渲染等方面提供高度抽象的框架。

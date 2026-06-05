@@ -1,0 +1,10 @@
+[example]
+id = "example-panic-unwind"
+name = "Panic Unwind"
+icon = "💥"
+category = "runtime"
+desc = """
+Example Panic Unwind
+"""
+tags = ["panic_unwind"]
+files = ["src/main.rs", "Cargo.toml"]

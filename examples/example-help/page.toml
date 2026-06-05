@@ -1,0 +1,10 @@
+[example]
+id = "example-help"
+name = "Help"
+icon = "💡"
+category = "ux"
+desc = """
+Example Help
+"""
+tags = ["#[helper]"]
+files = ["src/main.rs", "Cargo.toml"]

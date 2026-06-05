@@ -1,0 +1,10 @@
+[example]
+id = "example-general-renderer"
+name = "General Renderer"
+icon = "📤"
+category = "output"
+desc = """
+Example General Renderer
+"""
+tags = ["general_renderer", "--json", "--yaml"]
+files = ["src/main.rs", "Cargo.toml"]
