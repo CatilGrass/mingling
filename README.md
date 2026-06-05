@@ -135,9 +135,8 @@ You can read the following docs to learn more about the `Mingling` framework:
   - [ ] \[**0.2.0**\] Complete documentation, tests, and examples
 
 - [ ] Milestone.2 "More Comfortable Dev and User Experience"
-  - [ ] ...
+  - [ ] \[**0.2.1**\] \[`macros`\] `r_println!` in `#[chain]` support.
   - [ ] \[**0.2.5**\] \[`mling`\] Helpdoc Maker
-  - [ ] ...
   - [ ] \[**0.2.8**\] \[`picker`\] A more efficient and intelligent argument parser
 
 - [ ] Milestone.3 "Unplanned"
