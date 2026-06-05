@@ -15,6 +15,28 @@ pub struct ProgramStdoutSetting {
     /// **NOTE**: Convention only, not a configuration
     pub verbose: bool,
 
+    /// Quiet mode: suppress status messages, show only errors and results
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub quiet: bool,
+
+    /// Debug mode: output internal state and detailed diagnostics
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub debug: bool,
+
+    /// Enable colored output
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub color: bool,
+
+    /// Show progress indicators (e.g. progress bars, spinners)
+    ///
+    /// Automatically disabled when stdout is not a tty.
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub progress: bool,
+
     #[cfg(feature = "clap")]
     /// Behavior when Clap Dispatcher outputs help information
     pub clap_help_print_behaviour: ClapHelpPrintBehaviour,
@@ -38,6 +60,10 @@ impl Default for ProgramStdoutSetting {
             render_output: true,
             silence_panic: false,
             verbose: false,
+            quiet: false,
+            debug: false,
+            color: true,
+            progress: true,
             #[cfg(feature = "clap")]
             clap_help_print_behaviour: ClapHelpPrintBehaviour::default(),
         }
@@ -62,6 +88,21 @@ pub struct ProgramUserContext {
     ///
     /// **NOTE**: Convention only, not a configuration
     pub dry_run: bool,
+
+    /// Force execution, skipping safety checks
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub force: bool,
+
+    /// Whether the program is running in an interactive terminal (has a tty)
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub interactive: bool,
+
+    /// Assume "yes" for all confirmation prompts
+    ///
+    /// **NOTE**: Convention only, not a configuration
+    pub assume_yes: bool,
 }
 
 impl Default for ProgramUserContext {
@@ -71,6 +112,9 @@ impl Default for ProgramUserContext {
             run_hook: true,
             confirm: false,
             dry_run: false,
+            force: false,
+            interactive: false,
+            assume_yes: false,
         }
     }
 }

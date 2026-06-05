@@ -37,7 +37,7 @@ program.with_setup(ConfirmFlagSetup::new(["-C", "--confirm"]));
 program.with_setup(BasicProgramSetup);
 ```
 
-3. **\[core\]** Added `verbose` option to `ProgramStdoutSetting` and `dry_run` option to `ProgramUserContext`. These fields are annotated as conventions only, meaning the framework does not enforce any particular behavior — it is up to the application to read and act on them.
+3. **\[core\]** Added `verbose`, `quiet`, `debug`, `color`, and `progress` fields to `ProgramStdoutSetting`, and `dry_run`, `force`, `interactive`, and `assume_yes` fields to `ProgramUserContext`. These fields are annotated as conventions only, meaning the framework does not enforce any particular behavior — it is up to the application to read and act on them.
 
 #### **BREAKING CHANGES** (API CHANGES):
 
