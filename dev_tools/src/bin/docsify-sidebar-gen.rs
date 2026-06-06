@@ -73,7 +73,9 @@ fn build_sidebar_content(base_dir: &Path, pages_dir: &Path, sidebar_head: &str) 
                 let dir_name = entry.file_name().to_string_lossy().to_string();
                 let entries = collect_markdown_files(&path, base_dir);
                 if !entries.is_empty() {
-                    sub_dirs.insert(dir_name, entries);
+                    // Check for .name file to override directory display name
+                    let display_name = get_directory_display_name(&path, &dir_name);
+                    sub_dirs.insert(display_name, entries);
                 }
             } else if path.extension().is_some_and(|ext| ext == "md") {
                 let title = extract_title(&path);
@@ -165,6 +167,21 @@ fn extract_title(path: &Path) -> String {
         || "Untitled".to_string(),
         |s| s.to_string_lossy().to_string(),
     )
+}
+
+/// Read `.name` file inside a directory to get its display name for the sidebar.
+/// Falls back to the directory name itself if no `.name` file exists.
+fn get_directory_display_name(dir_path: &std::path::Path, fallback: &str) -> String {
+    let name_file = dir_path.join(".name");
+    if name_file.exists() && name_file.is_file() {
+        std::fs::read_to_string(&name_file)
+            .ok()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| fallback.to_string())
+    } else {
+        fallback.to_string()
+    }
 }
 
 fn find_git_repo() -> Option<std::path::PathBuf> {
