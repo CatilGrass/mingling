@@ -29,7 +29,7 @@ fn build_version_info() {
 
     // Get date from git commit, fallback to current date
     let date = Command::new("git")
-        .args(["log", "-1", "--format=%ad", "--date=format:%Y-%-m-%-d"])
+        .args(["log", "-1", "--format=%ad", "--date=format:%Y-%m-%d"])
         .output()
         .ok()
         .and_then(|output| {
@@ -40,7 +40,7 @@ fn build_version_info() {
             }
         })
         .map(|s| s.trim().to_string())
-        .unwrap_or_else(|| chrono::Local::now().format("%Y-%-m-%-d").to_string());
+        .unwrap_or_else(|| chrono::Local::now().format("%Y-%m-%d").to_string());
 
     let version_string = format!("mling {version} ({commit_hash} {date})");
 
