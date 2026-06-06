@@ -11,8 +11,12 @@ keywords = ["cli", "scaffolding", "command-line", "framework"]
 categories = ["command-line-interface"]
 
 [[bin]]
+name = "cargo-mling"
+path = "src/bin/mling.rs"
+
+[[bin]]
 name = "mling"
-path = "src/main.rs"
+path = "src/bin/mling.rs"
 
 [dependencies]
 mingling = { path = "../mingling", features = [
@@ -21,6 +25,7 @@ mingling = { path = "../mingling", features = [
     "comp",
     "general_renderer",
     "extra_macros",
+    "dispatch_tree",
 ] }
 
 serde = { version = "1", features = ["derive"] }
@@ -32,4 +37,5 @@ just_fmt = "0.1.2"
 toml.workspace = true
 
 [build-dependencies]
-mingling = { path = "../mingling", features = ["comp"] }
+chrono = "0.4"
+mingling = { path = "../mingling", features = ["comp", "builds"] }

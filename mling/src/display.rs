@@ -356,24 +356,26 @@ fn apply_color(text: impl AsRef<str>, color_name: impl AsRef<str>) -> String {
     let text = text.as_ref();
     let color_name = color_name.as_ref();
     match color_name {
-        // Normal colors and their bright short aliases
-        "black" | "b_black" => text.black().to_string(),
-        "red" | "b_red" => text.red().to_string(),
-        "green" | "b_green" => text.green().to_string(),
-        "yellow" | "b_yellow" => text.yellow().to_string(),
-        "blue" | "b_blue" => text.blue().to_string(),
-        "magenta" | "b_magenta" => text.magenta().to_string(),
-        "cyan" | "b_cyan" => text.cyan().to_string(),
+        // Normal colors
+        "black" => text.black().to_string(),
+        "red" => text.red().to_string(),
+        "green" => text.green().to_string(),
+        "yellow" => text.yellow().to_string(),
+        "blue" => text.blue().to_string(),
+        "magenta" => text.magenta().to_string(),
+        "cyan" => text.cyan().to_string(),
         "white" | "b_white" | "bright_gray" | "bright_grey" | "b_gray" | "b_grey" => {
             text.white().to_string()
         }
-        "bright_black" | "gray" | "grey" => text.bright_black().to_string(),
-        "bright_red" => text.bright_red().to_string(),
-        "bright_green" => text.bright_green().to_string(),
-        "bright_yellow" => text.bright_yellow().to_string(),
-        "bright_blue" => text.bright_blue().to_string(),
-        "bright_magenta" => text.bright_magenta().to_string(),
-        "bright_cyan" => text.bright_cyan().to_string(),
+
+        // Bright colors and their b_ short aliases
+        "bright_black" | "b_black" | "gray" | "grey" => text.bright_black().to_string(),
+        "bright_red" | "b_red" => text.bright_red().to_string(),
+        "bright_green" | "b_green" => text.bright_green().to_string(),
+        "bright_yellow" | "b_yellow" => text.bright_yellow().to_string(),
+        "bright_blue" | "b_blue" => text.bright_blue().to_string(),
+        "bright_magenta" | "b_magenta" => text.bright_magenta().to_string(),
+        "bright_cyan" | "b_cyan" => text.bright_cyan().to_string(),
         "bright_white" => text.bright_white().to_string(),
 
         // Default to white if color not recognized

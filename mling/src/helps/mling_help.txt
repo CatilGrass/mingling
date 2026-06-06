@@ -1,0 +1,14 @@
+Mingling's scaffolding tool
+
+[[b_green]]**Usage:**[[/]] [[b_cyan]]**cargo mling**[[/]] [[cyan]][COMMAND] [OPTIONS]...[[/]]
+
+[[b_green]]**Options:**[[/]]
+__  [[b_cyan]]**-V**[[/]], [[b_cyan]]**--version**[[/]]        Print version info and exit
+__  [[b_cyan]]**-h**[[/]], [[b_cyan]]**--help**[[/]]           Print this help message
+
+__  [[b_cyan]]**--silence**[[/]], [[b_cyan]]**--quiet**[[/]]   Suppress all output
+__  [[b_cyan]]**--no-error**[[/]]           Suppress error output
+__  [[b_cyan]]**--no-result**[[/]]          Suppress result output
+
+[[b_green]]**Commands:**[[/]]
+__  [[b_cyan]]**install**[[/]]          Install
