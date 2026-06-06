@@ -1,9 +1,6 @@
 use crate::THIS_PROGRAM;
 use crate::{Program, ProgramCollect, RenderResult, error::ProgramExecuteError};
 
-#[cfg(not(feature = "async"))]
-use crate::error::ProgramPanic;
-
 // Async program
 #[cfg(feature = "async")]
 impl<C> Program<C>
@@ -163,7 +160,7 @@ where
         })) {
             Ok(result) => result,
             Err(panic_info) => {
-                let panic_payload = ProgramPanic {
+                let panic_payload = crate::error::ProgramPanic {
                     payload: panic_info,
                 };
 
