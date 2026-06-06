@@ -2,5 +2,5 @@ use mingling::macros::dispatcher;
 
 dispatcher!("install");
 
-dispatcher!("ls.namespace");
-dispatcher!("rm.namespace");
+dispatcher!("ls.namespace", CMDListNamespace => EntryListNamespace);
+dispatcher!("rm.namespace", CMDRemoveNamespace => EntryRemoveNamespace);

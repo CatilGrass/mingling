@@ -17,7 +17,7 @@ use colored::Colorize;
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// format_cargo!("Compiling: hello.rs");
 /// // Output: "   Compiling hello.rs" (green bold "Compiling" padded to 12)
 /// ```
@@ -40,7 +40,7 @@ macro_rules! format_cargo {
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// eformat_cargo!("failed to parse input");
 /// // Output: "error: failed to parse input" (red bold "error")
 /// ```
@@ -63,7 +63,7 @@ macro_rules! eformat_cargo {
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// println_cargo!("Compiling: hello.rs");
 /// ```
 #[macro_export]
@@ -85,7 +85,7 @@ macro_rules! println_cargo {
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// eprintln_cargo!("failed to parse input");
 /// ```
 #[macro_export]

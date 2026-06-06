@@ -67,7 +67,7 @@ impl Markdown for String {
 ///
 /// # Examples
 /// ```
-/// # use cli_utils::display::markdown::markdown;
+/// # use mingling_cli::display::markdown;
 /// let formatted = markdown("Hello **world**!");
 /// println!("{}", formatted);
 ///

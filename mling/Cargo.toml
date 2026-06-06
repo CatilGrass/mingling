@@ -12,7 +12,7 @@ categories = ["command-line-interface"]
 
 [[bin]]
 name = "cargo-mling"
-path = "src/bin/mling.rs"
+path = "src/bin/cargo-mling.rs"
 
 [[bin]]
 name = "mling"
@@ -25,7 +25,6 @@ mingling = { path = "../mingling", features = [
     "comp",
     "general_renderer",
     "extra_macros",
-    "dispatch_tree",
 ] }
 
 serde = { version = "1", features = ["derive"] }
