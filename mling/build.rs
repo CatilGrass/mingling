@@ -57,6 +57,5 @@ fn build_version_info() {
 }
 
 fn build_completion() {
-    build_comp_scripts("cargo-mling").unwrap();
     build_comp_scripts("mling").unwrap();
 }
