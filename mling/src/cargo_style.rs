@@ -24,10 +24,10 @@ use colored::Colorize;
 #[macro_export]
 macro_rules! format_cargo {
     ($fmt:literal, $($arg:tt)*) => {
-        $crate::format_cargo(format!($fmt, $($arg)*))
+        $crate::get_cargo_info_format(format!($fmt, $($arg)*))
     };
     ($cmd:expr) => {
-        $crate::format_cargo($cmd)
+        $crate::get_cargo_info_format($cmd)
     };
 }
 
@@ -47,10 +47,10 @@ macro_rules! format_cargo {
 #[macro_export]
 macro_rules! eformat_cargo {
     ($fmt:literal, $($arg:tt)*) => {
-        $crate::eformat_cargo(format!($fmt, $($arg)*))
+        $crate::get_cargo_error_format(format!($fmt, $($arg)*))
     };
     ($cmd:expr) => {
-        $crate::eformat_cargo($cmd)
+        $crate::get_cargo_error_format($cmd)
     };
 }
 
@@ -69,10 +69,10 @@ macro_rules! eformat_cargo {
 #[macro_export]
 macro_rules! println_cargo {
     ($fmt:literal, $($arg:tt)*) => {
-        println!("{}", $crate::format_cargo(format!($fmt, $($arg)*)))
+        println!("{}", $crate::get_cargo_info_format(format!($fmt, $($arg)*)))
     };
     ($cmd:expr) => {
-        println!("{}", $crate::format_cargo($cmd))
+        println!("{}", $crate::get_cargo_info_format($cmd))
     };
 }
 
@@ -91,10 +91,10 @@ macro_rules! println_cargo {
 #[macro_export]
 macro_rules! eprintln_cargo {
     ($fmt:literal, $($arg:tt)*) => {
-        eprintln!("{}", $crate::eformat_cargo(format!($fmt, $($arg)*)))
+        eprintln!("{}", $crate::get_cargo_error_format(format!($fmt, $($arg)*)))
     };
     ($cmd:expr) => {
-        eprintln!("{}", $crate::eformat_cargo($cmd))
+        eprintln!("{}", $crate::get_cargo_error_format($cmd))
     };
 }
 
@@ -114,10 +114,10 @@ macro_rules! eprintln_cargo {
 /// # Examples
 ///
 /// ```ignore
-/// format_cargo("Compiling: my_program.rs");
+/// get_cargo_info_format("Compiling: my_program.rs");
 /// // returns "   Compiling my_program.rs"
 /// ```
-pub fn format_cargo(str: impl Into<String>) -> String {
+pub fn get_cargo_info_format(str: impl Into<String>) -> String {
     let s = str.into();
     let (prefix, content) = if let Some(pos) = s.find(':') {
         (
@@ -153,9 +153,9 @@ pub fn format_cargo(str: impl Into<String>) -> String {
 /// # Examples
 ///
 /// ```ignore
-/// eformat_cargo("something went wrong");
+/// get_cargo_error_format("something went wrong");
 /// // returns "error: something went wrong"
 /// ```
-pub fn eformat_cargo(str: impl Into<String>) -> String {
+pub fn get_cargo_error_format(str: impl Into<String>) -> String {
     format!("{}: {}", "error".bold().bright_red(), str.into())
 }

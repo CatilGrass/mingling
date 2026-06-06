@@ -1,6 +1,5 @@
 use std::{env::current_dir, process::exit};
 
-use colored::Colorize;
 use mingling::{
     Program,
     hook::ProgramHook,
@@ -65,7 +64,7 @@ fn main() {
         if result.exit_code == 0 && render_output {
             println!("{}", result.trim());
         } else if error_output {
-            eprintln!("{}", result.trim().bright_red());
+            eprintln!("{}", result.trim());
         }
     }
     exit(result.exit_code);
