@@ -14,7 +14,7 @@
 //! No name provided (with exit code 1)
 //! ```
 
-use mingling::{prelude::*, res::ExitCode, setup::ExitCodeSetup};
+use mingling::{prelude::*, res::ResExitCode, setup::ExitCodeSetup};
 
 fn main() {
     let mut program = ThisProgram::new();
@@ -50,11 +50,11 @@ fn render_result_name(name: ResultName) {
     r_println!("Hello, {}", *name);
 }
 
-// Define renderer, render error message                      _____________ Inject exit code resource
+// Define renderer, render error message                      _______________ Inject exit code resource
 //                                                           /
 /// Renders the error when no name is provided               |
-#[renderer] //                                               vvvvvvvvvvvvv
-fn render_error_no_name_provided(_: ErrorNoNameProvided, ec: &mut ExitCode) {
+#[renderer] //                                               vvvvvvvvvvvvvvvv
+fn render_error_no_name_provided(_: ErrorNoNameProvided, ec: &mut ResExitCode) {
     ec.exit_code = 1;
 
     // Prompt when no name is provided

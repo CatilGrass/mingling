@@ -9,7 +9,7 @@ use mingling_core::{ProgramCollect, this};
 /// The exit code is stored globally per `ProgramCollect` type and can be
 /// retrieved via [`exit_code()`] or updated via [`update_exit_code()`].
 #[derive(Debug, Default, Clone, Copy)]
-pub struct ExitCode {
+pub struct ResExitCode {
     /// The numeric exit code value.
     pub exit_code: i32,
 }
@@ -19,7 +19,7 @@ pub fn update_exit_code<C>(exit_code: i32)
 where
     C: ProgramCollect<Enum = C> + 'static,
 {
-    this::<C>().modify_res(|e: &mut ExitCode| e.exit_code = exit_code);
+    this::<C>().modify_res(|e: &mut ResExitCode| e.exit_code = exit_code);
 }
 
 /// Retrieves the globally stored exit code for the given `ProgramCollect` type.
@@ -29,7 +29,7 @@ pub fn exit_code<C>() -> i32
 where
     C: ProgramCollect<Enum = C> + 'static,
 {
-    match this::<C>().res::<ExitCode>() {
+    match this::<C>().res::<ResExitCode>() {
         Some(e) => e.exit_code,
         None => 0,
     }

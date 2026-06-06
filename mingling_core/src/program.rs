@@ -25,9 +25,8 @@ pub use collection::*;
 mod once_exec;
 
 #[cfg(feature = "repl")]
-mod repl_exec;
-#[cfg(feature = "repl")]
-pub use repl_exec::res::REPL;
+#[doc(hidden)]
+pub mod repl_exec;
 
 mod single_instance;
 pub use single_instance::*;

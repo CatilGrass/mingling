@@ -10,8 +10,9 @@
 use mingling::{
     hook::ProgramHook,
     prelude::*,
+    res::ResREPL,
     setup::{BasicREPLOutputSetup, BasicREPLPromptSetup, BasicREPLReadlineSetup},
-    this, REPL,
+    this,
 };
 use std::{env::current_dir, path::PathBuf};
 
@@ -145,7 +146,7 @@ fn render_list(list: ResultList) {
 #[chain]
 fn handle_exit(
     _prev: EntryExit,
-    repl: &mut REPL, // Import REPL resource, registered in `exec_repl`, usable directly
+    repl: &mut ResREPL, // Import REPL resource, registered in `exec_repl`, usable directly
 ) {
     // Set the REPL exit flag; REPL will exit after this loop iteration
     repl.exit = true;

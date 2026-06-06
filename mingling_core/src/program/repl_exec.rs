@@ -11,7 +11,7 @@ mod splitter;
 use crate::error::{ProgramInternalExecuteError, ProgramPanic};
 use crate::program::repl_exec::splitter::split_input_string;
 use crate::{Program, ProgramCollect, RenderResult};
-use crate::{program::repl_exec::res::REPL, this};
+use crate::{program::repl_exec::res::ResREPL, this};
 
 #[cfg(not(feature = "async"))]
 impl<C> Program<C>
@@ -24,7 +24,7 @@ where
     /// and displays the execution result or error message. It is suitable for scenarios requiring command-line interaction with the user.
     pub fn exec_repl(mut self) {
         // Inject default REPL resource
-        self.with_resource(REPL::default());
+        self.with_resource(ResREPL::default());
 
         self.run_hook_repl_on_begin();
 
@@ -48,7 +48,7 @@ where
                 }
                 p.run_hook_repl_post_exec();
 
-                if this::<C>().res::<REPL>().unwrap().exit {
+                if this::<C>().res::<ResREPL>().unwrap().exit {
                     p.run_hook_repl_exit();
                     break;
                 }
@@ -73,7 +73,7 @@ where
     /// Any panics during command execution will result in an abort rather than being caught and handled gracefully.
     pub async fn exec_repl(mut self) {
         // Inject default REPL resource
-        self.with_resource(REPL::default());
+        self.with_resource(ResREPL::default());
 
         self.run_hook_repl_on_begin();
 
@@ -94,7 +94,7 @@ where
                 }
                 p.run_hook_repl_post_exec();
 
-                if this::<C>().res::<REPL>().unwrap().exit {
+                if this::<C>().res::<ResREPL>().unwrap().exit {
                     p.run_hook_repl_exit();
                     break;
                 }

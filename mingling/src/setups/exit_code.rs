@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use mingling_core::{ProgramCollect, hook::ProgramHook, setup::ProgramSetup, this};
 
-use crate::res::ExitCode;
+use crate::res::ResExitCode;
 
 /// Provides the ability to control the program's exit code, which is returned when the program ends.
 ///
@@ -29,11 +29,11 @@ where
 {
     fn setup(self, program: &mut crate::Program<C>) {
         // Insert resource
-        program.with_resource(ExitCode { exit_code: 0 });
+        program.with_resource(ResExitCode { exit_code: 0 });
 
         // Insert hook to override exit code before program ends
         program.with_hook(ProgramHook::empty().on_finish(|| {
-            let this = this::<C>().res_or_default::<ExitCode>();
+            let this = this::<C>().res_or_default::<ResExitCode>();
             this.exit_code
         }));
     }

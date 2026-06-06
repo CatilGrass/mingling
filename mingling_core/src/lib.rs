@@ -70,3 +70,9 @@ pub use crate::comp::*;
 pub mod setup {
     pub use crate::program::setup::ProgramSetup;
 }
+
+#[doc(hidden)]
+pub mod core_res {
+    #[cfg(feature = "repl")]
+    pub use crate::program::repl_exec::res::ResREPL;
+}

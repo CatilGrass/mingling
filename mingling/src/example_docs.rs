@@ -1088,7 +1088,7 @@ pub mod example_error_handling {}
 ///
 /// Source code (./src/main.rs)
 /// ```ignore
-/// use mingling::{prelude::*, res::ExitCode, setup::ExitCodeSetup};
+/// use mingling::{prelude::*, res::ResExitCode, setup::ExitCodeSetup};
 ///
 /// fn main() {
 ///     let mut program = ThisProgram::new();
@@ -1124,11 +1124,11 @@ pub mod example_error_handling {}
 ///     r_println!("Hello, {}", *name);
 /// }
 ///
-/// // Define renderer, render error message                      _____________ Inject exit code resource
+/// // Define renderer, render error message                      _______________ Inject exit code resource
 /// //                                                           /
 /// /// Renders the error when no name is provided               |
-/// #[renderer] //                                               vvvvvvvvvvvvv
-/// fn render_error_no_name_provided(_: ErrorNoNameProvided, ec: &mut ExitCode) {
+/// #[renderer] //                                               vvvvvvvvvvvvvvvv
+/// fn render_error_no_name_provided(_: ErrorNoNameProvided, ec: &mut ResExitCode) {
 ///     ec.exit_code = 1;
 ///
 ///     // Prompt when no name is provided
@@ -1521,8 +1521,9 @@ pub mod example_panic_unwind {}
 /// use mingling::{
 ///     hook::ProgramHook,
 ///     prelude::*,
+///     res::ResREPL,
 ///     setup::{BasicREPLOutputSetup, BasicREPLPromptSetup, BasicREPLReadlineSetup},
-///     this, REPL,
+///     this,
 /// };
 /// use std::{env::current_dir, path::PathBuf};
 ///
@@ -1656,7 +1657,7 @@ pub mod example_panic_unwind {}
 /// #[chain]
 /// fn handle_exit(
 ///     _prev: EntryExit,
-///     repl: &mut REPL, // Import REPL resource, registered in `exec_repl`, usable directly
+///     repl: &mut ResREPL, // Import REPL resource, registered in `exec_repl`, usable directly
 /// ) {
 ///     // Set the REPL exit flag; REPL will exit after this loop iteration
 ///     repl.exit = true;
