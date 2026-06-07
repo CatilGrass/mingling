@@ -116,6 +116,13 @@ fn standard_output_setup(program: &mut Program<ThisProgram>) {
 }
 
 fn resolve_manifest_path(provided: Option<String>) -> PathBuf {
+    let p = ThisProgram::this();
+    let disable_error_output =
+        // --no-error
+        !p.stdout_setting.error_output ||
+        // or --quiet/--silence
+        p.stdout_setting.quiet;
+
     if let Some(path) = provided {
         let p = PathBuf::from_str(&path).unwrap();
         if p.is_dir() {
@@ -123,7 +130,9 @@ fn resolve_manifest_path(provided: Option<String>) -> PathBuf {
             if candidate.exists() {
                 return candidate;
             }
-            eprintln_cargo!("`{}` is not a crate root", p.display());
+            if !disable_error_output {
+                eprintln_cargo!("`{}` is not a crate root", p.display());
+            }
             exit(1);
         }
         return p;
@@ -137,7 +146,9 @@ fn resolve_manifest_path(provided: Option<String>) -> PathBuf {
         }
         if !dir.pop() {
             // Reached filesystem root without finding Cargo.toml
-            eprintln_cargo!("`{}` is not a crate root", current_dir().unwrap().display());
+            if !disable_error_output {
+                eprintln_cargo!("`{}` is not a crate root", current_dir().unwrap().display());
+            }
             exit(1);
         }
     }
