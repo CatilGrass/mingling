@@ -16,10 +16,10 @@ pub fn read_metadata(cargo_toml: &PathBuf) -> Result<CargoLockFile, std::io::Err
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!("cargo metadata failed: {}", stderr),
-        ));
+        return Err(std::io::Error::other(format!(
+            "cargo metadata failed: {}",
+            stderr
+        )));
     }
 
     let lock_file: CargoLockFile = serde_json::from_slice(&output.stdout)

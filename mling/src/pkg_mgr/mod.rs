@@ -4,6 +4,9 @@ use mingling::{
     macros::{dispatcher, program_setup},
 };
 
+mod installer;
+pub use installer::*;
+
 dispatcher!("install");
 dispatcher!("ls.namespace", CMDListNamespace => EntryListNamespace);
 dispatcher!("rm.namespace", CMDRemoveNamespace => EntryRemoveNamespace);
