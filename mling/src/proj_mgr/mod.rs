@@ -9,8 +9,13 @@ pub mod metadata;
 mod show_binaries;
 pub use show_binaries::*;
 
+mod show_directories;
+pub use show_directories::*;
+
 dispatcher!("show.binaries");
-dispatcher!("show.workspace");
+dispatcher!("show.workspace-dir",
+    CMDShowWorkspaceDirectory => EntryShowWorkspaceDirectory
+);
 dispatcher!("show.target-dir",
     CMDShowTargetDirectories => EntryShowTargetDirectories
 );
@@ -18,6 +23,6 @@ dispatcher!("show.target-dir",
 #[program_setup]
 pub fn project_manager_setup(p: &mut Program<ThisProgram>) {
     p.with_dispatcher(CMDShowBinaries);
-    p.with_dispatcher(CMDShowWorkspace);
+    p.with_dispatcher(CMDShowWorkspaceDirectory);
     p.with_dispatcher(CMDShowTargetDirectories);
 }
