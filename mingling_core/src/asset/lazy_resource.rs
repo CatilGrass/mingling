@@ -1,98 +1,125 @@
 use crate::{ProgramCollect, ResourceMarker, this};
 
-/// A lazily initialized resource that only creates its value on first access via a given initializer function.
+enum LazyInner<T> {
+    /// Not yet initialized — holds the factory function.
+    /// After init, the factory is **dropped**, no wasted memory.
+    Uninit(Box<dyn FnMut() -> T + Send + Sync>),
+    /// Initialized and ready to go.
+    Init(T),
+}
+
+/// A lazily initialized resource that only creates its value on first access.
 ///
-/// `LazyRes<T>` wraps an `Option<T>` and an initializer function, supporting thread-safe lazy loading.
-/// Initialization is triggered by calls to `get_ref()`, `get_mut()`, or `get_clone()`.
-pub struct LazyRes<T: Default + Send + Sync + Clone> {
-    /// The initializer function, called on first access to produce the inner value.
-    init_fn: Box<dyn FnMut() -> T + Send + Sync>,
-    /// Stores the initialized value; `None` means not yet initialized.
-    inner: Option<T>,
+/// Unlike `Option<T>` + persistent `Box<dyn FnMut>`, the factory function is
+/// **consumed and dropped** after initialization. No leftover allocation.
+///
+/// Initialization is triggered by `get_ref()`, `get_mut()`, or `get_clone()`.
+pub struct LazyRes<T: Send + Sync + 'static> {
+    inner: LazyInner<T>,
 }
 
-impl<T: Default + Send + Sync + Clone> Default for LazyRes<T> {
-    /// Creates an uninitialized `LazyRes<T>` whose initializer returns `T::default()`.
-    fn default() -> Self {
-        Self {
-            inner: None,
-            init_fn: Box::new(|| T::default()),
-        }
-    }
-}
-
-impl<T: Default + Send + Sync + Clone + 'static> LazyRes<T> {
-    /// Creates a new lazily initialized resource with a custom initializer function.
+impl<T: Send + Sync + 'static> LazyRes<T> {
+    /// Creates a new lazily initialized resource with a custom initializer.
     ///
-    /// # Parameters
-    /// - `f`: The initializer function called on first access, returning a value of type `T`.
-    ///
-    /// # Returns
-    /// Returns an uninitialized `LazyRes<T>`.
+    /// The factory `f` is called on first access, then dropped.
     #[must_use]
     pub fn new(f: impl FnMut() -> T + Send + Sync + 'static) -> Self {
         Self {
-            inner: None,
-            init_fn: Box::new(f),
+            inner: LazyInner::Uninit(Box::new(f)),
         }
     }
 
-    /// Returns an immutable reference to the inner value, calling the initializer if necessary.
-    ///
-    /// # Returns
-    /// An immutable reference to the inner value `T`.
+    fn force_init(&mut self) -> &mut LazyInner<T> {
+        if matches!(&self.inner, LazyInner::Uninit(_)) {
+            // Replace with a temporary poison value so we can move the real factory out.
+            // SAFETY: if the factory panics, the poison value's `unreachable!()` will
+            // catch any subsequent access.
+            let poisoned = LazyInner::Uninit(Box::new(|| {
+                unreachable!("LazyRes poisoned during initialization")
+            }));
+            let old = std::mem::replace(&mut self.inner, poisoned);
+            match old {
+                LazyInner::Uninit(mut f) => {
+                    self.inner = LazyInner::Init((f)());
+                }
+                // Already initialized — put it back
+                init @ LazyInner::Init(_) => {
+                    self.inner = init;
+                }
+            }
+        }
+        &mut self.inner
+    }
+
+    /// Returns an immutable reference to the inner value,
+    /// calling the initializer on first access.
     pub fn get_ref(&mut self) -> &T {
-        if self.inner.is_none() {
-            self.inner = Some((self.init_fn)());
+        self.force_init();
+        match &self.inner {
+            LazyInner::Init(t) => t,
+            _ => unreachable!(),
         }
-        self.inner.as_ref().unwrap()
     }
 
-    /// Returns a mutable reference to the inner value, calling the initializer if necessary.
-    ///
-    /// # Returns
-    /// A mutable reference to the inner value `T`.
+    /// Returns a mutable reference to the inner value,
+    /// calling the initializer on first access.
     pub fn get_mut(&mut self) -> &mut T {
-        if self.inner.is_none() {
-            self.inner = Some((self.init_fn)());
+        self.force_init();
+        match &mut self.inner {
+            LazyInner::Init(t) => t,
+            _ => unreachable!(),
         }
-        self.inner.as_mut().unwrap()
-    }
-
-    /// Resets the lazy resource by taking and returning the inner value; on next access, re-initialization occurs.
-    ///
-    /// # Returns
-    /// Returns the previously initialized value if any, otherwise `None`.
-    pub fn reset(&mut self) -> Option<T> {
-        self.inner.take()
     }
 
     /// Returns a clone of the inner value, calling the initializer if necessary.
-    ///
-    /// # Returns
-    /// A clone of type `T`.
-    pub fn get_clone(&mut self) -> T {
+    pub fn get_clone(&mut self) -> T
+    where
+        T: Clone,
+    {
         self.get_ref().clone()
     }
-}
 
-impl<T: Default + Send + Sync + Clone + 'static> From<T> for LazyRes<T> {
-    /// Creates a `LazyRes<T>` from an existing value (already initialized), with the initializer set to `T::default()`.
-    fn from(value: T) -> Self {
-        Self {
-            inner: Some(value),
-            init_fn: Box::new(|| T::default()),
+    /// Consumes the lazy resource and returns the inner value, if initialized.
+    ///
+    /// Unlike `reset()`, this **drops** the lazy wrapper entirely.
+    /// If you need to re-initialize, just construct a new `LazyRes::new(f)`.
+    pub fn into_inner(self) -> Option<T> {
+        match self.inner {
+            LazyInner::Init(t) => Some(t),
+            LazyInner::Uninit(_) => None,
         }
     }
 }
 
-impl<T: Default + Send + Sync + Clone + 'static> LazyRes<T> {
+impl<T: Send + Sync + 'static> Default for LazyRes<T>
+where
+    T: Default,
+{
+    /// Creates an uninitialized `LazyRes<T>` whose initializer returns `T::default()`.
+    fn default() -> Self {
+        Self::new(|| T::default())
+    }
+}
+
+impl<T: Send + Sync + 'static> From<T> for LazyRes<T> {
+    /// Creates a `LazyRes<T>` from an already-initialized value.
+    fn from(value: T) -> Self {
+        Self {
+            inner: LazyInner::Init(value),
+        }
+    }
+}
+
+impl<T: Send + Sync + 'static> LazyRes<T> {
     /// Creates a lazily initialized resource using `T::default()` as the initializer.
-    pub fn lazy_default() -> Self {
+    pub fn lazy_default() -> Self
+    where
+        T: Default,
+    {
         Self::default()
     }
 
-    /// Creates a lazily initialized resource with a custom initializer function.
+    /// Creates a lazily initialized resource with a custom initializer.
     ///
     /// Same as `LazyRes::new`.
     pub fn lazy_init(f: impl FnMut() -> T + Send + Sync + 'static) -> Self {
@@ -100,34 +127,48 @@ impl<T: Default + Send + Sync + Clone + 'static> LazyRes<T> {
     }
 }
 
-/// Provides convenience methods for types implementing `Default + Send + Sync + Clone + 'static`,
-/// allowing them to easily create a corresponding `LazyRes<T>`.
-pub trait LazyInit: Default + Send + Sync + Clone + 'static {
+/// Provides convenience methods for types, allowing them to easily
+/// create a corresponding `LazyRes<T>`.
+pub trait LazyInit: Send + Sync + 'static {
     /// Creates a lazily initialized resource for this type using `Default` as the initializer.
-    fn lazy_default() -> LazyRes<Self> {
+    fn lazy_default() -> LazyRes<Self>
+    where
+        Self: Default,
+    {
         LazyRes::default()
     }
 
-    /// Creates a lazily initialized resource for this type with a custom initializer function.
-    fn lazy_init(f: impl FnMut() -> Self + Send + Sync + 'static) -> LazyRes<Self> {
+    /// Creates a lazily initialized resource for this type with a custom initializer.
+    fn lazy_init(f: impl FnMut() -> Self + Send + Sync + 'static) -> LazyRes<Self>
+    where
+        Self: Sized,
+    {
         LazyRes::new(f)
     }
 }
 
-impl<T: Default + Send + Sync + Clone + 'static> LazyInit for T {}
+impl<T: Send + Sync + 'static> LazyInit for T {}
 
-impl<T: Default + Send + Sync + Clone + 'static> ResourceMarker for LazyRes<T> {
-    /// Clones the lazy resource. The cloned resource retains any initialized value, but the initializer is reset to `T::default()`.
+impl<T: Send + Sync + 'static> ResourceMarker for LazyRes<T>
+where
+    T: Default + Clone,
+{
+    /// Clones the lazy resource. The cloned resource retains any initialized value,
+    /// but the initializer is reset to `T::default()`.
     fn res_clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
-            // The original initializer is not preserved on clone
-            init_fn: Box::new(|| T::default()),
+        match &self.inner {
+            LazyInner::Init(t) => Self {
+                inner: LazyInner::Init(t.clone()),
+            },
+            LazyInner::Uninit(_) => Self::default(),
         }
     }
 
     /// Returns a default lazy resource (uninitialized, using `T::default()` as the initializer).
-    fn res_default() -> Self {
+    fn res_default() -> Self
+    where
+        T: Default,
+    {
         Self::default()
     }
 
