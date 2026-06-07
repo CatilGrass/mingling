@@ -54,6 +54,29 @@ macro_rules! eformat_cargo {
     };
 }
 
+/// Formats a help message in cargo-style format with a bright white "help" prefix.
+///
+/// # Macros
+///
+/// - `hformat_cargo!("prefix: {}", arg)` — format-style invocation
+/// - `hformat_cargo!(expr)` — direct expression invocation
+///
+/// # Examples
+///
+/// ```ignore
+/// hformat_cargo!("use --verbose for more info");
+/// // Output: "help: use --verbose for more info" (bright white "help")
+/// ```
+#[macro_export]
+macro_rules! hformat_cargo {
+    ($fmt:literal, $($arg:tt)*) => {
+        $crate::get_cargo_help_format(format!($fmt, $($arg)*))
+    };
+    ($cmd:expr) => {
+        $crate::get_cargo_help_format($cmd)
+    };
+}
+
 /// Print a message in cargo-style format with a bold green prefix.
 ///
 /// # Macros
@@ -95,6 +118,28 @@ macro_rules! eprintln_cargo {
     };
     ($cmd:expr) => {
         eprintln!("{}", $crate::get_cargo_error_format($cmd))
+    };
+}
+
+/// Print a help message in cargo-style format with a bright white "help" prefix.
+///
+/// # Macros
+///
+/// - `hprintln_cargo!("prefix: {}", arg)` — format-style invocation
+/// - `hprintln_cargo!(expr)` — direct expression invocation
+///
+/// # Examples
+///
+/// ```ignore
+/// hprintln_cargo!("use --verbose for more info");
+/// ```
+#[macro_export]
+macro_rules! hprintln_cargo {
+    ($fmt:literal, $($arg:tt)*) => {
+        println!("{}", $crate::get_cargo_help_format(format!($fmt, $($arg)*)))
+    };
+    ($cmd:expr) => {
+        println!("{}", $crate::get_cargo_help_format($cmd))
     };
 }
 
@@ -158,4 +203,19 @@ pub fn get_cargo_info_format(str: impl Into<String>) -> String {
 /// ```
 pub fn get_cargo_error_format(str: impl Into<String>) -> String {
     format!("{}: {}", "error".bold().bright_red(), str.into())
+}
+
+/// Format a help message in cargo style format, with bright white "help" prefix.
+///
+/// The input string is printed as the help content, prefixed by a bright white
+/// `help:` label (not bold).
+///
+/// # Examples
+///
+/// ```ignore
+/// get_cargo_help_format("use --verbose for more info");
+/// // returns "help: use --verbose for more info"
+/// ```
+pub fn get_cargo_help_format(str: impl Into<String>) -> String {
+    format!("{}: {}", "help".bright_white(), str.into())
 }

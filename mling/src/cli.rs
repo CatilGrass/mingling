@@ -1,15 +1,16 @@
-use std::{env::current_dir, process::exit};
+use std::{env::current_dir, path::PathBuf, process::exit, str::FromStr};
 
 use crate::{
-    CMDCompletion, ThisProgram,
+    CMDCompletion, PackageManagerSetup, ProjectManagerSetup, ThisProgram,
     display::markdown,
-    proj_mgr::{CMDInstall, CMDListNamespace, CMDRemoveNamespace},
-    res::ResCurrentDir,
+    eprintln_cargo,
+    pkg_mgr::{CMDInstall, CMDListNamespace, CMDRemoveNamespace},
+    res::{ResCurrentDir, ResManifestPath},
 };
 use mingling::{
     Program,
     hook::ProgramHook,
-    macros::program_setup,
+    macros::{help, program_setup},
     setup::{ExitCodeSetup, GeneralRendererSetup, HelpFlagSetup, QuietFlagSetup},
 };
 
@@ -48,22 +49,40 @@ pub fn run() {
         _ => {}
     }));
 
+    // Commands
+    program.with_dispatcher(CMDCompletion);
+
     // Setups
     program.with_setup(HelpFlagSetup::new(["-h", "--help"]));
     program.with_setup(GeneralRendererSetup);
-    program.with_setup(StandardOutputSetup);
     program.with_setup(ExitCodeSetup::default());
+
+    program.with_setup(StandardOutputSetup);
+    program.with_setup(PackageManagerSetup);
+    program.with_setup(ProjectManagerSetup);
 
     // Resources
     program.with_resource(ResCurrentDir {
         path: current_dir().unwrap(),
     });
 
-    // Commands
-    program.with_dispatcher(CMDCompletion);
-    program.with_dispatcher(CMDInstall);
-    program.with_dispatcher(CMDListNamespace);
-    program.with_dispatcher(CMDRemoveNamespace);
+    let manifest_path = program.pick_global_argument(["-P", "--manifest-path"]);
+    program.with_resource(ResManifestPath {
+        raw: manifest_path,
+        resolved: None,
+    });
+
+    // Manifest Path Check
+    program.with_hook(ProgramHook::empty().on_post_dispatch(|c| match c {
+        // Skip completion (bypass completion)
+        ThisProgram::CompletionContext => {}
+        _ => {
+            let p = ThisProgram::this();
+            p.modify_res(|manifest_path: &mut ResManifestPath| {
+                manifest_path.resolved = Some(resolve_manifest_path(manifest_path.raw.clone()));
+            });
+        }
+    }));
 
     // Execute
     let quiet = program.stdout_setting.quiet;
@@ -92,4 +111,32 @@ fn standard_output_setup(program: &mut Program<ThisProgram>) {
     program.global_flag(["--silence", "--quiet"], |program| {
         program.stdout_setting.quiet = true;
     });
+}
+
+fn resolve_manifest_path(provided: Option<String>) -> PathBuf {
+    if let Some(path) = provided {
+        let p = PathBuf::from_str(&path).unwrap();
+        if p.is_dir() {
+            let candidate = p.join("Cargo.toml");
+            if candidate.exists() {
+                return candidate;
+            }
+            eprintln_cargo!("`{}` is not a crate root", p.display());
+            exit(1);
+        }
+        return p;
+    }
+    // Walk up from current directory to find nearest Cargo.toml
+    let mut dir = current_dir().unwrap();
+    loop {
+        let candidate = dir.join("Cargo.toml");
+        if candidate.exists() {
+            return candidate;
+        }
+        if !dir.pop() {
+            // Reached filesystem root without finding Cargo.toml
+            eprintln_cargo!("`{}` is not a crate root", current_dir().unwrap().display());
+            exit(1);
+        }
+    }
 }

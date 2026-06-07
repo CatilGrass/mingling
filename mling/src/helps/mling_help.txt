@@ -15,6 +15,6 @@ __      [[b_cyan]]**--no-result**[[/]]                   Suppress result output
 [[b_green]]**Commands:**[[/]]
 __  [[b_cyan]]**install**[[/]]                           Install current project into
 __                                    the **mling** package manager
-__  [[b_cyan]]**ls**[[/]], [[b_cyan]]**add**[[/]], [[b_cyan]]**rm**[[/]]                       List, add, or remove something
+__  [[b_cyan]]**ls**[[/]], [[b_cyan]]**show**[[/]], [[b_cyan]]**add**[[/]], [[b_cyan]]**rm**[[/]]                 List, show, add, or remove something
 
 Run \`[[b_cyan]]**cargo help mling**[[/]]\` for more detailed information.

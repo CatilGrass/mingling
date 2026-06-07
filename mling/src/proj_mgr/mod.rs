@@ -1,6 +1,20 @@
-use mingling::macros::dispatcher;
+use crate::ThisProgram;
+use mingling::{
+    Program,
+    macros::{dispatcher, program_setup},
+};
 
-dispatcher!("install");
+pub mod metadata;
 
-dispatcher!("ls.namespace", CMDListNamespace => EntryListNamespace);
-dispatcher!("rm.namespace", CMDRemoveNamespace => EntryRemoveNamespace);
+dispatcher!("show.binaries");
+dispatcher!("show.workspace");
+dispatcher!("show.target-dir",
+    CMDShowTargetDirectories => EntryShowTargetDirectories
+);
+
+#[program_setup]
+pub fn project_manager_setup(p: &mut Program<ThisProgram>) {
+    p.with_dispatcher(CMDShowBinaries);
+    p.with_dispatcher(CMDShowWorkspace);
+    p.with_dispatcher(CMDShowTargetDirectories);
+}
