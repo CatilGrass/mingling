@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 /// Read cargo metadata by running `cargo metadata` with the given manifest path.
-pub fn read_metadata(cargo_toml: PathBuf) -> Result<CargoLockFile, std::io::Error> {
+pub fn read_metadata(cargo_toml: &PathBuf) -> Result<CargoLockFile, std::io::Error> {
     let output = Command::new("cargo")
         .arg("metadata")
         .arg("--format-version")

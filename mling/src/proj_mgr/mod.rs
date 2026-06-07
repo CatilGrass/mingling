@@ -6,6 +6,9 @@ use mingling::{
 
 pub mod metadata;
 
+mod show_binaries;
+pub use show_binaries::*;
+
 dispatcher!("show.binaries");
 dispatcher!("show.workspace");
 dispatcher!("show.target-dir",

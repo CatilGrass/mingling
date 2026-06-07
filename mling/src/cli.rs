@@ -1,18 +1,20 @@
-use std::{env::current_dir, path::PathBuf, process::exit, str::FromStr};
-
 use crate::{
-    CMDCompletion, PackageManagerSetup, ProjectManagerSetup, ThisProgram,
+    CMDCompletion, ErrorDispatcherNotFound, Next, PackageManagerSetup, ProjectManagerSetup,
+    ThisProgram,
     display::markdown,
-    eprintln_cargo,
+    eformat_cargo, eprintln_cargo, hformat_cargo,
     pkg_mgr::{CMDInstall, CMDListNamespace, CMDRemoveNamespace},
     res::{ResCurrentDir, ResManifestPath},
 };
+use colored::Colorize;
 use mingling::{
     Program,
     hook::ProgramHook,
-    macros::{help, program_setup},
+    macros::{chain, help, pack, program_setup, r_println, renderer},
+    res::ResExitCode,
     setup::{ExitCodeSetup, GeneralRendererSetup, HelpFlagSetup, QuietFlagSetup},
 };
+use std::{env::current_dir, path::PathBuf, process::exit, str::FromStr};
 
 pub fn run() {
     #[cfg(windows)]
@@ -139,4 +141,36 @@ fn resolve_manifest_path(provided: Option<String>) -> PathBuf {
             exit(1);
         }
     }
+}
+
+pack!(ResultMlingHelp = ());
+pack!(ResultUnknownCommand = String);
+
+#[chain]
+pub fn handle_error_dispatcher_not_found(err: ErrorDispatcherNotFound) -> Next {
+    if err.is_empty() {
+        ResultMlingHelp::default().to_render()
+    } else {
+        ResultUnknownCommand::new(err.join(" ")).to_render()
+    }
+}
+
+#[renderer]
+pub fn render_mling_help(_prev: ResultMlingHelp, ec: &mut ResExitCode) {
+    r_println!("{}", markdown(include_str!("helps/mling_help.txt")));
+    ec.exit_code = 0;
+}
+
+#[renderer]
+pub fn render_unknown_command(prev: ResultUnknownCommand, ec: &mut ResExitCode) {
+    r_println!(
+        "{}",
+        eformat_cargo!("no such command: `{}`", prev.bright_yellow().bold())
+    );
+    r_println!();
+    r_println!(
+        "{}",
+        hformat_cargo!("view all commands with `cargo help mling`")
+    );
+    ec.exit_code = 101;
 }

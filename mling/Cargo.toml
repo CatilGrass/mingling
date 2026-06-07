@@ -20,11 +20,11 @@ path = "src/bin/mling.rs"
 
 [dependencies]
 mingling = { path = "../mingling", features = [
-    "builds",
     "parser",
     "comp",
     "general_renderer",
     "extra_macros",
+    "yaml_serde_fmt",
 ] }
 
 serde = { version = "1", features = ["derive"] }
