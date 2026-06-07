@@ -1,3 +1,13 @@
+[[test.example-lazy-resources]]
+command = "none"
+expect.exit-code = 0
+expect.result = "None"
+
+[[test.example-lazy-resources]]
+command = "show"
+expect.exit-code = 0
+expect.result = "Initialized\nbaz: qux\nfoo: bar\nhello: world\nkey: value\nrust: lang"
+
 [[test.example-basic]]
 command = "greet"
 expect.exit-code = 0

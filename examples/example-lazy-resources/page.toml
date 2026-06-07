@@ -1,0 +1,10 @@
+[example]
+id = "example-lazy-resources"
+name = "Lazy Resources"
+icon = "💤️"
+category = "advanced"
+desc = """
+Example Lazy Resources
+"""
+tags = ["LazyRes<Res>"]
+files = ["src/main.rs", "Cargo.toml"]

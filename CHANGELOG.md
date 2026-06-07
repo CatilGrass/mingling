@@ -39,6 +39,36 @@ program.with_setup(BasicProgramSetup);
 
 3. **\[core\]** Added `verbose`, `quiet`, `debug`, `color`, and `progress` fields to `ProgramStdoutSetting`, and `dry_run`, `force`, `interactive`, and `assume_yes` fields to `ProgramUserContext`. These fields are annotated as conventions only, meaning the framework does not enforce any particular behavior — it is up to the application to read and act on them.
 
+4. **\[core\]** Added `LazyRes<T>` for lazy resource initialization. Resources wrapped in `LazyRes<T>` are only initialized when first accessed via `get_ref()` or `get_mut()`, rather than immediately when added to the program. This is useful for resources that are expensive to initialize and may not always be needed.
+
+```rust
+use std::collections::BTreeMap;
+use mingling::{LazyInit, LazyRes, prelude::*};
+
+#[derive(Default, Clone)]
+pub struct ResLargeData {
+    pub data: BTreeMap<String, String>,
+}
+
+fn init_res_large_data() -> ResLargeData {
+    // Expensive initialization here
+    ResLargeData { data: BTreeMap::new() }
+}
+
+fn main() {
+    let mut program = ThisProgram::new();
+    program.with_resource(ResLargeData::lazy_init(init_res_large_data));
+    // ...
+}
+
+// Injected as &mut LazyRes<T> instead of &T
+#[renderer]
+fn render_entry_show(_args: EntryShow, res: &mut LazyRes<ResLargeData>) {
+    let res = res.get_ref(); // Initialization happens here
+    // use res...
+}
+```
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **\[core\]** Changed the signature of `ProgramSetup::setup` from `fn setup(&mut self, program: &mut Program<C>) -> S` to `fn setup(self, program: &mut Program<C>)`, consuming `self` instead of taking a mutable reference. Correspondingly, `Program::with_setup` now accepts `S` by value (`&mut self, setup: S`) instead of by mutable reference (`&mut self, setup: &mut S`).

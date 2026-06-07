@@ -30,6 +30,7 @@ pub use crate::asset::dispatcher::*;
 pub use crate::asset::enum_tag::*;
 pub use crate::asset::global_resource::*;
 pub use crate::asset::help::*;
+pub use crate::asset::lazy_resource::*;
 pub use crate::asset::node::*;
 pub use crate::asset::renderer::*;
 
