@@ -22,6 +22,7 @@ exclude = [
     "examples/example-resources",
     "examples/example-setup",
     "examples/example-unit-test",
+    "examples/full-todolist",
     "dev_tools",
 ]
 

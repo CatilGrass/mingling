@@ -1,0 +1,16 @@
+[package]
+name = "full-todolist"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+
+[dependencies.mingling]
+path = "../../mingling"
+features = [
+    "parser",
+    "extra_macros",
+    "general_renderer",
+]

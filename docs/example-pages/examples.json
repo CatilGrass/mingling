@@ -291,5 +291,22 @@
       "Cargo.toml",
       "src/main.rs"
     ]
+  },
+  {
+    "id": "full-todolist",
+    "name": "Todo List",
+    "icon": "📝",
+    "category": "full",
+    "desc": "This is a complete example project that demonstrates how to develop a todo list application using Mingling\n",
+    "tags": [
+      "todolist",
+      "CRUD"
+    ],
+    "files": [
+      "src/main.rs",
+      "src/todolist.rs",
+      "src/help.rs",
+      "Cargo.toml"
+    ]
   }
 ]

@@ -63,9 +63,6 @@ fn main() {
         }
 
         let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        if !dir_name.starts_with("example-") {
-            continue;
-        }
 
         let id = dir_name.to_string();
         let page_toml_path = path.join("page.toml");
