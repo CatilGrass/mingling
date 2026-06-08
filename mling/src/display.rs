@@ -34,28 +34,28 @@ impl Markdown for String {
 /// Color tags support the following color names:
 /// Color tags support the following color names:
 ///
-/// | Type                  | Color Names                                                                 |
-/// |-----------------------|-----------------------------------------------------------------------------|
-/// | Standard colors       | `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`       |
-/// | Bright colors         | `bright_black`                                                              |
-/// |                       | `bright_red`                                                                |
-/// |                       | `bright_green`                                                              |
-/// |                       | `bright_yellow`                                                             |
-/// |                       | `bright_blue`                                                               |
-/// |                       | `bright_magenta`                                                            |
-/// |                       | `bright_cyan`                                                               |
-/// |                       | `bright_white`                                                              |
+/// | Type                    | Color Names                                                                 |
+/// |-------------------------|-----------------------------------------------------------------------------|
+/// | Standard colors         | `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`       |
+/// | Bright colors           | `bright_black`                                                              |
+/// |                         | `bright_red`                                                                |
+/// |                         | `bright_green`                                                              |
+/// |                         | `bright_yellow`                                                             |
+/// |                         | `bright_blue`                                                               |
+/// |                         | `bright_magenta`                                                            |
+/// |                         | `bright_cyan`                                                               |
+/// |                         | `bright_white`                                                              |
 /// | Bright color shorthands | `b_black`                                                                   |
-/// |                       | `b_red`                                                                     |
-/// |                       | `b_green`                                                                   |
-/// |                       | `b_yellow`                                                                  |
-/// |                       | `b_blue`                                                                    |
-/// |                       | `b_magenta`                                                                 |
-/// |                       | `b_cyan`                                                                    |
-/// |                       | `b_white`                                                                   |
-/// | Gray colors           | `gray`/`grey`                                                               |
-/// |                       | `bright_gray`/`bright_grey`                                                 |
-/// |                       | `b_gray`/`b_grey`                                                           |
+/// |                         | `b_red`                                                                     |
+/// |                         | `b_green`                                                                   |
+/// |                         | `b_yellow`                                                                  |
+/// |                         | `b_blue`                                                                    |
+/// |                         | `b_magenta`                                                                 |
+/// |                         | `b_cyan`                                                                    |
+/// |                         | `b_white`                                                                   |
+/// | Gray colors             | `gray`/`grey`                                                               |
+/// |                         | `bright_gray`/`bright_grey`                                                 |
+/// |                         | `b_gray`/`b_grey`                                                           |
 ///
 /// Color tags can be nested, `[[/]]` will close the most recently opened color tag.
 ///
