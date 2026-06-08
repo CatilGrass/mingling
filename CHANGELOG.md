@@ -8,6 +8,11 @@
 
 2. **\[core:comp\]** Fixed `default_completion` jumping to the next subcommand level on partial input (e.g. typing `b` for `bind` would skip `bind` and directly suggest third-level commands `add`/`ls`/`rm`). Now if the last input word is only a partial match (`starts_with` but not equal), the current-level word is suggested instead of skipping ahead
 
+3. **\[core\]** Replaced `OnceLock<Option<Box<dyn Any>>>` with a custom `ProgramCell` type backed by `UnsafeCell` and `AtomicBool`. The new `ProgramCell` replaces `OnceLock`'s `get_or_init` / `get` / `as_ref` calls with a direct `set` / `get_raw` / `take` API. This change:
+   - Eliminates the double indirection (`OnceLock<Option<Box<...>>>` → `UnsafeCell<Option<Box<...>>>`)
+   - Allows the program instance to be **taken** (moved out) via an `unsafe fn take()` after execution completes, enabling proper cleanup before `std::process::exit()` in `exec_and_exit`
+   - Is paired with corresponding simplifications in `once_exec.rs` and `repl_exec.rs` that switch from `THIS_PROGRAM.get().unwrap().as_ref()` to `THIS_PROGRAM.get_raw().unwrap()`
+
 #### Optimizations:
 
 1. **\[core:flag\]** Refactored the `special_argument!` and `special_arguments!` macros to replace index‑based `while` loops with iterator `position` and `drain`, improving both performance and readability.

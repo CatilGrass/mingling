@@ -129,9 +129,7 @@ where
                     payload: panic_info,
                 };
                 let program = crate::program::THIS_PROGRAM
-                    .get()
-                    .unwrap()
-                    .as_ref()
+                    .get_raw()
                     .unwrap()
                     .downcast_ref::<Program<C>>()
                     .unwrap();

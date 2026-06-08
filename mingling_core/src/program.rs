@@ -118,9 +118,7 @@ where
         C: 'static,
     {
         THIS_PROGRAM
-            .get()
-            .unwrap()
-            .as_ref()
+            .get_raw()
             .unwrap()
             .downcast_ref::<Program<C>>()
             .unwrap()

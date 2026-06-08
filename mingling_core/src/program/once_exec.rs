@@ -13,11 +13,9 @@ where
         F: FnOnce(&'static Program<C>) -> Fut + Send + Sync,
         Fut: Future + Send,
     {
-        THIS_PROGRAM.get_or_init(|| Some(Box::new(self)));
+        THIS_PROGRAM.set(Box::new(self));
         let program = THIS_PROGRAM
-            .get()
-            .unwrap()
-            .as_ref()
+            .get_raw()
             .unwrap()
             .downcast_ref::<Program<C>>()
             .unwrap();
@@ -100,7 +98,12 @@ where
     where
         C: 'static + Send + Sync,
     {
-        std::process::exit(self.exec().await)
+        let exit_code = self.exec().await;
+        // SAFETY: exec() is synchronous — it returns only after all
+        // chain handlers and renderers have finished. No code still
+        // holds references from get_raw() at this point.
+        drop(unsafe { THIS_PROGRAM.take() });
+        std::process::exit(exit_code)
     }
 }
 
@@ -115,11 +118,9 @@ where
         C: 'static + Send + Sync,
         F: FnOnce(&'static Program<C>) -> R + Send + Sync,
     {
-        THIS_PROGRAM.get_or_init(|| Some(Box::new(self)));
+        THIS_PROGRAM.set(Box::new(self));
         let program = THIS_PROGRAM
-            .get()
-            .unwrap()
-            .as_ref()
+            .get_raw()
             .unwrap()
             .downcast_ref::<Program<C>>()
             .unwrap();
@@ -165,9 +166,7 @@ where
                 };
 
                 let program = THIS_PROGRAM
-                    .get()
-                    .unwrap()
-                    .as_ref()
+                    .get_raw()
                     .unwrap()
                     .downcast_ref::<Program<C>>()
                     .unwrap();
@@ -232,6 +231,11 @@ where
     where
         C: 'static + Send + Sync,
     {
-        std::process::exit(self.exec())
+        let exit_code = self.exec();
+        // SAFETY: exec() is synchronous — it returns only after all
+        // chain handlers and renderers have finished. No code still
+        // holds references from get_raw() at this point.
+        drop(unsafe { THIS_PROGRAM.take() });
+        std::process::exit(exit_code)
     }
 }
