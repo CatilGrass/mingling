@@ -24,6 +24,10 @@ fn gen_example_doc_module() {
                 && file_type.is_dir()
             {
                 let example_name = entry.file_name().to_string_lossy().to_string();
+                // Ignore directories that don't start with "example-"
+                if !example_name.starts_with("example-") {
+                    continue;
+                }
                 let example_content = ExampleContent::read(&example_name);
                 examples.push(example_content);
             }
