@@ -74,6 +74,8 @@ fn render_entry_show(_args: EntryShow, res: &mut LazyRes<ResLargeData>) {
 }
 ```
 
+5. **\[core\]** Added `Program::get_args(&self)` method to expose the program's command-line arguments as a `&[String]` slice, providing public read access to the internal `args` field.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **\[core\]** Changed the signature of `ProgramSetup::setup` from `fn setup(&mut self, program: &mut Program<C>) -> S` to `fn setup(self, program: &mut Program<C>)`, consuming `self` instead of taking a mutable reference. Correspondingly, `Program::with_setup` now accepts `S` by value (`&mut self, setup: S`) instead of by mutable reference (`&mut self, setup: &mut S`).

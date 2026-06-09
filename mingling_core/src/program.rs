@@ -124,6 +124,12 @@ where
             .unwrap()
     }
 
+    /// Returns a reference to the program's command-line arguments.
+    #[must_use]
+    pub fn get_args(&self) -> &[String] {
+        &self.args
+    }
+
     /// Get all registered dispatcher names from the program
     #[must_use]
     pub fn get_nodes(
