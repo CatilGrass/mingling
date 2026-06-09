@@ -88,8 +88,8 @@ impl<T: Send + Sync + 'static> LazyRes<T> {
 
     fn force_init(&mut self) -> &mut LazyInner<T> {
         if matches!(&self.inner, LazyInner::Uninit(_, _)) {
-            // Replace with a temporary poison value so we can move the real factory out.
-            // SAFETY: if the factory panics, the poison value's `unreachable!()` will
+            // Replace with a temporary poison value so the real factory can be moved out.
+            // If the factory panics, the poison value's `unreachable!()` will
             // catch any subsequent access.
             let poisoned = LazyInner::Uninit(
                 Box::new(|| unreachable!("LazyRes poisoned during initialization")),
