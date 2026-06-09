@@ -305,3 +305,348 @@ where
         this::<C>().modify_res(f);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    /// Helper for tracking drops via an `Arc<AtomicBool>`.
+    struct DropFlag(Arc<AtomicBool>);
+
+    impl Drop for DropFlag {
+        fn drop(&mut self) {
+            self.0.store(true, Ordering::SeqCst);
+        }
+    }
+
+    // LazyRes::new starts uninitialized
+    #[test]
+    fn new_returns_uninitialized() {
+        let r: LazyRes<i32> = LazyRes::new(|| 42);
+        assert!(!r.is_initialized());
+    }
+
+    // LazyRes::get_ref triggers init and returns correct value
+    #[test]
+    fn get_ref_triggers_initialization() {
+        let mut r = LazyRes::new(|| 42);
+        assert!(!r.is_initialized());
+        let val = r.get_ref();
+        assert_eq!(*val, 42);
+        assert!(r.is_initialized());
+    }
+
+    #[test]
+    fn get_ref_returns_same_value_on_subsequent_calls() {
+        let mut r = LazyRes::new(|| 42);
+        assert_eq!(*r.get_ref(), 42);
+        assert_eq!(*r.get_ref(), 42);
+    }
+
+    // LazyRes::get_mut triggers init and allows mutation
+    #[test]
+    fn get_mut_triggers_initialization() {
+        let mut r = LazyRes::new(|| 10);
+        assert!(!r.is_initialized());
+        *r.get_mut() = 20;
+        assert_eq!(*r.get_ref(), 20);
+        assert!(r.is_initialized());
+    }
+
+    // LazyRes::get_clone returns cloned value
+    #[test]
+    fn get_clone_returns_cloned_value() {
+        let mut r = LazyRes::new(|| "hello".to_string());
+        assert_eq!(r.get_clone(), "hello");
+        assert!(r.is_initialized());
+    }
+
+    // LazyRes::is_initialized is false before get_ref and true after
+    #[test]
+    fn is_initialized_false_before_true_after() {
+        let mut r = LazyRes::new(|| 99);
+        assert!(!r.is_initialized());
+        r.get_ref();
+        assert!(r.is_initialized());
+    }
+
+    // LazyRes::into_inner returns Some if initialized and None otherwise
+    #[test]
+    fn into_inner_initialized_returns_some() {
+        let mut r = LazyRes::new(|| 7);
+        r.get_ref(); // force init
+        assert_eq!(r.into_inner(), Some(7));
+    }
+
+    #[test]
+    fn into_inner_uninitialized_returns_none() {
+        let r: LazyRes<i32> = LazyRes::new(|| 7);
+        assert_eq!(r.into_inner(), None);
+    }
+
+    // LazyRes::unwrap returns value if initialized or panics otherwise
+    #[test]
+    fn unwrap_initialized_returns_value() {
+        let mut r = LazyRes::new(|| 13);
+        r.get_ref();
+        assert_eq!(r.unwrap(), 13);
+    }
+
+    #[test]
+    #[should_panic(expected = "uninitialized")]
+    fn unwrap_uninitialized_panics() {
+        let r: LazyRes<i32> = LazyRes::new(|| 13);
+        r.unwrap();
+    }
+
+    // LazyRes::unwrap_or returns default if uninitialized
+    #[test]
+    fn unwrap_or_uninitialized_returns_default() {
+        let r: LazyRes<i32> = LazyRes::new(|| 5);
+        assert_eq!(r.unwrap_or(100), 100);
+    }
+
+    #[test]
+    fn unwrap_or_initialized_returns_inner() {
+        let mut r = LazyRes::new(|| 5);
+        r.get_ref();
+        assert_eq!(r.unwrap_or(100), 5);
+    }
+
+    // LazyRes::unwrap_or_default returns T::default
+    #[test]
+    fn unwrap_or_default_uninitialized_returns_default() {
+        let r: LazyRes<i32> = LazyRes::new(|| 42);
+        assert_eq!(r.unwrap_or_default(), 0);
+    }
+
+    #[test]
+    fn unwrap_or_default_initialized_returns_inner() {
+        let mut r = LazyRes::new(|| 42);
+        r.get_ref();
+        assert_eq!(r.unwrap_or_default(), 42);
+    }
+
+    // LazyRes::Default creates uninitialized with T::default factory
+    #[test]
+    fn default_creates_uninitialized_with_default_factory() {
+        let r: LazyRes<i32> = LazyRes::default();
+        assert!(!r.is_initialized());
+    }
+
+    #[test]
+    fn default_factory_produces_t_default() {
+        let mut r: LazyRes<i32> = LazyRes::default();
+        assert_eq!(*r.get_ref(), 0);
+    }
+
+    // From<T> for LazyRes creates initialized value
+    #[test]
+    fn from_t_creates_initialized() {
+        let r: LazyRes<String> = LazyRes::from("hello".to_string());
+        assert!(r.is_initialized());
+    }
+
+    #[test]
+    fn from_t_contains_correct_value() {
+        let r: LazyRes<String> = LazyRes::from("world".to_string());
+        // Can only check via into_inner since get_ref needs &mut
+        assert_eq!(r.into_inner(), Some("world".to_string()));
+    }
+
+    // Drop callback via new_with_drop is called on drop
+    #[test]
+    fn new_with_drop_calls_callback_on_drop() {
+        let dropped = Arc::new(AtomicBool::new(false));
+        let dropped_clone = Arc::clone(&dropped);
+
+        let r = LazyRes::new_with_drop(
+            || 42,
+            move |val| {
+                assert_eq!(val, 42);
+                dropped_clone.store(true, Ordering::SeqCst);
+            },
+        );
+        // Force init first
+        drop(r);
+        // Not initialized, so the callback above was stored but never invoked.
+        // The initialized path is tested below.
+    }
+
+    #[test]
+    fn new_with_drop_calls_callback_on_drop_after_init() {
+        let dropped = Arc::new(AtomicBool::new(false));
+        let dropped_clone = Arc::clone(&dropped);
+
+        let mut r = LazyRes::new_with_drop(
+            || 42,
+            move |val| {
+                assert_eq!(val, 42);
+                dropped_clone.store(true, Ordering::SeqCst);
+            },
+        );
+        r.get_ref(); // initialize
+        assert!(r.is_initialized());
+        drop(r);
+        assert!(dropped.load(Ordering::SeqCst));
+    }
+
+    // Drop callback via with_on_drop uses chained builder style
+    #[test]
+    fn with_on_drop_calls_callback_on_drop() {
+        let dropped = Arc::new(AtomicBool::new(false));
+        let dropped_clone = Arc::clone(&dropped);
+
+        let r = LazyRes::new(|| 99).with_on_drop(move |val| {
+            assert_eq!(val, 99);
+            dropped_clone.store(true, Ordering::SeqCst);
+        });
+        drop(r); // not initialized, callback stored but won't fire
+        assert!(!dropped.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn with_on_drop_calls_callback_on_drop_after_init() {
+        let dropped = Arc::new(AtomicBool::new(false));
+        let dropped_clone = Arc::clone(&dropped);
+
+        let mut r = LazyRes::new(|| 99).with_on_drop(move |val| {
+            assert_eq!(val, 99);
+            dropped_clone.store(true, Ordering::SeqCst);
+        });
+        r.get_ref();
+        drop(r);
+        assert!(dropped.load(Ordering::SeqCst));
+    }
+
+    // set_on_drop sets callback after construction
+    #[test]
+    fn set_on_drop_calls_callback_on_drop() {
+        let dropped = Arc::new(AtomicBool::new(false));
+        let dropped_clone = Arc::clone(&dropped);
+
+        let mut r = LazyRes::new(|| 55);
+        r.get_ref(); // init first
+        r.set_on_drop(move |val| {
+            assert_eq!(val, 55);
+            dropped_clone.store(true, Ordering::SeqCst);
+        });
+        drop(r);
+        assert!(dropped.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn set_on_drop_before_init_stored_and_fires_after_init() {
+        let dropped = Arc::new(AtomicBool::new(false));
+        let dropped_clone = Arc::clone(&dropped);
+
+        let mut r = LazyRes::new(|| 55);
+        r.set_on_drop(move |val| {
+            assert_eq!(val, 55);
+            dropped_clone.store(true, Ordering::SeqCst);
+        });
+        r.get_ref(); // init after setting callback
+        drop(r);
+        assert!(dropped.load(Ordering::SeqCst));
+    }
+
+    // LazyInit::lazy_default trait method
+    #[test]
+    fn lazy_default_creates_uninitialized() {
+        let r: LazyRes<i32> = i32::lazy_default();
+        assert!(!r.is_initialized());
+    }
+
+    #[test]
+    fn lazy_default_factory_returns_default() {
+        let mut r: LazyRes<i32> = i32::lazy_default();
+        assert_eq!(*r.get_ref(), 0);
+    }
+
+    // LazyInit::lazy_init trait method with custom factory
+    #[test]
+    fn lazy_init_creates_uninitialized() {
+        let r: LazyRes<i32> = i32::lazy_init(|| 77);
+        assert!(!r.is_initialized());
+    }
+
+    #[test]
+    fn lazy_init_factory_produces_correct_value() {
+        let mut r: LazyRes<i32> = i32::lazy_init(|| 77);
+        assert_eq!(*r.get_ref(), 77);
+    }
+
+    // ResourceMarker for LazyRes res_clone clones initialized and res_default returns default
+    #[test]
+    fn res_clone_of_initialized_clones_value() {
+        let mut r = LazyRes::new(|| vec![1, 2, 3]);
+        r.get_ref();
+        let cloned = r.res_clone();
+        assert!(cloned.is_initialized());
+        assert_eq!(cloned.into_inner(), Some(vec![1, 2, 3]));
+    }
+
+    #[test]
+    fn res_clone_of_uninitialized_creates_default() {
+        let r: LazyRes<Vec<i32>> = LazyRes::new(|| vec![1, 2, 3]);
+        let cloned = r.res_clone();
+        // The source is uninitialized, so res_clone returns a default lazy
+        assert!(!cloned.is_initialized());
+    }
+
+    #[test]
+    fn res_default_returns_uninitialized() {
+        let r: LazyRes<i32> = LazyRes::<i32>::res_default();
+        assert!(!r.is_initialized());
+    }
+
+    // Factory is dropped after init via Arc flag
+    #[test]
+    fn factory_dropped_after_initialization() {
+        let factory_dropped = Arc::new(AtomicBool::new(false));
+        let flag = DropFlag(Arc::clone(&factory_dropped));
+
+        // The factory closure captures `flag`. When the closure (the factory) is
+        // consumed and dropped after init, the captured `flag` will be dropped,
+        // setting the atomic bool.
+        let factory = move || {
+            let _ = &flag;
+            42
+        };
+
+        let mut r = LazyRes::new(factory);
+        assert!(
+            !factory_dropped.load(Ordering::SeqCst),
+            "factory not dropped yet"
+        );
+
+        r.get_ref(); // init — factory should be consumed and dropped
+        assert!(
+            factory_dropped.load(Ordering::SeqCst),
+            "factory should be dropped after initialization"
+        );
+
+        // Second access still works
+        assert_eq!(*r.get_ref(), 42);
+    }
+
+    #[test]
+    fn factory_dropped_even_when_not_initialized_and_dropped() {
+        let factory_dropped = Arc::new(AtomicBool::new(false));
+        let flag = DropFlag(Arc::clone(&factory_dropped));
+
+        let factory = move || {
+            let _ = &flag;
+            42
+        };
+
+        let r: LazyRes<i32> = LazyRes::new(factory);
+        drop(r);
+        assert!(
+            factory_dropped.load(Ordering::SeqCst),
+            "factory should be dropped when LazyRes is dropped"
+        );
+    }
+}

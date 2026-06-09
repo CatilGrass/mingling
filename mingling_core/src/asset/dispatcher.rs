@@ -227,3 +227,151 @@ impl<G> From<Dispatchers<G>> for Vec<Box<dyn Dispatcher<G> + Send + Sync + 'stat
         val.dispatcher
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ChainProcess;
+    use std::fmt::Display;
+
+    /// A minimal mock Dispatcher for testing Dispatchers conversions.
+    #[derive(Clone)]
+    struct MockDispatcher {
+        name: &'static str,
+    }
+
+    impl<C: Display> Dispatcher<C> for MockDispatcher {
+        fn node(&self) -> crate::asset::node::Node {
+            self.name.into()
+        }
+
+        fn begin(&self, _args: Vec<String>) -> ChainProcess<C> {
+            unimplemented!("not used in these tests")
+        }
+
+        fn clone_dispatcher(&self) -> Box<dyn Dispatcher<C>> {
+            Box::new(self.clone())
+        }
+    }
+
+    /// Minimal mock group for Dispatchers tests
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[allow(dead_code)]
+    enum MockG {
+        A,
+    }
+
+    impl Display for MockG {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "A")
+        }
+    }
+
+    #[test]
+    fn test_dispatchers_from_single_tuple() {
+        let disp = MockDispatcher { name: "foo" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((disp,));
+        assert_eq!(dispatchers.dispatcher.len(), 1);
+    }
+
+    #[test]
+    fn test_dispatchers_from_two_tuple() {
+        let d1 = MockDispatcher { name: "a" };
+        let d2 = MockDispatcher { name: "b" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((d1, d2));
+        assert_eq!(dispatchers.dispatcher.len(), 2);
+    }
+
+    #[test]
+    fn test_dispatchers_from_three_tuple() {
+        let d1 = MockDispatcher { name: "x" };
+        let d2 = MockDispatcher { name: "y" };
+        let d3 = MockDispatcher { name: "z" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((d1, d2, d3));
+        assert_eq!(dispatchers.dispatcher.len(), 3);
+    }
+
+    #[test]
+    fn test_dispatchers_from_four_tuple() {
+        let d1 = MockDispatcher { name: "1" };
+        let d2 = MockDispatcher { name: "2" };
+        let d3 = MockDispatcher { name: "3" };
+        let d4 = MockDispatcher { name: "4" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((d1, d2, d3, d4));
+        assert_eq!(dispatchers.dispatcher.len(), 4);
+    }
+
+    #[test]
+    fn test_dispatchers_from_five_tuple() {
+        let d1 = MockDispatcher { name: "a" };
+        let d2 = MockDispatcher { name: "b" };
+        let d3 = MockDispatcher { name: "c" };
+        let d4 = MockDispatcher { name: "d" };
+        let d5 = MockDispatcher { name: "e" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((d1, d2, d3, d4, d5));
+        assert_eq!(dispatchers.dispatcher.len(), 5);
+    }
+
+    #[test]
+    fn test_dispatchers_from_six_tuple() {
+        let d1 = MockDispatcher { name: "a" };
+        let d2 = MockDispatcher { name: "b" };
+        let d3 = MockDispatcher { name: "c" };
+        let d4 = MockDispatcher { name: "d" };
+        let d5 = MockDispatcher { name: "e" };
+        let d6 = MockDispatcher { name: "f" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((d1, d2, d3, d4, d5, d6));
+        assert_eq!(dispatchers.dispatcher.len(), 6);
+    }
+
+    #[test]
+    fn test_dispatchers_from_seven_tuple() {
+        let d1 = MockDispatcher { name: "a" };
+        let d2 = MockDispatcher { name: "b" };
+        let d3 = MockDispatcher { name: "c" };
+        let d4 = MockDispatcher { name: "d" };
+        let d5 = MockDispatcher { name: "e" };
+        let d6 = MockDispatcher { name: "f" };
+        let d7 = MockDispatcher { name: "g" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((d1, d2, d3, d4, d5, d6, d7));
+        assert_eq!(dispatchers.dispatcher.len(), 7);
+    }
+
+    #[test]
+    fn test_dispatchers_from_vec_of_boxed() {
+        let d1: Box<dyn Dispatcher<MockG> + Send + Sync> = Box::new(MockDispatcher { name: "a" });
+        let d2: Box<dyn Dispatcher<MockG> + Send + Sync> = Box::new(MockDispatcher { name: "b" });
+        let dispatchers: Dispatchers<MockG> = vec![d1, d2].into();
+        assert_eq!(dispatchers.dispatcher.len(), 2);
+    }
+
+    #[test]
+    fn test_dispatchers_from_single_boxed() {
+        let d: Box<dyn Dispatcher<MockG> + Send + Sync> = Box::new(MockDispatcher { name: "x" });
+        let dispatchers: Dispatchers<MockG> = d.into();
+        assert_eq!(dispatchers.dispatcher.len(), 1);
+    }
+
+    #[test]
+    fn test_dispatchers_deref() {
+        let disp = MockDispatcher { name: "test" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((disp,));
+        let inner: &Vec<Box<dyn Dispatcher<MockG> + Send + Sync + 'static>> = &*dispatchers;
+        assert_eq!(inner.len(), 1);
+    }
+
+    #[test]
+    fn test_dispatchers_into_vec() {
+        let disp = MockDispatcher { name: "foo" };
+        let dispatchers: Dispatchers<MockG> = Dispatchers::from((disp,));
+        let vec: Vec<Box<dyn Dispatcher<MockG> + Send + Sync + 'static>> = dispatchers.into();
+        assert_eq!(vec.len(), 1);
+    }
+
+    #[test]
+    fn test_box_clone_dispatcher() {
+        let disp: Box<dyn Dispatcher<MockG>> = Box::new(MockDispatcher { name: "clonable" });
+        let cloned = disp.clone_dispatcher();
+        assert_eq!(cloned.node().to_string(), "clonable");
+    }
+}

@@ -237,6 +237,7 @@ impl ShellContext {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::SuggestItem;
 
     #[test]
     fn test_try_from_full_args() {
@@ -314,5 +315,129 @@ mod tests {
         let args = vec!["-f".to_string(), "  cmd   arg1   arg2  ".to_string()];
         let context = ShellContext::try_from(args).unwrap();
         assert_eq!(context.all_words, vec!["cmd", "arg1", "arg2"]);
+    }
+
+    #[test]
+    fn test_filling_argument_first_true() {
+        let ctx = ShellContext {
+            previous_word: "--flag".to_string(),
+            current_word: "".to_string(),
+            all_words: vec!["cmd".to_string(), "--flag".to_string()],
+            ..Default::default()
+        };
+        assert!(ctx.filling_argument_first(&["--flag", "-f"][..]));
+    }
+
+    #[test]
+    fn test_filling_argument_first_false() {
+        let ctx = ShellContext {
+            previous_word: "--flag".to_string(),
+            current_word: "".to_string(),
+            all_words: vec![
+                "cmd".to_string(),
+                "--flag".to_string(),
+                "--flag".to_string(),
+            ],
+            ..Default::default()
+        };
+        assert!(!ctx.filling_argument_first(&["--flag", "-f"][..]));
+    }
+
+    #[test]
+    fn test_filling_argument_matches() {
+        let ctx = ShellContext {
+            previous_word: "--flag".to_string(),
+            current_word: "".to_string(),
+            all_words: vec!["cmd".to_string(), "--flag".to_string()],
+            ..Default::default()
+        };
+        assert!(ctx.filling_argument(&["--flag", "-f"][..]));
+    }
+
+    #[test]
+    fn test_filling_argument_no_match() {
+        let ctx = ShellContext {
+            previous_word: "other".to_string(),
+            current_word: "".to_string(),
+            all_words: vec!["cmd".to_string(), "other".to_string()],
+            ..Default::default()
+        };
+        assert!(!ctx.filling_argument(&["--flag", "-f"][..]));
+    }
+
+    #[test]
+    fn test_typing_argument_starts_with_dash() {
+        // On Windows typing_argument checks current_word.is_empty()
+        // On other platforms it checks current_word.starts_with("-")
+        let current_word = if cfg!(target_os = "windows") {
+            "".to_string()
+        } else {
+            "--verbose".to_string()
+        };
+        let ctx = ShellContext {
+            previous_word: "".to_string(),
+            current_word,
+            all_words: vec!["cmd".to_string(), "--verbose".to_string()],
+            ..Default::default()
+        };
+        assert!(ctx.typing_argument());
+    }
+
+    #[test]
+    fn test_typing_argument_no_dash() {
+        let ctx = ShellContext {
+            previous_word: "".to_string(),
+            current_word: "somefile".to_string(),
+            all_words: vec!["cmd".to_string(), "somefile".to_string()],
+            ..Default::default()
+        };
+        assert!(!ctx.typing_argument());
+    }
+
+    #[test]
+    fn test_strip_typed_argument_suggest() {
+        let ctx = ShellContext {
+            all_words: vec!["--flag".to_string()],
+            ..Default::default()
+        };
+        let suggest: Suggest = vec!["--flag", "--other"].into();
+        let stripped = ctx.strip_typed_argument(suggest);
+        match stripped {
+            Suggest::Suggest(set) => {
+                assert_eq!(set.len(), 1);
+                assert!(set.contains(&SuggestItem::new("--other".to_string())));
+            }
+            Suggest::FileCompletion => panic!("expected Suggest variant"),
+        }
+    }
+
+    #[test]
+    fn test_strip_typed_argument_file_completion() {
+        let ctx = ShellContext {
+            all_words: vec!["--flag".to_string()],
+            ..Default::default()
+        };
+        let stripped = ctx.strip_typed_argument(Suggest::FileCompletion);
+        assert_eq!(stripped, Suggest::FileCompletion);
+    }
+
+    #[test]
+    fn test_get_typed_arguments() {
+        let ctx = ShellContext {
+            previous_word: "".to_string(),
+            current_word: "".to_string(),
+            all_words: vec![
+                "cmd".to_string(),
+                "--flag".to_string(),
+                "--other".to_string(),
+                "file.txt".to_string(),
+            ],
+            ..Default::default()
+        };
+        let typed = ctx.get_typed_arguments();
+        let expected: HashSet<String> = vec!["--flag".to_string(), "--other".to_string()]
+            .into_iter()
+            .collect();
+        assert_eq!(typed, expected);
     }
 }

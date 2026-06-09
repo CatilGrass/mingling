@@ -164,3 +164,69 @@ impl<T: Default + Clone + Send + Sync + 'static> ResourceMarker for T {
         this::<C>().modify_res(f);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn global_resource_new_and_deref() {
+        let res = GlobalResource::new(42i32);
+        assert_eq!(*res, 42);
+    }
+
+    #[test]
+    fn global_resource_from_arc() {
+        let arc = Arc::new(42i32);
+        let res = GlobalResource::from(arc);
+        assert_eq!(*res, 42);
+    }
+
+    #[test]
+    fn global_resource_as_ref() {
+        let res = GlobalResource::new(42i32);
+        assert_eq!(res.as_ref(), &42);
+    }
+
+    #[test]
+    fn resource_marker_i32_res_clone() {
+        let val = 42i32;
+        let cloned = val.res_clone();
+        assert_eq!(cloned, 42);
+    }
+
+    #[test]
+    fn resource_marker_i32_res_default() {
+        assert_eq!(<i32 as ResourceMarker>::res_default(), 0i32);
+    }
+
+    #[test]
+    fn resource_marker_string_res_clone() {
+        let val = "hello".to_string();
+        let cloned = val.res_clone();
+        assert_eq!(cloned, "hello");
+    }
+
+    #[test]
+    fn resource_marker_string_res_default() {
+        assert_eq!(<String as ResourceMarker>::res_default(), "");
+    }
+
+    #[test]
+    fn resource_marker_vec_res_clone() {
+        let val = vec![1, 2, 3];
+        let cloned = val.res_clone();
+        assert_eq!(cloned, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn resource_marker_vec_res_default() {
+        let empty: Vec<i32> = vec![];
+        assert_eq!(<Vec<i32> as ResourceMarker>::res_default(), empty);
+    }
+
+    // Note: Tests for Program::with_resource, res(), res_or_route(), res_or_default(),
+    // and modify_res() require a concrete ProgramCollect implementation, which is
+    // complex and outside the scope of these unit tests.
+    // Those are better covered by integration tests.
+}

@@ -110,3 +110,49 @@ where
 {
     THIS_PROGRAM.get_raw()?.downcast_ref::<Program<C>>()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::ProgramCell;
+
+    #[test]
+    fn test_program_cell_set_and_get_raw() {
+        let cell = ProgramCell::new();
+        cell.set(Box::new(42_i32));
+        let val = cell.get_raw();
+        assert!(val.is_some());
+        assert_eq!(*val.unwrap().downcast_ref::<i32>().unwrap(), 42);
+    }
+
+    #[test]
+    fn test_program_cell_get_raw_uninitialized() {
+        let cell = ProgramCell::new();
+        assert!(cell.get_raw().is_none());
+    }
+
+    #[test]
+    #[should_panic(expected = "ProgramCell already initialized")]
+    fn test_program_cell_set_twice_panics() {
+        let cell = ProgramCell::new();
+        cell.set(Box::new(1_i32));
+        cell.set(Box::new(2_i32));
+    }
+
+    #[test]
+    fn test_program_cell_take() {
+        let cell = ProgramCell::new();
+        cell.set(Box::new(99_i32));
+
+        // SAFETY: test-local cell, no outstanding references.
+        let taken = unsafe { cell.take() };
+        assert!(taken.is_some());
+        assert_eq!(*taken.unwrap().downcast_ref::<i32>().unwrap(), 99);
+
+        // After take, get_raw returns None.
+        assert!(cell.get_raw().is_none());
+
+        // Calling take again returns None.
+        let taken_again = unsafe { cell.take() };
+        assert!(taken_again.is_none());
+    }
+}

@@ -146,3 +146,258 @@ impl<G> From<AnyOutput<G>> for ChainProcess<G> {
         ChainProcess::Ok((value, NextProcess::Chain))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Groupped;
+
+    /// Mock enum for testing AnyOutput
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[allow(dead_code)]
+    enum MockGroup {
+        Alpha,
+        Beta,
+        Gamma,
+    }
+
+    impl std::fmt::Display for MockGroup {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                MockGroup::Alpha => write!(f, "Alpha"),
+                MockGroup::Beta => write!(f, "Beta"),
+                MockGroup::Gamma => write!(f, "Gamma"),
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    #[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
+    struct AlphaData {
+        value: i32,
+    }
+
+    impl Groupped<MockGroup> for AlphaData {
+        fn member_id() -> MockGroup {
+            MockGroup::Alpha
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    #[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
+    struct BetaData {
+        name: String,
+    }
+
+    impl Groupped<MockGroup> for BetaData {
+        fn member_id() -> MockGroup {
+            MockGroup::Beta
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    #[allow(dead_code)]
+    #[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
+    struct GammaData;
+
+    impl Groupped<MockGroup> for GammaData {
+        fn member_id() -> MockGroup {
+            MockGroup::Gamma
+        }
+    }
+
+    // AnyOutput::new
+
+    #[test]
+    fn test_any_output_new_stores_type_id_and_member_id() {
+        let data = AlphaData { value: 42 };
+        let output = AnyOutput::new(data);
+
+        assert_eq!(output.type_id, std::any::TypeId::of::<AlphaData>());
+        assert_eq!(output.member_id, MockGroup::Alpha);
+    }
+
+    // AnyOutput::downcast
+
+    #[test]
+    fn test_any_output_downcast_success() {
+        let data = AlphaData { value: 99 };
+        let output = AnyOutput::new(data);
+
+        let result: Result<AlphaData, _> = output.downcast::<AlphaData>();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().value, 99);
+    }
+
+    #[test]
+    fn test_any_output_downcast_failure() {
+        let data = AlphaData { value: 10 };
+        let output = AnyOutput::new(data);
+
+        let result: Result<BetaData, _> = output.downcast::<BetaData>();
+        assert!(result.is_err());
+    }
+
+    // AnyOutput::is
+
+    #[test]
+    fn test_any_output_is_true_for_matching_type() {
+        let data = AlphaData { value: 7 };
+        let output = AnyOutput::new(data);
+
+        assert!(output.is::<AlphaData>());
+    }
+
+    #[test]
+    fn test_any_output_is_false_for_non_matching_type() {
+        let data = AlphaData { value: 7 };
+        let output = AnyOutput::new(data);
+
+        assert!(!output.is::<BetaData>());
+    }
+
+    // AnyOutput::route_chain
+
+    #[test]
+    fn test_route_chain_returns_ok_with_chain_next() {
+        let data = AlphaData { value: 1 };
+        let output = AnyOutput::new(data);
+
+        let result = output.route_chain();
+        match result {
+            ChainProcess::Ok((any, next)) => {
+                assert_eq!(any.member_id, MockGroup::Alpha);
+                assert_eq!(next, NextProcess::Chain);
+            }
+            _ => panic!("Expected ChainProcess::Ok"),
+        }
+    }
+
+    // AnyOutput::route_renderer
+
+    #[test]
+    fn test_route_renderer_returns_ok_with_renderer_next() {
+        let data = AlphaData { value: 2 };
+        let output = AnyOutput::new(data);
+
+        let result = output.route_renderer();
+        match result {
+            ChainProcess::Ok((any, next)) => {
+                assert_eq!(any.member_id, MockGroup::Alpha);
+                assert_eq!(next, NextProcess::Renderer);
+            }
+            _ => panic!("Expected ChainProcess::Ok"),
+        }
+    }
+
+    // AnyOutput: Deref / DerefMut
+
+    #[test]
+    fn test_any_output_deref_accesses_inner_any() {
+        let data = AlphaData { value: 5 };
+        let output = AnyOutput::new(data);
+
+        let inner: &dyn std::any::Any = &*output;
+        assert!(inner.downcast_ref::<AlphaData>().is_some());
+    }
+
+    #[test]
+    fn test_any_output_deref_mut_allows_modification() {
+        let data = AlphaData { value: 0 };
+        let mut output = AnyOutput::new(data);
+
+        let inner: &mut dyn std::any::Any = &mut *output;
+        if let Some(ref mut v) = inner.downcast_mut::<AlphaData>() {
+            v.value = 100;
+        }
+
+        let result: Result<AlphaData, _> = output.downcast::<AlphaData>();
+        assert_eq!(result.unwrap().value, 100);
+    }
+
+    // ChainProcess::From<AnyOutput>
+
+    #[test]
+    fn test_chain_process_from_any_output() {
+        let data = AlphaData { value: 3 };
+        let output = AnyOutput::new(data);
+
+        let cp: ChainProcess<MockGroup> = output.into();
+        match cp {
+            ChainProcess::Ok((any, next)) => {
+                assert_eq!(any.member_id, MockGroup::Alpha);
+                assert_eq!(next, NextProcess::Chain);
+            }
+            _ => panic!("Expected ChainProcess::Ok"),
+        }
+    }
+
+    // NextProcess::Display
+
+    #[test]
+    fn test_next_process_display_chain() {
+        assert_eq!(format!("{}", NextProcess::Chain), "Chain");
+    }
+
+    #[test]
+    fn test_next_process_display_renderer() {
+        assert_eq!(format!("{}", NextProcess::Renderer), "Renderer");
+    }
+
+    // AnyOutput::restore general_renderer feature only
+
+    #[cfg(feature = "general_renderer")]
+    #[test]
+    fn test_any_output_restore_success() {
+        use serde::Serialize;
+
+        #[derive(Debug, Clone, PartialEq, Serialize)]
+        struct SerData {
+            x: i32,
+        }
+
+        impl Groupped<MockGroup> for SerData {
+            fn member_id() -> MockGroup {
+                MockGroup::Gamma
+            }
+        }
+
+        let data = SerData { x: 42 };
+        let output = AnyOutput::new(data);
+        let restored: Option<SerData> = output.restore::<SerData>();
+        assert_eq!(restored, Some(SerData { x: 42 }));
+    }
+
+    #[cfg(feature = "general_renderer")]
+    #[test]
+    fn test_any_output_restore_type_mismatch() {
+        use serde::Serialize;
+
+        #[derive(Debug, Clone, PartialEq, Serialize)]
+        struct SerA {
+            a: i32,
+        }
+
+        #[derive(Debug, Clone, PartialEq, Serialize)]
+        struct SerB {
+            b: String,
+        }
+
+        impl Groupped<MockGroup> for SerA {
+            fn member_id() -> MockGroup {
+                MockGroup::Alpha
+            }
+        }
+
+        impl Groupped<MockGroup> for SerB {
+            fn member_id() -> MockGroup {
+                MockGroup::Beta
+            }
+        }
+
+        let data = SerA { a: 1 };
+        let output = AnyOutput::new(data);
+        let restored: Option<SerB> = output.restore::<SerB>();
+        assert_eq!(restored, None);
+    }
+}

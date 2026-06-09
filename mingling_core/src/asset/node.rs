@@ -58,3 +58,77 @@ impl std::fmt::Display for Node {
         write!(f, "{}", self.node.join("."))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_node_from_single_str() {
+        let node = Node::from("hello");
+        assert_eq!(node.node, vec!["hello"]);
+        assert_eq!(node.to_string(), "hello");
+    }
+
+    #[test]
+    fn test_node_from_dotted_str() {
+        let node = Node::from("a.b.c");
+        assert_eq!(node.node, vec!["a", "b", "c"]);
+        assert_eq!(node.to_string(), "a.b.c");
+    }
+
+    #[test]
+    fn test_node_kebab_case_conversion() {
+        let node = Node::from("HelloWorld.FooBar");
+        assert_eq!(node.node, vec!["hello-world", "foo-bar"]);
+    }
+
+    #[test]
+    fn test_node_from_string() {
+        let s = String::from("x.y");
+        let node = Node::from(s);
+        assert_eq!(node.node, vec!["x", "y"]);
+    }
+
+    #[test]
+    fn test_node_join() {
+        let node = Node::from("base").join("sub");
+        assert_eq!(node.node, vec!["base", "sub"]);
+    }
+
+    #[test]
+    fn test_node_join_multiple() {
+        let node = Node::from("a").join("b").join("c");
+        assert_eq!(node.to_string(), "a.b.c");
+    }
+
+    #[test]
+    fn test_node_default_empty() {
+        let node = Node::default();
+        assert!(node.node.is_empty());
+        assert_eq!(node.to_string(), "");
+    }
+
+    #[test]
+    fn test_node_partial_eq() {
+        let a = Node::from("a.b");
+        let b = Node::from("a.b");
+        let c = Node::from("a.c");
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+    }
+
+    #[test]
+    fn test_node_ord() {
+        let a = Node::from("a");
+        let b = Node::from("b");
+        assert!(a < b);
+    }
+
+    #[test]
+    fn test_node_join_appends_part() {
+        let node = Node::from("existing");
+        let joined = node.join("new-part");
+        assert_eq!(joined.to_string(), "existing.new-part");
+    }
+}

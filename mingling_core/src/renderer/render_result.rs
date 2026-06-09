@@ -105,3 +105,97 @@ impl RenderResult {
         self.render_text.clear();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write as IoWrite;
+
+    #[test]
+    fn default_creates_empty_text_with_exit_code_zero() {
+        let result = RenderResult::default();
+        assert!(result.is_empty());
+        assert_eq!(result.exit_code, 0);
+    }
+
+    #[test]
+    fn print_appends_text() {
+        let mut result = RenderResult::default();
+        result.print("Hello");
+        assert_eq!(result.deref(), "Hello");
+    }
+
+    #[test]
+    fn println_appends_text_with_newline() {
+        let mut result = RenderResult::default();
+        result.println("Hello");
+        assert_eq!(result.deref(), "Hello\n");
+    }
+
+    #[test]
+    fn clear_empties_content() {
+        let mut result = RenderResult::default();
+        result.print("something");
+        assert!(!result.is_empty());
+        result.clear();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn is_empty_returns_true_for_new_false_after_print() {
+        let mut result = RenderResult::default();
+        assert!(result.is_empty());
+        result.print("x");
+        assert!(!result.is_empty());
+    }
+
+    #[test]
+    fn write_appends_utf8_bytes() {
+        let mut result = RenderResult::default();
+        let n = IoWrite::write(&mut result, b"hello").unwrap();
+        assert_eq!(n, 5);
+        assert_eq!(result.deref(), "hello");
+    }
+
+    #[test]
+    fn write_with_invalid_utf8_returns_error() {
+        let mut result = RenderResult::default();
+        let err = IoWrite::write(&mut result, &[0xff, 0xfe]).unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::InvalidInput);
+    }
+
+    #[test]
+    fn display_trims_trailing_whitespace() {
+        let mut result = RenderResult::default();
+        result.print("  hello world  \n");
+        let formatted = format!("{}", result);
+        assert_eq!(formatted, "hello world\n");
+    }
+
+    #[test]
+    fn deref_exposes_inner_text_as_str() {
+        let mut result = RenderResult::default();
+        result.print("test");
+
+        let s: &str = &result;
+        assert_eq!(s, "test");
+    }
+
+    #[test]
+    fn from_render_result_into_string_consumes() {
+        let mut result = RenderResult::default();
+        result.print("content");
+        let s: String = result.into();
+        assert_eq!(s, "content");
+    }
+
+    #[test]
+    fn from_ref_render_result_into_string_clones() {
+        let mut result = RenderResult::default();
+        result.print("content");
+        let s: String = String::from(&result);
+        assert_eq!(s, "content");
+        // original is still usable
+        assert!(!result.is_empty());
+    }
+}

@@ -1,0 +1,20 @@
+[package]
+name = "test-all"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+mingling = { path = "../../../mingling", features = [
+    "general_renderer_full",
+    "comp",
+    "builds",
+    "repl",
+    "dispatch_tree",
+    "parser",
+    "extra_macros",
+] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }

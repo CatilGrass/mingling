@@ -125,3 +125,44 @@ fn get_tmpl(shell_flag: &ShellFlag) -> (&'static str, &'static str) {
         ShellFlag::Other(_) => (TMPL_COMP_BASH, ".sh"),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ShellFlag;
+
+    #[test]
+    fn get_tmpl_bash() {
+        let (tmpl, ext) = get_tmpl(&ShellFlag::Bash);
+        assert_eq!(ext, ".sh");
+        assert!(!tmpl.is_empty(), "bash template should not be empty");
+    }
+
+    #[test]
+    fn get_tmpl_zsh() {
+        let (tmpl, ext) = get_tmpl(&ShellFlag::Zsh);
+        assert_eq!(ext, ".zsh");
+        assert!(!tmpl.is_empty(), "zsh template should not be empty");
+    }
+
+    #[test]
+    fn get_tmpl_fish() {
+        let (tmpl, ext) = get_tmpl(&ShellFlag::Fish);
+        assert_eq!(ext, ".fish");
+        assert!(!tmpl.is_empty(), "fish template should not be empty");
+    }
+
+    #[test]
+    fn get_tmpl_powershell() {
+        let (tmpl, ext) = get_tmpl(&ShellFlag::Powershell);
+        assert_eq!(ext, ".ps1");
+        assert!(!tmpl.is_empty(), "powershell template should not be empty");
+    }
+
+    #[test]
+    fn get_tmpl_other() {
+        let (tmpl, ext) = get_tmpl(&ShellFlag::Other("custom".to_string()));
+        assert_eq!(ext, ".sh");
+        assert!(!tmpl.is_empty(), "fallback template should not be empty");
+    }
+}

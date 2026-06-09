@@ -1,0 +1,235 @@
+use mingling::Flag;
+use mingling::GeneralRenderer;
+use mingling::GeneralRendererSetting;
+use mingling::Groupped;
+use mingling::NextProcess;
+use mingling::Node;
+use mingling::Program;
+use mingling::ProgramCollect;
+use mingling::RenderResult;
+use mingling::StringVec;
+use mingling::comp::{ShellContext, ShellFlag, Suggest};
+use mingling::core_res::ResREPL;
+use mingling::hook::ProgramHook;
+use serde::Serialize;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+// MockCollect for is_completing tests
+
+#[derive(Debug, Clone, PartialEq)]
+struct MockCollect;
+
+impl Groupped<MockCollect> for MockCollect {
+    fn member_id() -> MockCollect {
+        MockCollect
+    }
+}
+
+impl ProgramCollect for MockCollect {
+    type Enum = MockCollect;
+    type ErrorDispatcherNotFound = MockCollect;
+    type ErrorRendererNotFound = MockCollect;
+    type ResultEmpty = MockCollect;
+
+    fn build_renderer_not_found(_member_id: MockCollect) -> mingling::AnyOutput<MockCollect> {
+        unimplemented!()
+    }
+    fn build_dispatcher_not_found(_args: Vec<String>) -> mingling::AnyOutput<MockCollect> {
+        unimplemented!()
+    }
+    fn build_empty_result() -> mingling::AnyOutput<MockCollect> {
+        unimplemented!()
+    }
+    fn render(_any: mingling::AnyOutput<MockCollect>, _r: &mut RenderResult) {
+        unimplemented!()
+    }
+    fn render_help(_any: mingling::AnyOutput<MockCollect>, _r: &mut RenderResult) {
+        unimplemented!()
+    }
+    fn do_chain(_any: mingling::AnyOutput<MockCollect>) -> mingling::ChainProcess<MockCollect> {
+        unimplemented!()
+    }
+    fn do_comp(_any: &mingling::AnyOutput<MockCollect>, _ctx: &ShellContext) -> Suggest {
+        unimplemented!()
+    }
+    fn has_renderer(_any: &mingling::AnyOutput<MockCollect>) -> bool {
+        unimplemented!()
+    }
+    fn has_chain(_any: &mingling::AnyOutput<MockCollect>) -> bool {
+        unimplemented!()
+    }
+
+    fn dispatch_args_trie(
+        _raw: &[String],
+    ) -> Result<mingling::AnyOutput<MockCollect>, mingling::error::ProgramInternalExecuteError>
+    {
+        unimplemented!()
+    }
+
+    fn get_nodes() -> Vec<(
+        String,
+        &'static (dyn mingling::Dispatcher<MockCollect> + Send + Sync),
+    )> {
+        unimplemented!()
+    }
+
+    fn general_render(
+        _any: mingling::AnyOutput<MockCollect>,
+        _setting: &GeneralRendererSetting,
+    ) -> Result<RenderResult, mingling::error::GeneralRendererSerializeError> {
+        unimplemented!()
+    }
+}
+
+// ShellContext
+
+#[test]
+fn test_shell_context_from_args() {
+    let ctx = ShellContext::try_from(vec![
+        "-f".to_string(),
+        "app greet".to_string(),
+        "-F".to_string(),
+        "zsh".to_string(),
+    ])
+    .unwrap();
+    assert!(matches!(ctx.shell_flag, ShellFlag::Zsh));
+    assert_eq!(ctx.all_words, vec!["app", "greet"]);
+}
+
+// Suggest
+
+#[test]
+fn test_suggest_creation() {
+    let s: Suggest = vec!["--help".to_string()].into();
+    assert!(matches!(s, Suggest::Suggest(_)));
+}
+
+// ResREPL
+
+#[test]
+fn test_res_repl_default() {
+    let res = ResREPL::default();
+    assert!(!res.exit);
+}
+
+// Node
+
+#[test]
+fn test_node_creation() {
+    let node = Node::from("a.b.c");
+    assert_eq!(node.to_string(), "a.b.c");
+}
+
+#[test]
+fn test_node_kebab() {
+    let node = Node::from("HelloWorld.FooBar");
+    assert_eq!(node.to_string(), "hello-world.foo-bar");
+}
+
+// Flag
+
+#[test]
+fn test_flag_conversion() {
+    let flag = Flag::from(["-h", "--help"]);
+    assert_eq!(flag.as_ref(), &["-h", "--help"]);
+}
+
+#[test]
+fn test_flag_empty() {
+    let flag = Flag::from(());
+    assert!(flag.is_empty());
+}
+
+// RenderResult
+
+#[test]
+fn test_render_result_default() {
+    let r = RenderResult::default();
+    assert!(r.is_empty());
+    assert_eq!(r.exit_code, 0);
+}
+
+#[test]
+fn test_render_result_print() {
+    let mut r = RenderResult::default();
+    r.print("hello");
+    assert_eq!(&*r, "hello");
+}
+
+// GeneralRenderer
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+struct TestData {
+    name: String,
+    value: i32,
+}
+
+#[test]
+fn test_general_renderer_disable() {
+    let data = TestData {
+        name: "test".into(),
+        value: 42,
+    };
+    let mut r = RenderResult::default();
+    let result = GeneralRenderer::render(&data, &GeneralRendererSetting::Disable, &mut r);
+    assert!(result.is_ok());
+    assert!(r.is_empty());
+}
+
+#[test]
+fn test_general_renderer_json() {
+    let data = TestData {
+        name: "test".into(),
+        value: 42,
+    };
+    let mut r = RenderResult::default();
+    let result = GeneralRenderer::render(&data, &GeneralRendererSetting::Json, &mut r);
+    assert!(result.is_ok());
+    assert!(!r.is_empty());
+}
+
+// is_completing
+
+#[test]
+fn test_is_completing() {
+    let program: Program<MockCollect> = Program::new_with_args(["app", "__comp"]);
+    assert!(program.is_completing());
+}
+
+#[test]
+fn test_is_not_completing() {
+    let program: Program<MockCollect> = Program::new_with_args(["app", "greet"]);
+    assert!(!program.is_completing());
+}
+
+// Hooks
+
+#[test]
+fn test_hook_setup() {
+    static CALLED: AtomicBool = AtomicBool::new(false);
+
+    let hook = ProgramHook::<MockCollect>::empty().on_begin(|| {
+        CALLED.store(true, Ordering::SeqCst);
+    });
+
+    assert!(hook.begin.is_some());
+    (hook.begin.unwrap())();
+    assert!(CALLED.load(Ordering::SeqCst));
+}
+
+// NextProcess
+
+#[test]
+fn test_next_process_display() {
+    assert_eq!(format!("{}", NextProcess::Chain), "Chain");
+    assert_eq!(format!("{}", NextProcess::Renderer), "Renderer");
+}
+
+// StringVec
+
+#[test]
+fn test_string_vec_from_array() {
+    let sv = StringVec::from(["a", "b", "c"]);
+    let v: Vec<String> = sv.into();
+    assert_eq!(v, vec!["a", "b", "c"]);
+}

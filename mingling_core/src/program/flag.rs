@@ -161,6 +161,8 @@ macro_rules! special_arguments {
 
 #[cfg(test)]
 mod tests {
+    use crate::Flag;
+
     #[test]
     fn test_special_flag() {
         // Test flag found and removed
@@ -465,6 +467,57 @@ mod tests {
         let result = special_arguments!(args, "");
         assert_eq!(result, vec!["a", "b"]);
         assert_eq!(args, vec!["--next", "1"]);
+    }
+
+    #[test]
+    fn test_flag_from_empty_tuple() {
+        let flag = Flag::from(());
+        assert_eq!(flag.as_ref(), &[] as &[&str]);
+    }
+
+    #[test]
+    fn test_flag_from_static_str() {
+        let flag = Flag::from("-h");
+        assert_eq!(flag.as_ref(), &["-h"]);
+    }
+
+    #[test]
+    fn test_flag_from_slice() {
+        let flag = Flag::from(&["-h", "--help"][..]);
+        assert_eq!(flag.as_ref(), &["-h", "--help"]);
+    }
+
+    #[test]
+    fn test_flag_from_array() {
+        let flag = Flag::from(["-v", "--verbose"]);
+        assert_eq!(flag.as_ref(), &["-v", "--verbose"]);
+    }
+
+    #[test]
+    fn test_flag_from_ref_array() {
+        let flag = Flag::from(&["-f", "--file"]);
+        assert_eq!(flag.as_ref(), &["-f", "--file"]);
+    }
+
+    #[test]
+    fn test_flag_from_ref_flag() {
+        let original = Flag::from("-x");
+        let cloned = Flag::from(&original);
+        assert_eq!(cloned.as_ref(), &["-x"]);
+    }
+
+    #[test]
+    fn test_flag_as_ref() {
+        let flag = Flag::from("-h");
+        let r: &[&str] = flag.as_ref();
+        assert_eq!(r, &["-h"]);
+    }
+
+    #[test]
+    fn test_flag_deref() {
+        let flag = Flag::from(["-a", "-b"]);
+        let collected: Vec<&&str> = flag.iter().collect();
+        assert_eq!(collected, vec![&"-a", &"-b"]);
     }
 }
 

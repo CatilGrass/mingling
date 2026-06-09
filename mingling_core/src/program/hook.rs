@@ -543,3 +543,211 @@ where
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Groupped;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[cfg_attr(feature = "general_renderer", derive(serde::Serialize))]
+    enum MockHookEnum {
+        A,
+        B,
+    }
+
+    impl std::fmt::Display for MockHookEnum {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{:?}", self)
+        }
+    }
+
+    impl Groupped<MockHookEnum> for MockHookEnum {
+        fn member_id() -> MockHookEnum {
+            MockHookEnum::A
+        }
+    }
+
+    impl ProgramCollect for MockHookEnum {
+        type Enum = MockHookEnum;
+        type ErrorDispatcherNotFound = MockHookEnum;
+        type ErrorRendererNotFound = MockHookEnum;
+        type ResultEmpty = MockHookEnum;
+
+        fn build_renderer_not_found(_member_id: MockHookEnum) -> AnyOutput<MockHookEnum> {
+            unreachable!()
+        }
+
+        fn build_dispatcher_not_found(_args: Vec<String>) -> AnyOutput<MockHookEnum> {
+            unreachable!()
+        }
+
+        fn build_empty_result() -> AnyOutput<MockHookEnum> {
+            unreachable!()
+        }
+
+        fn render(_any: AnyOutput<MockHookEnum>, _r: &mut RenderResult) {
+            unreachable!()
+        }
+
+        fn render_help(_any: AnyOutput<MockHookEnum>, _r: &mut RenderResult) {
+            unreachable!()
+        }
+
+        fn do_chain(_any: AnyOutput<MockHookEnum>) -> crate::ChainProcess<MockHookEnum> {
+            unreachable!()
+        }
+
+        fn has_renderer(_any: &AnyOutput<MockHookEnum>) -> bool {
+            unreachable!()
+        }
+
+        fn has_chain(_any: &AnyOutput<MockHookEnum>) -> bool {
+            unreachable!()
+        }
+
+        #[cfg(feature = "comp")]
+        fn do_comp(_any: &AnyOutput<MockHookEnum>, _ctx: &crate::ShellContext) -> crate::Suggest {
+            unreachable!()
+        }
+
+        #[cfg(feature = "general_renderer")]
+        fn general_render(
+            _any: AnyOutput<MockHookEnum>,
+            _setting: &crate::GeneralRendererSetting,
+        ) -> Result<crate::RenderResult, crate::error::GeneralRendererSerializeError> {
+            unreachable!()
+        }
+    }
+
+    #[test]
+    fn test_hook_empty() {
+        let hook = ProgramHook::<MockHookEnum>::empty();
+        assert!(hook.begin.is_none());
+        assert!(hook.pre_dispatch.is_none());
+        assert!(hook.post_dispatch.is_none());
+        assert!(hook.pre_chain.is_none());
+        assert!(hook.post_chain.is_none());
+        assert!(hook.pre_render.is_none());
+        assert!(hook.post_render.is_none());
+        assert!(hook.finish.is_none());
+    }
+
+    #[test]
+    fn test_hook_on_begin() {
+        static CALLED: AtomicBool = AtomicBool::new(false);
+        let hook = ProgramHook::<MockHookEnum>::empty().on_begin(|| {
+            CALLED.store(true, Ordering::SeqCst);
+        });
+        assert!(hook.begin.is_some());
+        (hook.begin.unwrap())();
+        assert!(CALLED.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn test_hook_on_pre_dispatch() {
+        static CALLED: AtomicBool = AtomicBool::new(false);
+        let hook = ProgramHook::<MockHookEnum>::empty().on_pre_dispatch(|args| {
+            assert_eq!(args, &["a", "b"]);
+            CALLED.store(true, Ordering::SeqCst);
+        });
+        assert!(hook.pre_dispatch.is_some());
+        (hook.pre_dispatch.unwrap())(&["a".to_string(), "b".to_string()]);
+        assert!(CALLED.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn test_hook_on_post_dispatch() {
+        static CALLED: AtomicBool = AtomicBool::new(false);
+        let hook = ProgramHook::<MockHookEnum>::empty().on_post_dispatch(|entry| {
+            assert_eq!(*entry, MockHookEnum::A);
+            CALLED.store(true, Ordering::SeqCst);
+        });
+        assert!(hook.post_dispatch.is_some());
+        (hook.post_dispatch.unwrap())(&MockHookEnum::A);
+        assert!(CALLED.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn test_hook_on_pre_chain() {
+        static CALLED: AtomicBool = AtomicBool::new(false);
+        let hook = ProgramHook::<MockHookEnum>::empty().on_pre_chain(
+            |input: &MockHookEnum, _raw: &dyn Any| {
+                assert_eq!(*input, MockHookEnum::A);
+                CALLED.store(true, Ordering::SeqCst);
+            },
+        );
+        assert!(hook.pre_chain.is_some());
+        (hook.pre_chain.unwrap())(&MockHookEnum::A, &42);
+        assert!(CALLED.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn test_hook_on_post_chain() {
+        static CALLED: AtomicBool = AtomicBool::new(false);
+        let hook = ProgramHook::<MockHookEnum>::empty().on_post_chain(
+            |_output: &AnyOutput<MockHookEnum>| {
+                CALLED.store(true, Ordering::SeqCst);
+            },
+        );
+        assert!(hook.post_chain.is_some());
+        let output = AnyOutput::new(MockHookEnum::A);
+        (hook.post_chain.unwrap())(&output);
+        assert!(CALLED.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn test_hook_on_pre_render() {
+        static CALLED: AtomicBool = AtomicBool::new(false);
+        let hook = ProgramHook::<MockHookEnum>::empty().on_pre_render(
+            |input: &MockHookEnum, _raw: &dyn Any| {
+                assert_eq!(*input, MockHookEnum::A);
+                CALLED.store(true, Ordering::SeqCst);
+            },
+        );
+        assert!(hook.pre_render.is_some());
+        (hook.pre_render.unwrap())(&MockHookEnum::A, &42);
+        assert!(CALLED.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn test_hook_on_post_render() {
+        static CALLED: AtomicBool = AtomicBool::new(false);
+        let hook = ProgramHook::<MockHookEnum>::empty().on_post_render(|_result: &RenderResult| {
+            CALLED.store(true, Ordering::SeqCst);
+        });
+        assert!(hook.post_render.is_some());
+        let result = RenderResult::default();
+        (hook.post_render.unwrap())(&result);
+        assert!(CALLED.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn test_hook_on_finish() {
+        let hook = ProgramHook::<MockHookEnum>::empty().on_finish(|| 42);
+        assert!(hook.finish.is_some());
+        assert_eq!((hook.finish.unwrap())(), 42);
+    }
+
+    #[test]
+    fn test_hook_builder_chaining() {
+        let hook = ProgramHook::<MockHookEnum>::empty()
+            .on_begin(|| {})
+            .on_pre_dispatch(|_| {})
+            .on_post_dispatch(|_| {})
+            .on_pre_chain(|_, _| {})
+            .on_post_chain(|_| {})
+            .on_pre_render(|_, _| {})
+            .on_post_render(|_| {})
+            .on_finish(|| 0);
+        assert!(hook.begin.is_some());
+        assert!(hook.pre_dispatch.is_some());
+        assert!(hook.post_dispatch.is_some());
+        assert!(hook.pre_chain.is_some());
+        assert!(hook.post_chain.is_some());
+        assert!(hook.pre_render.is_some());
+        assert!(hook.post_render.is_some());
+        assert!(hook.finish.is_some());
+    }
+}

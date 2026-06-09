@@ -1,0 +1,10 @@
+[package]
+name = "test-dispatch-tree"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+mingling = { path = "../../../mingling", features = ["dispatch_tree"] }

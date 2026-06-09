@@ -2,6 +2,43 @@
 
 ### Release 0.2.0 (Unreleased)
 
+#### Tests:
+
+1. **\[core\] Added complete unit test coverage**, adding `#[cfg(test)]` test modules for 23 modules in `mingling_core` that previously lacked tests, covering:
+
+   - **Core types** (`any.rs`): `AnyOutput` creation, downcast, type judgment, route routing, restore deserialization; `ChainProcess` type conversion; `NextProcess` formatting
+   - **Dispatcher** (`dispatcher.rs`): Conversion of `Dispatchers` from 1~7 tuples, Vec, Box; Deref dereferencing; clone behavior
+   - **Node** (`node.rs`): Construction, join, kebab-case conversion, equality comparison, sorting
+   - **Global resource** (`global_resource.rs`): `GlobalResource` new, Deref, AsRef; three default implementations of `ResourceMarker`
+   - **Lazy resource** (`lazy_resource.rs`): Coverage of all 18+ methods of `LazyRes`, including initialization triggering, get_ref/get_mut/get_clone, into_inner/unwrap, Drop callback, `ResourceMarker` integration
+   - **Error types** (`chain/error.rs`, `program/error.rs`): All Display, Error source, From conversions
+   - **Configuration structs** (`config.rs`): Default values for `ProgramStdoutSetting`, `ProgramUserContext`; FromStr parsing and Display output of `GeneralRendererSetting` (feature-gated)
+   - **Flag system** (`flag.rs`): Added 8 From conversions, Deref, AsRef for `Flag`
+   - **String wrapper** (`string_vec.rs`): 6 From conversions, Deref, Into\<Vec\>
+   - **Render result** (`render_result.rs`): print/println/clear/is_empty, Write trait, Display, Deref, From conversions
+   - **Render error** (`general/error.rs`): Construction, From, Deref, Into\<String\>
+   - **General renderer** (`general.rs`): Rendering in Disable/JSON/YAML/TOML/RON formats (feature-gated)
+   - **Completion suggestions** (`suggest.rs`): All construction, access, modification, sorting, and conversion methods for `Suggest` and `SuggestItem`
+   - **Shell context** (`shell_ctx.rs`): Added `filling_argument`, `filling_argument_first`, `typing_argument`, `strip_typed_argument`, `get_typed_arguments`
+   - **Hook system** (`hook.rs`): `ProgramHook::empty` and all 8 builder methods
+   - **Singleton management** (`single_instance.rs`): `ProgramCell` set/get_raw/take/double-set-panic
+   - **Program setup** (`setup.rs`): Verification of `with_setup` invocation
+   - **Completion detection** (`comp_ctx.rs`): Three scenarios for `is_completing`
+   - **Build script** (`builds/comp.rs`): `get_tmpl` for four Shells and Other fallback
+
+2. **\[core\] Added 6 integration test crates**, testing public APIs under different feature combinations:
+
+   - `test-basic`: Basic type tests with default features (Node, Flag, RenderResult, NextProcess, StringVec)
+   - `test-comp`: ShellContext, Suggest, SuggestItem, is_completing with `comp + builds` features
+   - `test-general-renderer`: GeneralRenderer output in various formats with `general_renderer_full + parser` features
+   - `test-repl`: ResREPL and basic types with `repl + extra_macros` features
+   - `test-dispatch-tree`: Basic types with `dispatch_tree` feature
+   - `test-all`: Comprehensive testing with all feature combinations (ShellContext, Suggest, ResREPL, GeneralRenderer, Hooks, basic types, etc.)
+
+   These crates are located in `mingling_core/tests/test-*/`, each marked as an independent workspace via `[workspace]`, isolated from the main workspace.
+
+3. **\[workspace\] Added workspace exclude rules for the 6 test crates in the root `Cargo.toml`**, ensuring that integration test crates are not captured by the workspace's implicit member rules.
+
 #### Fixes:
 
 1. **\[core:comp\]** Fixed `default_completion` incorrectly handling multi-level subcommand suggestions when the cursor is after a trailing space. `all_words.get(1..word_index)` could go out of bounds because Zsh's `$CURRENT` (`word_index`) may exceed `all_words.len()` when trailing whitespace is present. The range end is now capped with `.min(all_words.len())`

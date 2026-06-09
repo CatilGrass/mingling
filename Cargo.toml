@@ -2,6 +2,7 @@
 resolver = "2"
 members = ["mingling", "mingling_core", "mingling_macros", "mling"]
 exclude = [
+    # Examples
     "examples/example-argument-parse",
     "examples/example-async-support",
     "examples/example-basic",
@@ -23,7 +24,18 @@ exclude = [
     "examples/example-setup",
     "examples/example-unit-test",
     "examples/full-todolist",
+
+    # Dev Tools
     "dev_tools",
+
+    # Tests
+    "mingling_core/tests/test-basic",
+    "mingling_core/tests/test-comp",
+    "mingling_core/tests/test-general-renderer",
+    "mingling_core/tests/test-repl",
+    "mingling_core/tests/test-dispatch-tree",
+    "mingling_core/tests/test-async",
+    "mingling_core/tests/test-all",
 ]
 
 [workspace.dependencies]

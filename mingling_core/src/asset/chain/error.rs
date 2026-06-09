@@ -53,3 +53,86 @@ impl From<ProgramInternalExecuteError> for ChainProcessError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::{ProgramInternalExecuteError, ProgramPanic};
+    use std::error::Error;
+
+    #[test]
+    fn test_chain_process_error_display_other() {
+        let err = ChainProcessError::Other("something went wrong".into());
+        assert_eq!(format!("{err}"), "Other error: something went wrong");
+    }
+
+    #[test]
+    fn test_chain_process_error_display_io() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
+        let err = ChainProcessError::IO(io_err);
+        let display = format!("{err}");
+        assert!(display.contains("IO error"));
+        assert!(display.contains("file not found"));
+    }
+
+    #[test]
+    fn test_chain_process_error_source_io() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "denied");
+        let err = ChainProcessError::IO(io_err);
+        assert!(err.source().is_some());
+    }
+
+    #[test]
+    fn test_chain_process_error_source_other() {
+        let err = ChainProcessError::Other("msg".into());
+        assert!(err.source().is_none());
+    }
+
+    #[test]
+    fn test_from_io_error_into_chain_process_error() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::TimedOut, "timeout");
+        let err: ChainProcessError = io_err.into();
+        assert!(matches!(err, ChainProcessError::IO(_)));
+    }
+
+    #[test]
+    fn test_from_program_internal_execute_error_dispatcher_not_found() {
+        let internal = ProgramInternalExecuteError::DispatcherNotFound;
+        let err: ChainProcessError = internal.into();
+        assert!(matches!(err, ChainProcessError::Other(_)));
+        assert_eq!(format!("{err}"), "Other error: DispatcherNotFound");
+    }
+
+    #[test]
+    fn test_from_program_internal_execute_error_renderer_not_found() {
+        let internal = ProgramInternalExecuteError::RendererNotFound("json".into());
+        let err: ChainProcessError = internal.into();
+        assert_eq!(format!("{err}"), "Other error: RendererNotFound: json");
+    }
+
+    #[test]
+    fn test_from_program_internal_execute_error_other() {
+        let internal = ProgramInternalExecuteError::Other("custom error".into());
+        let err: ChainProcessError = internal.into();
+        assert_eq!(format!("{err}"), "Other error: custom error");
+    }
+
+    #[test]
+    fn test_from_program_internal_execute_error_io() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
+        let internal = ProgramInternalExecuteError::IO(io_err);
+        let err: ChainProcessError = internal.into();
+        let display = format!("{err}");
+        assert!(display.contains("IOError"));
+    }
+
+    #[test]
+    fn test_from_program_internal_execute_error_repl_panic() {
+        let panic_payload = ProgramPanic {
+            payload: Box::new("repl crash"),
+        };
+        let internal = ProgramInternalExecuteError::REPLPanic(panic_payload);
+        let err: ChainProcessError = internal.into();
+        assert!(format!("{err}").contains("REPLPanic"));
+    }
+}

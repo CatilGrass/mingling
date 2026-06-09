@@ -371,3 +371,13 @@ fn trace_ctx(ctx: &ShellContext) {
     trace!("shell_flag={:?}", ctx.shell_flag);
     trace!("===  SHELL CTX END  ===");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::COMPLETION_SUBCOMMAND;
+
+    #[test]
+    fn completion_subcommand_constant() {
+        assert_eq!(COMPLETION_SUBCOMMAND, "__comp");
+    }
+}

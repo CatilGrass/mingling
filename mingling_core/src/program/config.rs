@@ -206,3 +206,145 @@ impl std::fmt::Display for GeneralRendererSetting {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn program_stdout_setting_default() {
+        let s = ProgramStdoutSetting::default();
+        assert!(s.error_output);
+        assert!(s.render_output);
+        assert!(!s.silence_panic);
+        assert!(!s.verbose);
+        assert!(!s.quiet);
+        assert!(!s.debug);
+        assert!(s.color);
+        assert!(s.progress);
+    }
+
+    #[test]
+    fn program_user_context_default() {
+        let ctx = ProgramUserContext::default();
+        assert!(!ctx.help);
+        assert!(ctx.run_hook);
+        assert!(!ctx.confirm);
+        assert!(!ctx.dry_run);
+        assert!(!ctx.force);
+        assert!(!ctx.interactive);
+        assert!(!ctx.assume_yes);
+    }
+
+    #[cfg(feature = "general_renderer")]
+    mod general_renderer_tests {
+        use super::*;
+
+        #[test]
+        fn from_str_disable() {
+            let val: GeneralRendererSetting = "disable".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::Disable));
+        }
+
+        #[cfg(feature = "json_serde_fmt")]
+        #[test]
+        fn from_str_json() {
+            let val: GeneralRendererSetting = "json".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::Json));
+        }
+
+        #[cfg(feature = "json_serde_fmt")]
+        #[test]
+        fn from_str_json_pretty() {
+            let val: GeneralRendererSetting = "json-pretty".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::JsonPretty));
+        }
+
+        #[cfg(feature = "yaml_serde_fmt")]
+        #[test]
+        fn from_str_yaml() {
+            let val: GeneralRendererSetting = "yaml".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::Yaml));
+        }
+
+        #[cfg(feature = "toml_serde_fmt")]
+        #[test]
+        fn from_str_toml() {
+            let val: GeneralRendererSetting = "toml".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::Toml));
+        }
+
+        #[cfg(feature = "ron_serde_fmt")]
+        #[test]
+        fn from_str_ron() {
+            let val: GeneralRendererSetting = "ron".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::Ron));
+        }
+
+        #[cfg(feature = "ron_serde_fmt")]
+        #[test]
+        fn from_str_ron_pretty() {
+            let val: GeneralRendererSetting = "ron-pretty".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::RonPretty));
+        }
+
+        #[test]
+        fn from_str_invalid() {
+            let res: Result<GeneralRendererSetting, String> = "invalid".parse();
+            assert!(res.is_err());
+        }
+
+        #[test]
+        fn from_str_kebab_case() {
+            let val: GeneralRendererSetting = "JsonPretty".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::JsonPretty));
+        }
+
+        #[test]
+        fn from_str_case_insensitive() {
+            let val: GeneralRendererSetting = "JSON".parse().unwrap();
+            assert!(matches!(val, GeneralRendererSetting::Json));
+        }
+
+        #[test]
+        fn from_and_str() {
+            let val = <GeneralRendererSetting as From<&str>>::from("json");
+            assert!(
+                matches!(val, GeneralRendererSetting::Disable)
+                    || matches!(val, GeneralRendererSetting::Json)
+            );
+
+            let val = <GeneralRendererSetting as From<&str>>::from("invalid");
+            assert!(matches!(val, GeneralRendererSetting::Disable));
+        }
+
+        #[test]
+        fn from_string() {
+            let val = <GeneralRendererSetting as From<String>>::from("json-pretty".to_string());
+            assert!(
+                matches!(val, GeneralRendererSetting::Disable)
+                    || matches!(val, GeneralRendererSetting::JsonPretty)
+            );
+        }
+
+        #[test]
+        fn display_disable() {
+            assert_eq!(GeneralRendererSetting::Disable.to_string(), "disable");
+        }
+
+        #[cfg(feature = "json_serde_fmt")]
+        #[test]
+        fn display_json() {
+            assert_eq!(GeneralRendererSetting::Json.to_string(), "json");
+        }
+
+        #[cfg(feature = "json_serde_fmt")]
+        #[test]
+        fn display_json_pretty() {
+            assert_eq!(
+                GeneralRendererSetting::JsonPretty.to_string(),
+                "json-pretty"
+            );
+        }
+    }
+}

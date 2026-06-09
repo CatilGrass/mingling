@@ -34,3 +34,35 @@ impl From<GeneralRendererSerializeError> for String {
         val.error
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_creates_error_with_message() {
+        let msg = "serialization failed".to_string();
+        let err = GeneralRendererSerializeError::new(msg.clone());
+        assert_eq!(err.error, msg);
+    }
+
+    #[test]
+    fn from_str_creates_error_from_string_slice() {
+        let err: GeneralRendererSerializeError = "oops".into();
+        assert_eq!(err.error, "oops");
+    }
+
+    #[test]
+    fn deref_accesses_inner_error_string() {
+        let err = GeneralRendererSerializeError::new("inner message".to_string());
+        let derefed: &String = &*err;
+        assert_eq!(derefed, "inner message");
+    }
+
+    #[test]
+    fn into_string_extracts_message() {
+        let err = GeneralRendererSerializeError::new("extract me".to_string());
+        let s: String = err.into();
+        assert_eq!(s, "extract me");
+    }
+}

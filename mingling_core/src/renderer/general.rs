@@ -142,3 +142,115 @@ impl GeneralRenderer {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::RenderResult;
+    use serde::Serialize;
+
+    #[derive(Debug, Clone, PartialEq, Serialize)]
+    struct TestData {
+        name: String,
+        value: i32,
+    }
+
+    fn test_data() -> TestData {
+        TestData {
+            name: "hello".into(),
+            value: 42,
+        }
+    }
+
+    #[test]
+    fn test_render_disable_does_nothing() {
+        let mut r = RenderResult::default();
+        let result =
+            GeneralRenderer::render(&test_data(), &GeneralRendererSetting::Disable, &mut r);
+        assert!(result.is_ok());
+        assert!(r.is_empty());
+    }
+
+    #[cfg(feature = "json_serde_fmt")]
+    #[test]
+    fn test_render_to_json() {
+        let mut r = RenderResult::default();
+        let result = GeneralRenderer::render_to_json(&test_data(), &mut r);
+        assert!(result.is_ok());
+        assert!(!r.is_empty());
+        let output: String = r.into();
+        assert!(output.contains("\"name\""));
+        assert!(output.contains("\"hello\""));
+        assert!(output.contains("\"value\""));
+        assert!(output.contains("42"));
+    }
+
+    #[cfg(feature = "json_serde_fmt")]
+    #[test]
+    fn test_render_to_json_pretty() {
+        let mut r = RenderResult::default();
+        let result = GeneralRenderer::render_to_json_pretty(&test_data(), &mut r);
+        assert!(result.is_ok());
+        let output: String = r.into();
+        // Pretty JSON has newlines
+        assert!(output.contains('\n'));
+    }
+
+    #[cfg(feature = "yaml_serde_fmt")]
+    #[test]
+    fn test_render_to_yaml() {
+        let mut r = RenderResult::default();
+        let result = GeneralRenderer::render_to_yaml(&test_data(), &mut r);
+        assert!(result.is_ok());
+        assert!(!r.is_empty());
+    }
+
+    #[cfg(feature = "toml_serde_fmt")]
+    #[test]
+    fn test_render_to_toml() {
+        let mut r = RenderResult::default();
+        let result = GeneralRenderer::render_to_toml(&test_data(), &mut r);
+        assert!(result.is_ok());
+        assert!(!r.is_empty());
+    }
+
+    #[cfg(feature = "ron_serde_fmt")]
+    #[test]
+    fn test_render_to_ron() {
+        let mut r = RenderResult::default();
+        let result = GeneralRenderer::render_to_ron(&test_data(), &mut r);
+        assert!(result.is_ok());
+        assert!(!r.is_empty());
+    }
+
+    #[cfg(feature = "ron_serde_fmt")]
+    #[test]
+    fn test_render_to_ron_pretty() {
+        let mut r = RenderResult::default();
+        let result = GeneralRenderer::render_to_ron_pretty(&test_data(), &mut r);
+        assert!(result.is_ok());
+        let output: String = r.into();
+        assert!(output.contains('\n'));
+    }
+
+    #[test]
+    fn test_render_dispatches_correct_format() {
+        // Test that render dispatches to the right format handler
+        let mut r = RenderResult::default();
+
+        // Disable
+        let result =
+            GeneralRenderer::render(&test_data(), &GeneralRendererSetting::Disable, &mut r);
+        assert!(result.is_ok());
+        assert!(r.is_empty());
+    }
+
+    #[cfg(feature = "json_serde_fmt")]
+    #[test]
+    fn test_render_dispatches_json() {
+        let mut r = RenderResult::default();
+        let result = GeneralRenderer::render(&test_data(), &GeneralRendererSetting::Json, &mut r);
+        assert!(result.is_ok());
+        assert!(!r.is_empty());
+    }
+}
