@@ -8,20 +8,28 @@ fn main() {
     let _ = colored::control::set_virtual_terminal(true);
     println!("{}", include_str!("../../../docs/res/ci_banner.txt"));
 
+    let args: Vec<String> = std::env::args().collect();
+    let auto_yes = args.iter().any(|a| a == "-y");
+
     let needs_commit_temp = !{ run_cmd!("git diff-index --quiet HEAD --").is_ok() };
 
     if needs_commit_temp {
-        print!("Working tree is not clean, temporarily commit? [y/N]:");
-        std::io::stdout().flush().unwrap();
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
-        if input == "y" || input == "Y" || input == "yes" || input == "Yes" {
+        if auto_yes {
             run_cmd!("git add .").unwrap();
             run_cmd!("git commit -m \"[DO NOT PUSH] CI TEMP [DO NOT PUSH]\"").unwrap();
         } else {
-            eprintln_cargo_style!("Aborting.");
-            exit(2)
+            print!("Working tree is not clean, temporarily commit? [y/N]:");
+            std::io::stdout().flush().unwrap();
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input).unwrap();
+            let input = input.trim();
+            if input == "y" || input == "Y" || input == "yes" || input == "Yes" {
+                run_cmd!("git add .").unwrap();
+                run_cmd!("git commit -m \"[DO NOT PUSH] CI TEMP [DO NOT PUSH]\"").unwrap();
+            } else {
+                eprintln_cargo_style!("Aborting.");
+                exit(2)
+            }
         }
     }
 
