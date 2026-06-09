@@ -76,6 +76,10 @@ fn render_entry_show(_args: EntryShow, res: &mut LazyRes<ResLargeData>) {
 
 5. **\[core\]** Added `Program::get_args(&self)` method to expose the program's command-line arguments as a `&[String]` slice, providing public read access to the internal `args` field.
 
+6. **\[core:comp\]** Added `COMPLETION_SUBCOMMAND` constant to `mingling_core::comp` with the value `"__comp"`, providing a single canonical reference for the completion subcommand name used internally. This replaces hardcoded string literals across the codebase.
+
+7. **\[core:comp\]** Added `Program::is_completing()` method to check whether the program is currently running in completion mode. This provides a convenient way to conditionally skip certain logic during completion generation, where those operations may be unnecessary or undesirable.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **\[core\]** Changed the signature of `ProgramSetup::setup` from `fn setup(&mut self, program: &mut Program<C>) -> S` to `fn setup(self, program: &mut Program<C>)`, consuming `self` instead of taking a mutable reference. Correspondingly, `Program::with_setup` now accepts `S` by value (`&mut self, setup: S`) instead of by mutable reference (`&mut self, setup: &mut S`).

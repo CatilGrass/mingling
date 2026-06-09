@@ -1,9 +1,20 @@
+mod comp_ctx;
 mod flags;
 mod shell_ctx;
 mod suggest;
 
 use std::collections::BTreeSet;
 use std::fmt::Display;
+
+/// Constant defining the name of the completion subcommand.
+///
+/// When a user invokes this subcommand (e.g., `your_program __comp`), the
+/// program enters completion mode and generates shell completions based on
+/// the current shell context.
+///
+/// This value is used internally by the completion system to intercept the
+/// command-line input and redirect to the completion handler.
+pub const COMPLETION_SUBCOMMAND: &str = "__comp";
 
 #[doc(hidden)]
 pub use flags::*;

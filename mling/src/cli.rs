@@ -75,16 +75,14 @@ pub fn run() {
     });
 
     // Manifest Path Check
-    program.with_hook(ProgramHook::empty().on_post_dispatch(|c| match c {
-        // Skip completion (bypass completion)
-        ThisProgram::CompletionContext => {}
-        _ => {
+    if !program.is_completing() {
+        program.with_hook(ProgramHook::empty().on_post_dispatch(|_| {
             let p = ThisProgram::this();
             p.modify_res(|manifest_path: &mut ResManifestPath| {
                 manifest_path.resolved = Some(resolve_manifest_path(manifest_path.raw.clone()));
             });
-        }
-    }));
+        }));
+    }
 
     // Execute
     let quiet = program.stdout_setting.quiet;
