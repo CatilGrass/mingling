@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This repository has been migrated to [mingling-rs/mingling](https://github.com/mingling-rs/mingling). The original address will be kept as a **Public Archive**.
+
 <p align="center">
     <a href="https://github.com/catilgrass/mingling">
         <img alt="Mingling" src="https://github.com/catilgrass/mingling/raw/main/docs/res/pixel_icon_o_1024.png" width="30%">
