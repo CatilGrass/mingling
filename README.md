@@ -736,7 +736,9 @@ fn render_downloaded(result: ResultDownloaded) {
 }
 ```
 
-Note: `#[renderer]` functions cannot be async. When `async` is enabled, `program.exec_and_exit().await` returns a Future.
+> [!NOTE]
+>
+> `#[renderer]` functions cannot be async. When `async` is enabled, `program.exec_and_exit().await` returns a Future.
 
 ---
 
