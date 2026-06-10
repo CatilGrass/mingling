@@ -73,6 +73,7 @@ fn ci() -> Result<(), i32> {
     clippy_all()?;
     test_all()?;
     test_examples()?;
+    test_readme()?;
     docs_refresh()?;
 
     run_cmd!("git add --renormalize .")?;
@@ -83,6 +84,11 @@ fn ci() -> Result<(), i32> {
 fn test_examples() -> Result<(), i32> {
     println_cargo_style!("Testing: examples");
     run_cmd!("cargo run --manifest-path dev_tools/Cargo.toml --bin test-examples")
+}
+
+fn test_readme() -> Result<(), i32> {
+    println_cargo_style!("Testing: readme code blocks");
+    run_cmd!("cargo run --manifest-path dev_tools/Cargo.toml --bin test-readme")
 }
 
 fn build_all() -> Result<(), i32> {

@@ -2,6 +2,9 @@
 resolver = "2"
 members = ["mingling", "mingling_core", "mingling_macros", "mling"]
 exclude = [
+    # README-Tests
+    "./temp/readme-test",
+
     # Examples
     "examples/example-argument-parse",
     "examples/example-async-support",

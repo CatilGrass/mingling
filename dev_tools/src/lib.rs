@@ -10,6 +10,18 @@ macro_rules! run_cmd {
     };
 }
 
+/// Run a shell command and capture its combined stdout+stderr output.
+/// Returns `Ok(output)` on success, `Err((exit_code, stderr))` on failure.
+#[macro_export]
+macro_rules! run_cmd_and_capture_stderr {
+    ($fmt:literal, $($arg:tt)*) => {
+        $crate::run_cmd_capture(format!($fmt, $($arg)*))
+    };
+    ($cmd:expr) => {
+        $crate::run_cmd_capture($cmd)
+    };
+}
+
 #[macro_export]
 macro_rules! println_cargo_style {
     ($fmt:literal, $($arg:tt)*) => {
@@ -94,6 +106,35 @@ pub fn run_cmd(cmd: impl Into<String>) -> Result<(), i32> {
         Ok(())
     } else {
         Err(exit_code)
+    }
+}
+
+/// Run a shell command and capture its combined stdout+stderr output.
+///
+/// On success returns `Ok(combined_output)`. On failure returns `Err((exit_code, stderr))`.
+/// Stderr falls back to stdout if stderr is empty.
+pub fn run_cmd_capture(cmd: impl Into<String>) -> Result<String, (i32, String)> {
+    let shell = if cfg!(target_os = "windows") {
+        "powershell"
+    } else {
+        "sh"
+    };
+    let output = std::process::Command::new(shell)
+        .arg("-c")
+        .arg(cmd.into())
+        .current_dir(std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")))
+        .output()
+        .expect("failed to execute command");
+
+    let exit_code = output.status.code().unwrap_or(1);
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let combined = if stderr.is_empty() { stdout } else { stderr };
+
+    if exit_code == 0 {
+        Ok(combined)
+    } else {
+        Err((exit_code, combined))
     }
 }
 
